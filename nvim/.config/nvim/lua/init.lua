@@ -5,6 +5,17 @@ require'lualine'.setup{}
 require'nvim-treesitter.configs'.setup { highlight = { enable = true } }
 require'telescope'.load_extension('project')
 
+require'telescope'.setup{
+    defaults = {
+        file_ignore_patterns = { "node_modules", ".git/" }
+    },
+    pickers = {
+        find_files = {
+            hidden = true
+        }
+    }
+}
+
 local lspconfig = require'lspconfig'
 local configs = require'lspconfig/configs'    
 local capabilities = vim.lsp.protocol.make_client_capabilities()
