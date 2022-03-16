@@ -5,7 +5,9 @@ require'lualine'.setup{}
 require'nvim-treesitter.configs'.setup { highlight = { enable = true } }
 require'telescope'.load_extension('project')
 
-require'telescope'.setup{
+local telescope = require'telescope'
+
+telescope.setup{
     defaults = {
         file_ignore_patterns = { "node_modules", ".git/" }
     },
@@ -13,8 +15,18 @@ require'telescope'.setup{
         find_files = {
             hidden = true
         }
+    },
+    extensions = {
+    fzf = {
+      fuzzy = true,
+      override_generic_sorter = true,
+      override_file_sorter = true,
+      case_mode = "smart_case",
     }
+  }
 }
+
+telescope.load_extension'fzf'
 
 local lspconfig = require'lspconfig'
 local configs = require'lspconfig/configs'    
