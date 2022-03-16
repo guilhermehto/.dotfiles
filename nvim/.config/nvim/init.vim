@@ -28,6 +28,7 @@ call plug#begin()
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-project.nvim'
+Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
 Plug 'matsuuu/pinkmare'
 Plug 'neovim/nvim-lspconfig'
 Plug 'tami5/lspsaga.nvim'
@@ -74,7 +75,7 @@ imap jk <Esc>
 nnoremap <Tab> <cmd>:bnext<CR>
 nnoremap <S-Tab> <cmd>:bprevious<CR>
 
-nnoremap <leader>ff <cmd>lua require'telescope.builtin'.find_files{}<CR>
+nnoremap <silent><C-p> <cmd>lua require'telescope.builtin'.find_files{}<CR>
 nnoremap <leader>fp <cmd>lua require'telescope.builtin'.git_files{}<CR>
 nnoremap <leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <leader>fb <cmd>Telescope buffers<cr>
