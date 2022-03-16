@@ -49,6 +49,7 @@ Plug 'nvim-lua/plenary.nvim'
 Plug 'airblade/vim-rooter'
 Plug 'nvim-lualine/lualine.nvim'
 Plug 'kyazdani42/nvim-web-devicons'
+Plug 'sotte/presenting.vim'
 Plug 'ryanoasis/vim-devicons'
 call plug#end()
 
