@@ -7,7 +7,7 @@ require'telescope'.load_extension('project')
 
 require'telescope'.setup{
     defaults = {
-        file_ignore_patterns = { "node_modules", ".git" }
+        file_ignore_patterns = { "node_modules", ".git/" }
     },
     pickers = {
         find_files = {
