@@ -31,6 +31,8 @@ telescope.load_extension'fzf'
 local lspconfig = require'lspconfig'
 local configs = require'lspconfig/configs'    
 local capabilities = vim.lsp.protocol.make_client_capabilities()
+local saga = require'lspsaga'
+saga.init_lsp_saga()
 
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
