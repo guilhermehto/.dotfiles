@@ -44,7 +44,7 @@ Plug 'dense-analysis/ale'
 Plug 'preservim/nerdtree'
 Plug 'dstein64/vim-startuptime'
 Plug 'tpope/vim-surround'
-Plug 'arcticicestudio/nord-vim'
+Plug 'shatur/neovim-ayu'
 Plug 'nvim-lualine/lualine.nvim'
 Plug 'kyazdani42/nvim-web-devicons'
 Plug 'sotte/presenting.vim'
@@ -54,7 +54,8 @@ call plug#end()
 " ==== [GENERAL]
 
 let mapleader = " "
-colorscheme nord
+let ayucolor="dark"
+colorscheme ayu
 set encoding=utf8
 let g:rooter_targets = '/,*'
 let g:rooter_patterns = ['.git']
