@@ -112,5 +112,7 @@ nnoremap <leader>t3 3gt
 nnoremap <leader>t4 4gt
 nnoremap <leader>t5 5gt
 
+nnoremap <leader>vs :source $MYVIMRC<CR>
+
 vnoremap J :m '>+1<CR>gv=gv
 vnoremap K :m '<-2<CR>gv=gv
