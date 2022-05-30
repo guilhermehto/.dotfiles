@@ -116,3 +116,6 @@ nnoremap <leader>vs :source $MYVIMRC<CR>
 
 vnoremap J :m '>+1<CR>gv=gv
 vnoremap K :m '<-2<CR>gv=gv
+
+noremap <leader>wz <c-w>_ \| <c-w>\|
+noremap <leader>wo <c-w>=
