@@ -4,6 +4,7 @@ require'lspconfig'.emmet_ls.setup{}
 require'lualine'.setup{}
 require'nvim-treesitter.configs'.setup { highlight = { enable = true } }
 require'telescope'.load_extension('project')
+require'lspconfig'.sumneko_lua.setup {}
 
 local telescope = require'telescope'
 
