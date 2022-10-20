@@ -104,7 +104,7 @@ nnoremap <leader>csa <cmd>:Lspsaga code_action<CR>
 nnoremap <leader>css <cmd>:Lspsaga signature_help<CR>
 nnoremap <leader>cse <cmd>:Lspsaga show_line_diagnostics<CR>
 nnoremap <C-t> <cmd>:Lspsaga open_floaterm<CR>
-nnoremap <C-T> <cmd>:Lspsaga open_floaterm lazygit<CR>
+nnoremap <C-l> <cmd>:Lspsaga open_floaterm lazygit<CR>
 tnoremap <C-t> <cmd>:Lspsaga close_floaterm<CR>
 
 nnoremap <leader>tn <cmd>:tabnew<cr>
