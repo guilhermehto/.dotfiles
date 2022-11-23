@@ -107,6 +107,7 @@ nnoremap <leader>cse <cmd>:Lspsaga show_line_diagnostics<CR>
 nnoremap <C-t> <cmd>:Lspsaga open_floaterm<CR>
 nnoremap <C-l> <cmd>:Lspsaga open_floaterm lazygit<CR>
 tnoremap <C-t> <cmd>:Lspsaga close_floaterm<CR>
+tnoremap <C-l> <cmd>:Lspsaga close_floaterm lazygit<CR>
 
 nnoremap <leader>tn <cmd>:tabnew<cr>
 nnoremap <leader>tc <cmd>:tabclose<cr>
