@@ -49,6 +49,7 @@ Plug 'nvim-lualine/lualine.nvim'
 Plug 'kyazdani42/nvim-web-devicons'
 Plug 'sotte/presenting.vim'
 Plug 'ryanoasis/vim-devicons'
+Plug 'ggandor/leap.nvim'
 call plug#end()
 
 " ==== [GENERAL]
