@@ -49,6 +49,7 @@ Plug 'nvim-lualine/lualine.nvim'
 Plug 'kyazdani42/nvim-web-devicons'
 Plug 'sotte/presenting.vim'
 Plug 'ryanoasis/vim-devicons'
+Plug 'ggandor/leap.nvim'
 call plug#end()
 
 " ==== [GENERAL]
@@ -104,8 +105,9 @@ nnoremap <leader>csa <cmd>:Lspsaga code_action<CR>
 nnoremap <leader>css <cmd>:Lspsaga signature_help<CR>
 nnoremap <leader>cse <cmd>:Lspsaga show_line_diagnostics<CR>
 nnoremap <C-t> <cmd>:Lspsaga open_floaterm<CR>
-nnoremap <C-T> <cmd>:Lspsaga open_floaterm lazygit<CR>
+nnoremap <C-l> <cmd>:Lspsaga open_floaterm lazygit<CR>
 tnoremap <C-t> <cmd>:Lspsaga close_floaterm<CR>
+tnoremap <C-l> <cmd>:Lspsaga close_floaterm lazygit<CR>
 
 nnoremap <leader>tn <cmd>:tabnew<cr>
 nnoremap <leader>tc <cmd>:tabclose<cr>
