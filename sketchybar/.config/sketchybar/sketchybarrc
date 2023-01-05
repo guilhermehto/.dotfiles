@@ -1,0 +1,66 @@
+# This is a demo config to show some of the most important commands more easily.
+# This is meant to be changed and configured, as it is intentionally kept sparse.
+# For a more advanced configuration example see my dotfiles:
+# https://github.com/FelixKratz/dotfiles
+
+PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+
+##### Bar Appearance #####
+# Configuring the general appearance of the bar, these are only some of the
+# options available. For all options see:
+# https://felixkratz.github.io/SketchyBar/config/bar
+# If you are looking for other colors, see the color picker:
+# https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
+
+sketchybar --bar height=32        \
+                 blur_radius=50   \
+                 position=top     \
+                 sticky=off       \
+                 padding_left=10  \
+                 padding_right=10 \
+                 color=0x15ffffff
+
+##### Changing Defaults #####
+# We now change some default values that are applied to all further items
+# For a full list of all available item properties see:
+# https://felixkratz.github.io/SketchyBar/config/items
+
+sketchybar --default updates=when_shown                    \
+                     drawing=on                            \
+                     icon.font="Hack Nerd Font:Bold:17.0"  \
+                     icon.color=0xffffffff                 \
+                     label.font="Hack Nerd Font:Bold:14.0" \
+                     label.color=0xffffffff                \
+                     label.padding_left=4                  \
+                     label.padding_right=4                 \
+                     icon.padding_left=4                   \
+                     icon.padding_right=4
+
+
+sketchybar --add item wifi right                         \
+           --set wifi    script="$PLUGIN_DIR/wifi.sh"    \
+                         background.padding_right=12     \
+                         update_freq=5
+
+### TODO: change the font here because it looks weird af, too big
+sketchybar -m --add item disk_label right \
+              --set disk_label label.font="Hack Nerd Font:Bold:12.0" \
+                               label=DISK \
+                               y_offset=6 \
+                               width=0 \
+\
+              --add item disk_percentage right \
+              --set disk_percentage \
+                                    y_offset=-4 \
+                                    update_freq=1 \
+                                    script="$PLUGIN_DIR/disk.sh"
+sketchybar --add item system.label left \
+           --set system.label script="sketchybar --set \$NAME label=\"\$INFO\"" \
+           --subscribe system.label front_app_switched
+##### Finalizing Setup #####
+# The below command is only needed at the end of the initial configuration and
+# should never be run in an item script.
+
+sketchybar --update
+
+echo "sketchybar configuration loaded.."
