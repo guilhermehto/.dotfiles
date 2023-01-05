@@ -6,6 +6,7 @@ require'nvim-treesitter.configs'.setup { highlight = { enable = true } }
 require'telescope'.load_extension('project')
 require'lspconfig'.pyright.setup{}
 require'lspconfig'.sumneko_lua.setup {}
+require('leap').add_default_mappings()
 
 local telescope = require'telescope'
 
@@ -150,3 +151,9 @@ lspconfig.emmet_ls.setup({
   require('lspconfig')['cssls'].setup {
     capabilities = capabilities
   }
+
+  require('neorg').setup {
+    load = {
+        ["core.defaults"] = {}
+    }
+}
