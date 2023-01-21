@@ -18,8 +18,8 @@ sketchybar --bar height=32        \
                  sticky=off       \
                  padding_left=10  \
                  padding_right=10 \
-                 color=0xff24273a \
-                 border_radius=16
+                 color=0xff24273a 
+#                 border_radius=16
 
 ##### Changing Defaults #####
 # We now change some default values that are applied to all further items
@@ -66,29 +66,19 @@ do
 #
 sketchybar --add item clock right                              \
            --set clock   update_freq=10                        \
-                         script="$PLUGIN_DIR/clock.sh"         \
-                         label.color=0xffcad3f5 \
-                         icon.color=0xff8aadf4 
+                         script="$PLUGIN_DIR/clock.sh"         
 
 ### wifi
 #
 sketchybar --add item wifi right                         \
            --set wifi    script="$PLUGIN_DIR/wifi.sh"    \
-                         update_freq=5 \
-                         label.color=0xffcad3f5 \
-                         icon.color=0xff8aadf4
+                         update_freq=5 
 ### disk
 #
-sketchybar -m --add item disk_label right \
-                               label=disk \
-                               width=0 \
-                               label.color=0xffcad3f5 \
-                               icon.color=0xff8aadf4 \
+sketchybar    --add item disk_percentage right \
               --set disk_percentage \
-                                    update_freq=1 \
-                                    script="$PLUGIN_DIR/disk.sh" \
-                                    label.color=0xffcad3f5 \
-                                    icon.color=0xff8aadf4 \
+                                update_freq=1 \
+                                script="$PLUGIN_DIR/disk.sh" 
 ### app name
 #
 sketchybar --add item system.label left \
