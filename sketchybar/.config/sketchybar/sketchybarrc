@@ -18,7 +18,8 @@ sketchybar --bar height=32        \
                  sticky=off       \
                  padding_left=10  \
                  padding_right=10 \
-                 color=0x15ffffff
+                 color=0xff24273a \
+                 border_radius=16
 
 ##### Changing Defaults #####
 # We now change some default values that are applied to all further items
@@ -27,36 +28,74 @@ sketchybar --bar height=32        \
 
 sketchybar --default updates=when_shown                    \
                      drawing=on                            \
+                     label.color=0xffcad3f5                \
+                     icon.color=0xff8aadf4                 \
                      icon.font="Hack Nerd Font:Bold:17.0"  \
-                     icon.color=0xffffffff                 \
                      label.font="Hack Nerd Font:Bold:14.0" \
-                     label.color=0xffffffff                \
-                     label.padding_left=4                  \
-                     label.padding_right=4                 \
-                     icon.padding_left=4                   \
-                     icon.padding_right=4
+                     label.padding_left=0                  \
+                     label.padding_right=8                 \
+                     icon.padding_left=0                   \
+                     icon.padding_right=8
 
+SPACE_ICONS=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10")
 
+for i in "${!SPACE_ICONS[@]}"
+do
+  sid=$(($i+1))
+  sketchybar --add space space.$sid left                                 \
+             --set space.$sid associated_space=$sid                      \
+                              icon=${SPACE_ICONS[i]}                     \
+                              icon.padding_left=8                        \
+                              icon.padding_right=8                       \
+                              background.padding_left=5                  \
+                              background.padding_right=5                 \
+                              background.color=0x44ffffff                \
+                              background.corner_radius=5                 \
+                              background.height=22                       \
+                              background.drawing=off                     \
+                              label.drawing=off                          \
+                              script="$PLUGIN_DIR/space.sh"              \
+                              click_script="yabai -m space --focus $sid"
+            done
+
+#################
+#### PLUGINS ####
+#################
+
+### clock
+#
+sketchybar --add item clock right                              \
+           --set clock   update_freq=10                        \
+                         script="$PLUGIN_DIR/clock.sh"         \
+                         label.color=0xffcad3f5 \
+                         icon.color=0xff8aadf4 
+
+### wifi
+#
 sketchybar --add item wifi right                         \
            --set wifi    script="$PLUGIN_DIR/wifi.sh"    \
-                         background.padding_right=12     \
-                         update_freq=5
-
-### TODO: change the font here because it looks weird af, too big
+                         update_freq=5 \
+                         label.color=0xffcad3f5 \
+                         icon.color=0xff8aadf4
+### disk
+#
 sketchybar -m --add item disk_label right \
-              --set disk_label label.font="Hack Nerd Font:Bold:12.0" \
-                               label=DISK \
-                               y_offset=6 \
+                               label=disk \
                                width=0 \
-\
-              --add item disk_percentage right \
+                               label.color=0xffcad3f5 \
+                               icon.color=0xff8aadf4 \
               --set disk_percentage \
-                                    y_offset=-4 \
                                     update_freq=1 \
-                                    script="$PLUGIN_DIR/disk.sh"
+                                    script="$PLUGIN_DIR/disk.sh" \
+                                    label.color=0xffcad3f5 \
+                                    icon.color=0xff8aadf4 \
+### app name
+#
 sketchybar --add item system.label left \
            --set system.label script="sketchybar --set \$NAME label=\"\$INFO\"" \
            --subscribe system.label front_app_switched
+
+
 ##### Finalizing Setup #####
 # The below command is only needed at the end of the initial configuration and
 # should never be run in an item script.
