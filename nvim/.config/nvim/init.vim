@@ -29,7 +29,6 @@ Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-project.nvim'
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
-Plug 'matsuuu/pinkmare'
 Plug 'neovim/nvim-lspconfig'
 Plug 'tami5/lspsaga.nvim'
 Plug 'hrsh7th/cmp-nvim-lsp'
@@ -51,13 +50,13 @@ Plug 'sotte/presenting.vim'
 Plug 'ryanoasis/vim-devicons'
 Plug 'nvim-neorg/neorg'
 Plug 'ggandor/leap.nvim'
+Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
 call plug#end()
 
 " ==== [GENERAL]
 
 let mapleader = " "
-let ayucolor="dark"
-colorscheme ayu
+colorscheme catppuccin-macchiato
 set encoding=utf8
 let g:rooter_targets = '/,*'
 let g:rooter_patterns = ['.git']
