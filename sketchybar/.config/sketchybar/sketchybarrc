@@ -19,7 +19,6 @@ sketchybar --bar height=32        \
                  padding_left=10  \
                  padding_right=10 \
                  color=0xff24273a 
-#                 border_radius=16
 
 ##### Changing Defaults #####
 # We now change some default values that are applied to all further items
@@ -49,8 +48,7 @@ do
                               icon.padding_right=8                       \
                               background.padding_left=5                  \
                               background.padding_right=5                 \
-                              background.color=0x44ffffff                \
-                              background.corner_radius=5                 \
+                              background.color=0xff363a4f                \
                               background.height=22                       \
                               background.drawing=off                     \
                               label.drawing=off                          \
@@ -85,6 +83,8 @@ sketchybar --add item system.label left \
            --set system.label script="sketchybar --set \$NAME label=\"\$INFO\"" \
            --subscribe system.label front_app_switched
 
+### cpu
+#
 
 ##### Finalizing Setup #####
 # The below command is only needed at the end of the initial configuration and
