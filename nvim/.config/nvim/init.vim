@@ -26,6 +26,8 @@ set completeopt=menu,menuone,noselect
 
 call plug#begin()
 Plug 'nvim-lua/plenary.nvim'
+Plug 'williamboman/mason.nvim'
+Plug 'williamboman/mason-lspconfig.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-project.nvim'
 Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
@@ -95,8 +97,8 @@ nnoremap <leader>j <cmd>:wincmd j<cr>
 nnoremap <leader>k <cmd>:wincmd k<cr>
 nnoremap <leader>l <cmd>:wincmd l<cr>
 
-nnoremap <leader>cd <cmd>:Lspsaga lsp_finder<CR>
-nnoremap <leader>cD <cmd>lua vim.lsp.buf.definition()<CR>
+nnoremap <leader>cd <cmd>:Telescope lsp_references<CR>
+nnoremap <leader>cD <cmd>:Telescope lsp_definitions<CR>
 nnoremap <leader>cr <cmd>:Lspsaga rename<CR>
 nnoremap <leader>csd <cmd>:Lspsaga hover_doc<CR>
 nnoremap <silent> <C-f> <cmd>:lua require('lspsaga.action').smart_scroll_with_saga(1)<CR>
