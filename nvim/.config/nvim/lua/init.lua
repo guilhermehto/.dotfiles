@@ -132,4 +132,10 @@ require('lspconfig')['tsserver'].setup {capabilities = capabilities}
 
 require('lspconfig')['cssls'].setup {capabilities = capabilities}
 
-require('neorg').setup {load = {["core.defaults"] = {}}}
+require('neorg').setup {
+    load = {
+        ["core.defaults"] = {}, -- Loads default behaviour
+        ["core.norg.concealer"] = {}, -- Adds pretty icons to your documents
+        ["core.norg.completion"] = {},
+    },
+}
