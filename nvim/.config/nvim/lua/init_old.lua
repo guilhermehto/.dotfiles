@@ -5,7 +5,15 @@ require'lualine'.setup {}
 require'nvim-treesitter.configs'.setup {highlight = {enable = true}}
 require'telescope'.load_extension('project')
 require'lspconfig'.pyright.setup {}
-require'lspconfig'.sumneko_lua.setup {}
+require'lspconfig'.sumneko_lua.setup {
+settings = {
+    Lua = {
+    diagnostics = {
+        globals = { 'vim' },
+    },
+}
+}
+}
 require('leap').add_default_mappings()
 require'mason'.setup {}
 
@@ -124,7 +132,7 @@ cmp.setup.cmdline(':', {
 })
 
 -- Setup lspconfig.
-local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp
+local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp
                                                                      .protocol
                                                                      .make_client_capabilities())
 -- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
@@ -132,10 +140,3 @@ require('lspconfig')['tsserver'].setup {capabilities = capabilities}
 
 require('lspconfig')['cssls'].setup {capabilities = capabilities}
 
-require('neorg').setup {
-    load = {
-        ["core.defaults"] = {}, -- Loads default behaviour
-        ["core.norg.concealer"] = {}, -- Adds pretty icons to your documents
-        ["core.norg.completion"] = {},
-    },
-}
