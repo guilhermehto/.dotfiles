@@ -7,8 +7,8 @@ vim.keymap.set("n", "<leader>fb", "<cmd>Telescope buffers<cr>")
 vim.keymap.set("n", "<leader>fh", "<cmd>Telescope help_tags<cr>")
 vim.keymap.set("n", "<leader>pp", "<cmd>:lua require'telescope'.extensions.project.project{}<cr>")
 
-vim.keymap.set("n", "<leader>ft", "<cmd>NERDTreeToggleVCS<cr>")
-vim.keymap.set("n", "<leader>fT", "<cmd>NERDTreeFind<cr>")
+vim.keymap.set("n", "<leader>ft", "<cmd>Neotree<cr>")
+vim.keymap.set("n", "<leader>fT", "<cmd>Neotree reveal<cr>")
 
 vim.keymap.set("n", "<leader>wh", "<cmd>split<cr>")
 vim.keymap.set("n", "<leader>wv", "<cmd>vsplit<cr>")
