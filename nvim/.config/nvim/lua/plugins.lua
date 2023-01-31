@@ -62,7 +62,6 @@ require("lazy").setup({
 	"saadparwaiz1/cmp_luasnip",
 
 	"onsails/lspkind-nvim",
-	"dense-analysis/ale",
 	"tpope/vim-surround",
 	{
 		"nvim-lualine/lualine.nvim",
