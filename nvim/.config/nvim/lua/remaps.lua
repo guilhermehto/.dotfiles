@@ -48,6 +48,10 @@ vim.keymap.set("n", "<leader>vs", ":source $MYVIMRC<cr>")
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
--- ThePrimeagen
+-- from: ThePrimeagen
 vim.keymap.set("n", "<C-d>", "<C-d>zz")
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
+
+-- Managers
+vim.keymap.set("n", "<leader>mm", "<cmd>Mason<cr>")
+vim.keymap.set("n", "<leader>ml", "<cmd>Lazy<cr>")
