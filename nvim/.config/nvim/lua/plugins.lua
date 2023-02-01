@@ -138,6 +138,8 @@ require("lazy").setup({
 	},
 	"airblade/vim-gitgutter",
 	"tpope/vim-fugitive",
+	"tpope/vim-rhubarb",
+	"junegunn/gv.vim",
 })
 
 -- TODO: move this out of here :)
