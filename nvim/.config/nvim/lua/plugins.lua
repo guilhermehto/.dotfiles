@@ -140,6 +140,25 @@ require("lazy").setup({
 	"tpope/vim-fugitive",
 	"tpope/vim-rhubarb",
 	"junegunn/gv.vim",
+	{
+		"nvim-neorg/neorg",
+		build = ":Neorg sync-parsers",
+		config = function()
+			require("neorg").setup({
+				load = {
+					["core.defaults"] = {}, -- Loads default behaviour
+					["core.norg.concealer"] = {}, -- Adds pretty icons to your documents
+					["core.norg.completion"] = {
+						config = {
+							engine = "nvim-cmp",
+						},
+					}, -- Adds pretty icons to your documents
+					["core.integrations.nvim-cmp"] = {},
+				},
+			})
+		end,
+		dependencies = { { "nvim-lua/plenary.nvim" } },
+	},
 })
 
 -- TODO: move this out of here :)
@@ -195,6 +214,7 @@ cmp.setup({
 	sources = cmp.config.sources({
 		{ name = "nvim_lsp" },
 		{ name = "luasnip" }, -- For luasnip users.
+		{ name = "neorg" },
 	}, {
 		{ name = "buffer" },
 	}),
