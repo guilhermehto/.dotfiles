@@ -136,6 +136,8 @@ require("lazy").setup({
 			})
 		end,
 	},
+	"airblade/vim-gitgutter",
+	"tpope/vim-fugitive",
 })
 
 -- TODO: move this out of here :)
