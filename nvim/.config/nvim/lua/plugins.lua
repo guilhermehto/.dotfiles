@@ -51,7 +51,7 @@ require("lazy").setup({
 			})
 		end,
 	},
-	"nvim-treesitter/nvim-treesitter",
+	{ "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
 	"neovim/nvim-lspconfig",
 
 	"hrsh7th/cmp-nvim-lsp",
