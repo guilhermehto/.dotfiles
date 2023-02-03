@@ -143,20 +143,23 @@ require("lazy").setup({
 	{
 		"nvim-neorg/neorg",
 		build = ":Neorg sync-parsers",
-		config = function()
-			require("neorg").setup({
-				load = {
-					["core.defaults"] = {}, -- Loads default behaviour
-					["core.norg.concealer"] = {}, -- Adds pretty icons to your documents
-					["core.norg.completion"] = {
-						config = {
-							engine = "nvim-cmp",
-						},
-					}, -- Adds pretty icons to your documents
-					["core.integrations.nvim-cmp"] = {},
+		opts = {
+			load = {
+				["core.defaults"] = {},
+				["core.norg.concealer"] = {
+					config = {
+						folds = false,
+					},
 				},
-			})
-		end,
+				["core.norg.dirman"] = {
+					config = {
+						workspaces = {
+							notes = "~/notes",
+						},
+					},
+				},
+			},
+		},
 		dependencies = { { "nvim-lua/plenary.nvim" } },
 	},
 })

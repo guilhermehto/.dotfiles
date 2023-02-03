@@ -21,3 +21,4 @@ vim.opt.termguicolors = true
 vim.opt.scrolloff = 8
 vim.opt.background = "dark"
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
+vim.opt.conceallevel = 2
