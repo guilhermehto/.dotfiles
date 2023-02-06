@@ -297,3 +297,7 @@ require("lspconfig")["pyright"].setup({
 require("lspconfig")["marksman"].setup({
 	capabilities = capabilities,
 })
+
+require("lspconfig")["tailwindcss"].setup({
+	capabilities = capabilities,
+})
