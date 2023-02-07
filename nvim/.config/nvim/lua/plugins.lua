@@ -162,8 +162,8 @@ require("lazy").setup({
 				["core.norg.dirman"] = {
 					config = {
 						workspaces = {
-							personal = "~/notes/personal",
-							work = "~/notes/work",
+							personal = "~/Dropbox/notes/personal",
+							work = "~/Dropbox/notes/work",
 						},
 					},
 				},
