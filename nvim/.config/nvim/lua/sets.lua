@@ -22,3 +22,5 @@ vim.opt.scrolloff = 8
 vim.opt.background = "dark"
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 vim.opt.conceallevel = 2
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
