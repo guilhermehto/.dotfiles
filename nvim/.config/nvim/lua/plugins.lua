@@ -167,6 +167,12 @@ require("lazy").setup({
 						},
 					},
 				},
+				["core.norg.journal"] = {
+					config = {
+						workspace = "personal",
+						strategy = "flat",
+					},
+				},
 			},
 		},
 		dependencies = { { "nvim-lua/plenary.nvim" } },
