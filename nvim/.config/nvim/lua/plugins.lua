@@ -177,6 +177,7 @@ require("lazy").setup({
 		},
 		dependencies = { { "nvim-lua/plenary.nvim" } },
 	},
+	"windwp/nvim-spectre",
 })
 
 -- TODO: move this out of here :)
