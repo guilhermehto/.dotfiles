@@ -1,5 +1,6 @@
 vim.g.mapleader = " "
 vim.keymap.set("i", "<C-c>", "<esc><esc>")
+
 vim.keymap.set("n", "<C-p>", "<cmd>Telescope find_files<cr>")
 vim.keymap.set("n", "<leader>ff", "<cmd>Telescope current_buffer_fuzzy_find <cr>")
 vim.keymap.set("n", "<leader>fp", "<cmd>Telescope git_files<cr>")
@@ -56,3 +57,8 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz")
 -- Managers
 vim.keymap.set("n", "<leader>mm", "<cmd>Mason<cr>")
 vim.keymap.set("n", "<leader>ml", "<cmd>Lazy<cr>")
+
+-- Neorg
+vim.keymap.set("n", "<leader>nww", "<cmd>Neorg workspace work<cr>")
+vim.keymap.set("n", "<leader>nwp", "<cmd>Neorg workspace personal<cr>")
+vim.keymap.set("n", "<leader>nr", "<cmd>Neorg return<cr>")
