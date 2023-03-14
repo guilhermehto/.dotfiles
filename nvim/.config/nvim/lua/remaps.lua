@@ -1,4 +1,5 @@
 vim.g.mapleader = " "
+vim.keymap.set("i", "<C-c>", "<esc><esc>")
 vim.keymap.set("n", "<C-p>", "<cmd>Telescope find_files<cr>")
 vim.keymap.set("n", "<leader>ff", "<cmd>Telescope current_buffer_fuzzy_find <cr>")
 vim.keymap.set("n", "<leader>fp", "<cmd>Telescope git_files<cr>")
