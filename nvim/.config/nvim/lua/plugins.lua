@@ -47,8 +47,14 @@ require("lazy").setup({
 						override_file_sorter = true,
 						case_mode = "smart_case",
 					},
+					["ui-select"] = {
+						require("telescope.themes").get_dropdown({
+							-- even more opts
+						}),
+					},
 				},
 			})
+			require("telescope").load_extension("ui-select")
 		end,
 	},
 	{
@@ -196,6 +202,12 @@ require("lazy").setup({
 		event = "VeryLazy",
 		opts = {},
 	},
+	{
+		"folke/trouble.nvim",
+		dependencies = { "nvim-tree/nvim-web-devicons" },
+		opts = {},
+	},
+	"nvim-telescope/telescope-ui-select.nvim",
 })
 
 -- TODO: move this out of here :)
