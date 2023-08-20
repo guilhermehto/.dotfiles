@@ -222,6 +222,7 @@ require("lazy").setup({
 		opts = {},
 	},
 	"f-person/git-blame.nvim",
+	{ "nvim-treesitter/nvim-treesitter-context", opts = {} },
 })
 
 -- TODO: move this out of here :)
