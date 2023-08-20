@@ -185,6 +185,12 @@ require("lazy").setup({
 	},
 	"windwp/nvim-spectre",
 	"metakirby5/codi.vim",
+	{
+		"echasnovski/mini.animate",
+		version = false,
+		event = "VeryLazy",
+		opts = {},
+	},
 })
 
 -- TODO: move this out of here :)
