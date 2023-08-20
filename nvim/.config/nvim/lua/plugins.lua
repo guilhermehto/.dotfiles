@@ -67,10 +67,16 @@ require("lazy").setup({
 	"hrsh7th/cmp-path",
 	"hrsh7th/cmp-cmdline",
 	"hrsh7th/nvim-cmp",
-	"L3MON4D3/LuaSnip",
+	{
+		"L3MON4D3/LuaSnip",
+		config = function()
+			require("luasnip.loaders.from_vscode").lazy_load()
+		end,
+	},
 	"saadparwaiz1/cmp_luasnip",
 
 	"onsails/lspkind-nvim",
+	"rafamadriz/friendly-snippets",
 	"tpope/vim-surround",
 	{
 		"nvim-lualine/lualine.nvim",
@@ -154,12 +160,12 @@ require("lazy").setup({
 		opts = {
 			load = {
 				["core.defaults"] = {},
-				["core.norg.concealer"] = {
+				["core.concealer"] = {
 					config = {
 						folds = false,
 					},
 				},
-				["core.norg.dirman"] = {
+				["core.dirman"] = {
 					config = {
 						workspaces = {
 							personal = "~/Dropbox/notes/personal",
@@ -167,7 +173,7 @@ require("lazy").setup({
 						},
 					},
 				},
-				["core.norg.journal"] = {
+				["core.journal"] = {
 					config = {
 						workspace = "personal",
 						strategy = "flat",
@@ -178,6 +184,7 @@ require("lazy").setup({
 		dependencies = { { "nvim-lua/plenary.nvim" } },
 	},
 	"windwp/nvim-spectre",
+	"metakirby5/codi.vim",
 })
 
 -- TODO: move this out of here :)
@@ -307,5 +314,9 @@ require("lspconfig")["marksman"].setup({
 })
 
 require("lspconfig")["tailwindcss"].setup({
+	capabilities = capabilities,
+})
+
+require("lspconfig")["gdscript"].setup({
 	capabilities = capabilities,
 })

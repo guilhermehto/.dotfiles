@@ -1,8 +1,8 @@
 vim.g.mapleader = " "
 
 vim.opt.exrc = true
-vim.opt.tabstop = 4
-vim.opt.shiftwidth = 4
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
 vim.opt.guicursor = ""
 vim.opt.relativenumber = true
 vim.opt.hlsearch = false
