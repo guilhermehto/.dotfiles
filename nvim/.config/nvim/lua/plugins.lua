@@ -223,6 +223,15 @@ require("lazy").setup({
 	},
 	"f-person/git-blame.nvim",
 	{ "nvim-treesitter/nvim-treesitter-context", opts = {} },
+	{
+		"NeogitOrg/neogit",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-telescope/telescope.nvim",
+			"sindrets/diffview.nvim",
+		},
+		config = true,
+	},
 })
 
 -- TODO: move this out of here :)

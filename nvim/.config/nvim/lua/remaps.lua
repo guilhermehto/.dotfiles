@@ -76,3 +76,6 @@ end)
 
 -- Git blame
 vim.keymap.set("n", "<leader>gsb", "<cmd>GitBlameToggle<cr>")
+
+-- Neogit
+vim.keymap.set("n", "<leader>gn", "<cmd>Neogit<cr>")
