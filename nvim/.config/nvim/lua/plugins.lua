@@ -93,7 +93,12 @@ require("lazy").setup({
 			require("lspsaga").setup()
 		end,
 	},
-	"ggandor/leap.nvim",
+	{
+		"ggandor/leap.nvim",
+		config = function()
+			require("leap").add_default_mappings()
+		end,
+	},
 	{
 		"jose-elias-alvarez/null-ls.nvim",
 		config = function()
