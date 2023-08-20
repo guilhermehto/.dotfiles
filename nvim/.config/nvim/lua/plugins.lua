@@ -191,12 +191,7 @@ require("lazy").setup({
 	},
 	"windwp/nvim-spectre",
 	"metakirby5/codi.vim",
-	{
-		"echasnovski/mini.animate",
-		version = false,
-		event = "VeryLazy",
-		opts = {},
-	},
+	{ "karb94/neoscroll.nvim", config = true },
 	{
 		"folke/trouble.nvim",
 		dependencies = { "nvim-tree/nvim-web-devicons" },
