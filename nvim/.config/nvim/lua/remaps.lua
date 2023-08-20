@@ -36,14 +36,6 @@ vim.keymap.set("n", "<C-t>", "<cmd>Lspsaga open_floaterm<cr>")
 vim.keymap.set("n", "<leader>gl", "<cmd>Lspsaga open_floaterm lazygit<cr>")
 vim.keymap.set("t", "<C-t>", "<cmd>Lspsaga close_floaterm<cr>")
 
-vim.keymap.set("n", "<leader>tn", "<cmd>:tabnew<cr>")
-vim.keymap.set("n", "<leader>tc", "<cmd>:tabclose<cr>")
-vim.keymap.set("n", "<leader>t1", "1gt")
-vim.keymap.set("n", "<leader>t2", "2gt")
-vim.keymap.set("n", "<leader>t3", "3gt")
-vim.keymap.set("n", "<leader>t4", "4gt")
-vim.keymap.set("n", "<leader>t5", "5gt")
-
 vim.keymap.set("n", "<leader>vs", ":source $MYVIMRC<cr>")
 
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
