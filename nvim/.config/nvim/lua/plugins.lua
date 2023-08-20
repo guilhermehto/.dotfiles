@@ -208,6 +208,13 @@ require("lazy").setup({
 		opts = {},
 	},
 	"nvim-telescope/telescope-ui-select.nvim",
+	{
+		"echasnovski/mini.pairs",
+		version = false,
+		event = "VeryLazy",
+		opts = {},
+	},
+	},
 })
 
 -- TODO: move this out of here :)
