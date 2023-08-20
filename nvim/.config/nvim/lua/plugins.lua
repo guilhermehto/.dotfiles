@@ -220,6 +220,12 @@ require("lazy").setup({
 		event = "VeryLazy",
 		opts = {},
 	},
+	{
+		"echasnovski/mini.comment",
+		version = false,
+		event = "VeryLazy",
+		opts = {},
+	},
 })
 
 -- TODO: move this out of here :)
