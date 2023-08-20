@@ -232,6 +232,10 @@ require("lazy").setup({
 		},
 		config = true,
 	},
+	{
+		"aserowy/tmux.nvim",
+		config = true,
+	},
 })
 
 -- TODO: move this out of here :)
