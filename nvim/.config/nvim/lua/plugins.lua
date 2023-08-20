@@ -82,8 +82,6 @@ require("lazy").setup({
 	"saadparwaiz1/cmp_luasnip",
 
 	"onsails/lspkind-nvim",
-	"rafamadriz/friendly-snippets",
-	"tpope/vim-surround",
 	{
 		"nvim-lualine/lualine.nvim",
 		dependencies = { { "kyazdani42/nvim-web-devicons", name = "kyazdani42-webdevicons" } },
@@ -162,9 +160,6 @@ require("lazy").setup({
 		end,
 	},
 	"airblade/vim-gitgutter",
-	"tpope/vim-fugitive",
-	"tpope/vim-rhubarb",
-	"junegunn/gv.vim",
 	{
 		"nvim-neorg/neorg",
 		build = ":Neorg sync-parsers",
