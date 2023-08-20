@@ -221,6 +221,7 @@ require("lazy").setup({
 		event = "VeryLazy",
 		opts = {},
 	},
+	"f-person/git-blame.nvim",
 })
 
 -- TODO: move this out of here :)

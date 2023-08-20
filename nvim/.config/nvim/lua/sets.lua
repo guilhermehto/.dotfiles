@@ -1,4 +1,5 @@
 vim.g.mapleader = " "
+vim.g.gitblame_enabled = 0
 
 vim.opt.exrc = true
 vim.opt.tabstop = 2

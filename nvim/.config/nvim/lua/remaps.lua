@@ -73,3 +73,6 @@ end)
 vim.keymap.set("n", "gR", function()
 	require("trouble").open("lsp_references")
 end)
+
+-- Git blame
+vim.keymap.set("n", "<leader>gsb", "<cmd>GitBlameToggle<cr>")
