@@ -214,6 +214,11 @@ require("lazy").setup({
 		event = "VeryLazy",
 		opts = {},
 	},
+	{
+		"echasnovski/mini.surround",
+		version = false,
+		event = "VeryLazy",
+		opts = {},
 	},
 })
 
