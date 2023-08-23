@@ -4,6 +4,15 @@
 # https://github.com/FelixKratz/dotfiles
 
 PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+FONT="AzeretMono Nerd Font"
+
+BASE_COLOR=0xff24273a 
+TEXT_COLOR=0xffcad3f5
+ICON_COLOR=0xff8aadf4
+RED_COLOR=0xffed8796
+GREEN_COLOR=0xffa6da95
+SAPPHIRE_COLOR=0xff7dc4e4
+PINK_COLOR=0xfff5bde6
 
 ##### Bar Appearance #####
 # Configuring the general appearance of the bar, these are only some of the
@@ -18,7 +27,7 @@ sketchybar --bar height=32        \
                  sticky=off       \
                  padding_left=10  \
                  padding_right=10 \
-                 color=0xff24273a 
+                 color=$BASE_COLOR
 
 ##### Changing Defaults #####
 # We now change some default values that are applied to all further items
@@ -27,10 +36,10 @@ sketchybar --bar height=32        \
 
 sketchybar --default updates=when_shown                    \
                      drawing=on                            \
-                     label.color=0xffcad3f5                \
-                     icon.color=0xff8aadf4                 \
-                     icon.font="Hack Nerd Font:Bold:17.0"  \
-                     label.font="Hack Nerd Font:Bold:14.0" \
+                     label.color=$TEXT_COLOR               \
+                     icon.color=$ICON_COLOR                \
+                     icon.font="$FONT:Bold:17.0"  \
+                     label.font="$FONT:Bold:14.0" \
                      label.padding_left=0                  \
                      label.padding_right=8                 \
                      icon.padding_left=0                   \
@@ -66,25 +75,61 @@ sketchybar --add item clock right                              \
            --set clock   update_freq=10                        \
                          script="$PLUGIN_DIR/clock.sh"         
 
-### wifi
-#
-sketchybar --add item wifi right                         \
-           --set wifi    script="$PLUGIN_DIR/wifi.sh"    \
-                         update_freq=5 
-### disk
+### Disk
 #
 sketchybar    --add item disk_percentage right \
               --set disk_percentage \
                                 update_freq=1 \
                                 script="$PLUGIN_DIR/disk.sh" 
-### app name
+### App name
 #
 sketchybar --add item system.label left \
            --set system.label script="sketchybar --set \$NAME label=\"\$INFO\"" \
            --subscribe system.label front_app_switched
 
+### Ram
+#
+
+sketchybar --add item ram right                         \
+           --set ram    script="$PLUGIN_DIR/ram.sh"    \
+                         update_freq=5 
+
 ### cpu
 #
+
+sketchybar 	--add item cpu.percent right 					\
+ 						--set cpu.percent script="$PLUGIN_DIR/cpu.sh" \
+                  update_freq=1
+
+### Network
+#
+sketchybar --add item  network.up right                              \
+           --set       network.up script="$PLUGIN_DIR/wifi.sh"       \
+                                  update_freq=1                     \
+                                  padding_left=2                     \
+                                  padding_right=2                    \
+                                  background.border_width=0          \
+                                  background.height=24               \
+                                  icon=⇡                             \
+                                  label.font="$FONT:Bold:10.0"       \
+                                  icon.font="$FONT:Bold:12.0"        \
+                                  icon.color=$RED_COLOR \
+                                  y_offset=7 \
+                                                                     
+sketchybar --add item  network.down right                            \
+           --set       network.down script="$PLUGIN_DIR/wifi.sh"     \
+                               update_freq=1                        \
+                               padding_left=8                        \
+                               padding_right=2                       \
+                               background.border_width=0             \
+                               background.height=24                  \
+                               icon=⇣                                \
+                               label.font="$FONT:Bold:10.0"          \
+                               icon.font="$FONT:Bold:12.0"           \
+                               icon.color=$GREEN_COLOR \
+                               y_offset=-7                           \
+                               background.padding_right=-82         \
+
 
 ##### Finalizing Setup #####
 # The below command is only needed at the end of the initial configuration and

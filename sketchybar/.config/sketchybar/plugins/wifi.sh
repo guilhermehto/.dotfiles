@@ -1,11 +1,23 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-CURRENT_WIFI="$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I)"
-SSID="$(echo "$CURRENT_WIFI" | grep -o "SSID: .*" | sed 's/^SSID: //')"
-CURR_TX="$(echo "$CURRENT_WIFI" | grep -o "lastTxRate: .*" | sed 's/^lastTxRate: //')"
+UPDOWN=$(ifstat -i "en0" -b 0.1 1 | tail -n1)
+DOWN=$(echo "$UPDOWN" | awk "{ print \$1 }" | cut -f1 -d ".")
+UP=$(echo "$UPDOWN" | awk "{ print \$2 }" | cut -f1 -d ".")
 
-if [ "$SSID" = "" ]; then
-  sketchybar --set $NAME label="Disconnected" icon=睊
+DOWN_FORMAT=""
+if [ "$DOWN" -gt "9999" ]; then
+	DOWN_FORMAT=$(echo "$DOWN" | awk '{ printf "%04.0f Mbps", $1 / 1000}')
 else
-  sketchybar --set $NAME label="${CURR_TX}Mbps" icon=直
+	DOWN_FORMAT=$(echo "$DOWN" | awk '{ printf "%04.0f kbps", $1}')
 fi
+
+UP_FORMAT=""
+if [ "$UP" -gt "9999" ]; then
+	UP_FORMAT=$(echo "$UP" | awk '{ printf "%04.0f Mbps", $1 / 1000}')
+else
+	UP_FORMAT=$(echo "$UP" | awk '{ printf "%04.0f kbps", $1}')
+fi
+
+sketchybar -m --set network.down label="$DOWN_FORMAT" \
+	--set network.up label="$UP_FORMAT" 
+
