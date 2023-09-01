@@ -27,7 +27,7 @@ sketchybar --bar height=40        \
                  y_offset=6       \
                  blur_radius=50   \
                  corner_radius=22 \
-                 margin=12 \
+                 margin=12        \
                  position=top     \
                  sticky=off       \
                  padding_left=10  \
@@ -43,8 +43,8 @@ sketchybar --default updates=when_shown                    \
                      drawing=on                            \
                      label.color=$TEXT_COLOR               \
                      icon.color=$ICON_COLOR                \
-                     icon.font="$FONT:Bold:17.0"  \
-                     label.font="$FONT:Bold:14.0" \
+                     icon.font="$FONT:Bold:17.0"           \
+                     label.font="$FONT:Bold:14.0"          \
                      label.padding_left=0                  \
                      label.padding_right=8                 \
                      icon.padding_left=0                   \
@@ -88,43 +88,24 @@ sketchybar --add item date right                              \
 sketchybar --add item clock right                              \
            --set clock   update_freq=10                        \
                          script="$PLUGIN_DIR/clock.sh"         \
-                         label.font="$FONT:Regular:10.0"       \
+                         label.font="$FONT:Regular:12.0"       \
                          icon.font="$FONT:Regular:12.0"        \
                          y_offset=-8 \
-                               background.padding_right=-60
+                         background.padding_right=-66
 
 ### Disk
 #
-sketchybar    --add item disk_percentage right \
-              --set disk_percentage \
-                                update_freq=1 \
-                                script="$PLUGIN_DIR/disk.sh" 
-
-### App name
-#
-sketchybar --add item system.label left \
-           --set system.label script="sketchybar --set \$NAME label=\"\$INFO\"" \
-           --subscribe system.label front_app_switched
-
-### Ram
-#
-
-sketchybar --add item ram right                         \
-           --set ram    script="$PLUGIN_DIR/ram.sh"    \
-                         update_freq=5 
-
-### cpu
-#
-
-sketchybar 	--add item cpu.percent right 					\
- 						--set cpu.percent script="$PLUGIN_DIR/cpu.sh" \
-                  update_freq=1
+# sketchybar    --add item disk_percentage right \
+#               --set disk_percentage \
+#                                 update_freq=1 \
+#                                 script="$PLUGIN_DIR/disk.sh" \
+#                                 padding_right=24
 
 ### Network
 #
 sketchybar --add item  network.up right                              \
            --set       network.up script="$PLUGIN_DIR/wifi.sh"       \
-                                  update_freq=1                     \
+                                  update_freq=1                      \
                                   padding_left=2                     \
                                   padding_right=2                    \
                                   background.border_width=0          \
@@ -132,12 +113,12 @@ sketchybar --add item  network.up right                              \
                                   icon=⇡                             \
                                   label.font="$FONT:Bold:10.0"       \
                                   icon.font="$FONT:Bold:12.0"        \
-                                  icon.color=$RED_COLOR \
+                                  icon.color=$PINK_COLOR \
                                   y_offset=7 \
                                                                      
 sketchybar --add item  network.down right                            \
            --set       network.down script="$PLUGIN_DIR/wifi.sh"     \
-                               update_freq=1                        \
+                               update_freq=1                         \
                                padding_left=8                        \
                                padding_right=2                       \
                                background.border_width=0             \
@@ -145,10 +126,30 @@ sketchybar --add item  network.down right                            \
                                icon=⇣                                \
                                label.font="$FONT:Bold:10.0"          \
                                icon.font="$FONT:Bold:12.0"           \
-                               icon.color=$GREEN_COLOR \
+                               icon.color=$GREEN_COLOR               \
                                y_offset=-7                           \
-                               background.padding_right=-82         \
+                               background.padding_right=-82         
 
+
+### App name
+#
+sketchybar --add item system.label left                                         \
+           --set system.label script="sketchybar --set \$NAME label=\"\$INFO\"" \
+           --subscribe system.label front_app_switched
+
+### Ram
+#
+
+sketchybar --add item ram right                        \
+           --set ram    script="$PLUGIN_DIR/ram.sh"    \
+                        update_freq=5 
+
+### cpu
+#
+
+sketchybar 	--add item cpu.percent right 					        \
+ 						--set cpu.percent script="$PLUGIN_DIR/cpu.sh" \
+                  update_freq=1
 
 ##### Finalizing Setup #####
 # The below command is only needed at the end of the initial configuration and
