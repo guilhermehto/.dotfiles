@@ -64,5 +64,6 @@ yabai -m rule --add label="Dictionary" app="^Dictionary$" manage=off
 yabai -m rule --add label="Software Update" title="Software Update" manage=off
 yabai -m rule --add label="About This Mac" app="System Information" title="About This Mac" manage=off
 yabai -m rule --add label="Godot" app="Godot" manage=off
+yabai -m rule --add label="Loom" app="Loom" manage=off
 #yabai -m rule --add label="Godot" app="Godot" title="^low res jam$" manage=on
 
