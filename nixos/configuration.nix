@@ -73,8 +73,6 @@
   services.xserver.videoDrivers = ["nvidia"];
   
   services.xserver.displayManager.sddm.enable = true;
-#  services.xserver.desktopManager.plasma5.enable = true;
-
 
   hardware.nvidia = {
     modesetting.enable = true;
@@ -89,7 +87,6 @@
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
-  
 
   # END CUSTOM
 
