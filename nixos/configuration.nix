@@ -87,6 +87,10 @@
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
 
   # END CUSTOM
 
@@ -142,6 +146,9 @@
     rofi-wayland
 
     gcc
+    # Waybar
+    blueman
+    networkmanagerapplet
   ];
 
   fonts.packages = with pkgs; [
