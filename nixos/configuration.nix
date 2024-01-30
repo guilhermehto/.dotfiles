@@ -92,6 +92,22 @@
     powerOnBoot = true;
   };
 
+  programs.zsh = {
+    enable = true;
+    shellAliases = {
+      ll = "ls -l";
+      update = "sudo nixos-rebuild switch";
+    };
+
+    ohMyZsh = {
+      enable = true;
+      plugins = ["git" "thefuck"];
+      theme = "agnoster";
+    };
+  };
+
+  users.defaultUserShell = pkgs.zsh;
+
   # END CUSTOM
 
   # Enable CUPS to print documents.
@@ -139,6 +155,7 @@
     alacritty
     git
     lazygit
+    nodejs_20
 
     # Utilities
     wget
@@ -146,6 +163,8 @@
     wl-clipboard
     killall
     ripgrep
+    thefuck
+
 
     # Rice
     rofi-wayland
