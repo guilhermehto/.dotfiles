@@ -141,6 +141,7 @@
     lazygit
 
     # Utilities
+    wget
     stow
     wl-clipboard
     killall
