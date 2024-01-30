@@ -94,6 +94,7 @@
 
   programs.zsh = {
     enable = true;
+    autosuggestions.enable = true;
     shellAliases = {
       ll = "ls -l";
       update = "sudo nixos-rebuild switch";
