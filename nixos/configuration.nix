@@ -107,6 +107,8 @@
     };
   };
 
+  programs.tmux.enable = true ;
+
   users.defaultUserShell = pkgs.zsh;
 
   # END CUSTOM
