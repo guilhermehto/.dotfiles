@@ -1,6 +1,15 @@
 font:
   normal:
-    family: "Hack Nerd Font Mono"
+    family: "AzeretMono Nerd Font"
+  bold:
+    family: "AzeretMono Nerd Font"
+    style: Bold
+  italic:
+    family: "AzeretMono Nerd Font"
+    style: Italic
+  bold_italic:
+    family: "AzeretMono Nerd Font"
+    style: Bold Italic
   size: 16.0
 window:
   decorations: none

@@ -1,1 +1,3 @@
-sketchybar -m --set disk_percentage label=$(df -lh | grep /dev/disk1s2 | awk '{print $5}') icon=﫭
+#!/usr/bin/env bash
+
+sketchybar -m --set "$NAME" label="$(df -H | grep -E '^(/dev/disk3s5).' | awk '{ printf ("%s\n", $5) }')" icon=﫭
