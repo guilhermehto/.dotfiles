@@ -180,6 +180,9 @@
     # Waybar
     blueman
     networkmanagerapplet
+
+    # Normie stuff
+    google-chrome
   ];
 
   fonts.packages = with pkgs; [
