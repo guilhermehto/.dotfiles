@@ -93,6 +93,8 @@
     powerOnBoot = true;
   };
 
+  services.blueman.enable = true;
+
   programs.zsh = {
     enable = true;
     autosuggestions.enable = true;
