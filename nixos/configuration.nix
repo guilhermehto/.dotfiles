@@ -186,6 +186,7 @@
 
     # Normie stuff
     google-chrome
+    discord
   ];
 
   fonts.packages = with pkgs; [
