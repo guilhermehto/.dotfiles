@@ -175,6 +175,7 @@
 
     # Rice
     rofi-wayland
+    eww-wayland
 
     # Compilers
     gcc
