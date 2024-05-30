@@ -68,11 +68,11 @@
   hardware.opengl = {
     enable = true;
     driSupport = true;
-    driSupport32Bit = true;  
+    driSupport32Bit = true;
   };
 
   services.xserver.videoDrivers = ["nvidia"];
-  
+
   services.xserver.displayManager.sddm.enable = true;
 
   hardware.nvidia = {
