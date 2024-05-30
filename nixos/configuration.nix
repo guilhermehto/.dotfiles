@@ -183,7 +183,7 @@
 
     # Rice
     rofi-wayland
-    eww-wayland
+    #eww-wayland come back to this eventually
 
     # Compilers
     gcc
