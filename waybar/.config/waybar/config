@@ -11,7 +11,7 @@
 	],
 	"modules-center": [
 		"custom/left-arrow-dark",
-		"clock#3",
+		"clock#2",
 		"custom/left-arrow-light",
 		"custom/left-arrow-dark",
 		"hyprland/window",
@@ -120,7 +120,8 @@
 		"format": "{title}",
 		"rewrite": {
 			"(.*) - Google Chrome": "chrome",
-			"tmux": "terminal"
+			"tmux": "terminal",
+			"(.*)@gui(.*)": "terminal"
 		}
 	}
 }
