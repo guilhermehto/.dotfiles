@@ -171,6 +171,9 @@
     ripgrep
     thefuck
     iwd
+    unzip
+    hyprpaper
+    tldr
 
 
     # Rice
@@ -189,8 +192,9 @@
     discord
   ];
 
+  fonts.fontDir.enable = true;
   fonts.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "VictorMono" ]; })
+    (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
