@@ -174,6 +174,8 @@
     unzip
     hyprpaper
     tldr
+    nerdfetch
+    fastfetch
 
 
     # Rice
