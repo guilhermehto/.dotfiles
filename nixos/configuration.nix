@@ -176,6 +176,9 @@
     tldr
     nerdfetch
     fastfetch
+    swappy
+    grim
+    slurp
 
 
     # Rice
