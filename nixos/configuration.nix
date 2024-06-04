@@ -179,6 +179,7 @@
     swappy
     grim
     slurp
+    yazi
 
 
     # Rice
