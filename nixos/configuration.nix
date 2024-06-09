@@ -162,6 +162,8 @@
     git
     lazygit
     nodejs_20
+    bun
+    turso-cli
 
     # Utilities
     wget
