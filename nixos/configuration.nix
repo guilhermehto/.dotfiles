@@ -100,7 +100,8 @@
     autosuggestions.enable = true;
     shellAliases = {
       ll = "ls -l";
-      update = "sudo nixos-rebuild switch";
+      rebuild = "sudo nixos-rebuild switch";
+      upgrade = "sudo nixos-rebuild switch --upgrade";
     };
 
     ohMyZsh = {
