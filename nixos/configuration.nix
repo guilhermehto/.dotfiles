@@ -104,6 +104,10 @@
       upgrade = "sudo nixos-rebuild switch --upgrade";
     };
 
+    interactiveShellInit = ''
+      source ${pkgs.zsh-vi-mode}/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
+      '';
+
     ohMyZsh = {
       enable = true;
       plugins = ["git" "thefuck"];
@@ -112,6 +116,11 @@
   };
 
   programs.tmux.enable = true ;
+
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+  };
 
   users.defaultUserShell = pkgs.zsh;
 
