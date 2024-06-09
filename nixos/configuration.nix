@@ -194,6 +194,7 @@
     yazi
     bat
     zoxide
+    bottom
 
 
     # Rice
