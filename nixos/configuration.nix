@@ -182,6 +182,8 @@
     grim
     slurp
     yazi
+    bat
+    zoxide
 
 
     # Rice
