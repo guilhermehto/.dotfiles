@@ -215,7 +215,7 @@
 
   fonts.fontDir.enable = true;
   fonts.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
+    (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" "0xProto" "ComicShannsMono" ]; })
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
