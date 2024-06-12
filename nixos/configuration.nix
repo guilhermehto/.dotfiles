@@ -221,7 +221,9 @@
 
     # Rice
     rofi
+    eww
     polybar
+
     # Compilers
     gcc
 
