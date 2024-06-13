@@ -41,6 +41,7 @@ exec --no-startup-id polybar
 bindsym Control+space exec "rofi -show combi"
 
 gaps inner 20px
+default_border pixel 5
 # CUSTOM ENDS
 
 # Use pactl to adjust volume in PulseAudio.
