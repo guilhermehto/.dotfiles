@@ -85,7 +85,7 @@ family = "ComicShannsMono Nerd Font"
 style = "bold"
 
 [window]
-decorations = "none"
+decorations = "full"
 
 [window.padding]
 x = 4
