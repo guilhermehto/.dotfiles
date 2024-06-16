@@ -43,6 +43,8 @@ bindsym Control+space exec "rofi -show combi"
 
 gaps inner 20px
 default_border pixel 5
+client.focused  #fff #fff #fff #fff #c6a0f6
+client.unfocused  #fff #fff #fff #fff #1e2030
 # CUSTOM ENDS
 
 # Use pactl to adjust volume in PulseAudio.
