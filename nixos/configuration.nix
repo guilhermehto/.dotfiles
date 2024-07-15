@@ -222,6 +222,7 @@
     zoxide
     bottom
     picom
+    feh
 
 
     # Rice Wayland
@@ -232,6 +233,7 @@
     rofi
     eww
     polybar
+    feh
 
     # Compilers
     gcc
