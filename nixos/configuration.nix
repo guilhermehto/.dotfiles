@@ -223,6 +223,7 @@
     bottom
     picom
     feh
+    fzf
 
 
     # Rice Wayland
