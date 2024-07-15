@@ -246,6 +246,8 @@
     # Normie stuff
     google-chrome
     discord
+    cinnamon.nemo
+    unzip
   ];
 
   fonts.fontDir.enable = true;
