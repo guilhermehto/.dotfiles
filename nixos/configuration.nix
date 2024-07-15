@@ -191,6 +191,15 @@
     nodejs_20
     bun
     turso-cli
+    lua
+    lua-language-server
+    go
+    (python3.withPackages (
+      python-pkgs: [
+        python-pkgs.numpy
+        python-pkgs.tensorflow
+      ]
+    ))
 
     # Utilities
     wget
