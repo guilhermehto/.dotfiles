@@ -67,8 +67,9 @@
       enable = true;
       extraPackages = with pkgs; [
         dmenu
-          i3status
-          i3lock
+        i3status
+        i3lock
+        i3lock-blur
       ];
     };
   };
@@ -84,7 +85,6 @@
 
   hardware.opengl = {
     enable = true;
-    driSupport = true;
     driSupport32Bit = true;
   };
 
