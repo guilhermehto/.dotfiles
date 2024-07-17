@@ -200,6 +200,7 @@
         python-pkgs.tensorflow
       ]
     ))
+    insomnia
 
     # Utilities
     wget
