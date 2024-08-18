@@ -54,6 +54,24 @@
   services.xserver = {
     layout = "nz";
     xkbVariant = "";
+
+    desktopManager = {
+      xterm.enable = false;
+    };
+
+    displayManager = {
+      defaultSession = "none+i3";
+    };
+
+    windowManager.i3 = {
+      enable = true;
+      extraPackages = with pkgs; [
+        dmenu
+        i3status
+        i3lock
+        i3lock-blur
+      ];
+    };
   };
 
   # CUSTOM
@@ -67,7 +85,6 @@
 
   hardware.opengl = {
     enable = true;
-    driSupport = true;
     driSupport32Bit = true;
   };
 
@@ -131,10 +148,10 @@
 
   # Enable sound with pipewire.
   sound.enable = true;
-  hardware.pulseaudio.enable = false;
+  hardware.pulseaudio.enable = true;
   security.rtkit.enable = true;
   services.pipewire = {
-    enable = true;
+    enable = false;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
@@ -174,6 +191,16 @@
     nodejs_20
     bun
     turso-cli
+    lua
+    lua-language-server
+    go
+    (python3.withPackages (
+      python-pkgs: [
+        python-pkgs.numpy
+        python-pkgs.tensorflow
+      ]
+    ))
+    insomnia
 
     # Utilities
     wget
@@ -195,11 +222,20 @@
     bat
     zoxide
     bottom
+    picom
+    feh
+    fzf
 
 
-    # Rice
+    # Rice Wayland
     rofi-wayland
     #eww-wayland come back to this eventually
+
+    # Rice
+    rofi
+    eww
+    polybar
+    feh
 
     # Compilers
     gcc
@@ -211,11 +247,13 @@
     # Normie stuff
     google-chrome
     discord
+    cinnamon.nemo
+    unzip
   ];
 
   fonts.fontDir.enable = true;
   fonts.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
+    (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" "0xProto" "ComicShannsMono" ]; })
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
