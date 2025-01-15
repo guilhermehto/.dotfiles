@@ -43,34 +43,41 @@
     LC_TIME = "en_NZ.UTF-8";
   };
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment.
   #services.xserver.displayManager.gdm.enable = true;
   #services.xserver.desktopManager.gnome.enable = true;
 
   # Configure keymap in X11
-  services.xserver = {
-    layout = "nz";
-    xkbVariant = "";
-
-    desktopManager = {
-      xterm.enable = false;
-    };
-
+  services = {
     displayManager = {
       defaultSession = "none+i3";
+      sddm.enable = true;
     };
 
-    windowManager.i3 = {
+    pulseaudio.enable = true;
+
+    xserver = {
+      # Enable the X11 windowing system.
       enable = true;
-      extraPackages = with pkgs; [
-        dmenu
-        i3status
-        i3lock
-        i3lock-blur
-      ];
+      xkb.layout = "nz";
+      xkb.variant = "";
+
+      desktopManager = {
+        xterm.enable = false;
+      };
+
+      videoDrivers = ["nvidia"];
+
+      windowManager.i3 = {
+        enable = true;
+        extraPackages = with pkgs; [
+          dmenu
+          i3status
+          i3lock
+          i3lock-blur
+        ];
+      };
     };
   };
 
@@ -83,14 +90,9 @@
 
   programs.waybar.enable = true;
 
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
-    driSupport32Bit = true;
   };
-
-  services.xserver.videoDrivers = ["nvidia"];
-
-  services.xserver.displayManager.sddm.enable = true;
 
   hardware.nvidia = {
     modesetting.enable = true;
@@ -147,8 +149,6 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = false;
@@ -194,13 +194,16 @@
     lua
     lua-language-server
     go
-    (python3.withPackages (
-      python-pkgs: [
-        python-pkgs.numpy
-        python-pkgs.tensorflow
-      ]
-    ))
+    # (python3.withPackages (
+    #   python-pkgs: [
+    #     python-pkgs.numpy
+    #     python-pkgs.tensorflow
+    #   ]
+    # ))
+    python3
     insomnia
+    godot_4
+    blender
 
     # Utilities
     wget
@@ -247,13 +250,17 @@
     # Normie stuff
     google-chrome
     discord
-    cinnamon.nemo
+    nemo
     unzip
+    libreoffice
   ];
 
   fonts.fontDir.enable = true;
   fonts.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" "0xProto" "ComicShannsMono" ]; })
+    pkgs.nerd-fonts._0xproto
+    pkgs.nerd-fonts.droid-sans-mono
+    pkgs.nerd-fonts.fira-code
+    pkgs.nerd-fonts.comic-shanns-mono
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
