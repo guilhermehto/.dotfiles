@@ -77,15 +77,15 @@ TERM = "xterm-256color"
 size = 16.0
 
 [font.bold]
-family = "ComicShannsMono Nerd Font"
-style = "bold"
+family = "0xProto Nerd Font"
+style = "Regular"
 
 [font.normal]
-family = "ComicShannsMono Nerd Font"
-style = "bold"
+family = "0xProto Nerd Font"
+style = "Regular"
 
 [window]
-decorations = "full"
+decorations = "Buttonless"
 
 [window.padding]
 x = 4

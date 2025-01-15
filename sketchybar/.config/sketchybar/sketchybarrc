@@ -93,14 +93,6 @@ sketchybar --add item clock right                              \
                          y_offset=-8 \
                          background.padding_right=-66
 
-### Disk
-#
-# sketchybar    --add item disk_percentage right \
-#               --set disk_percentage \
-#                                 update_freq=1 \
-#                                 script="$PLUGIN_DIR/disk.sh" \
-#                                 padding_right=24
-
 ### Network
 #
 sketchybar --add item  network.up right                              \
@@ -130,6 +122,12 @@ sketchybar --add item  network.down right                            \
                                y_offset=-7                           \
                                background.padding_right=-82         
 
+### Disk
+#
+sketchybar    --add item disk_percentage right \
+              --set disk_percentage \
+                                update_freq=1 \
+                                script="$PLUGIN_DIR/disk.sh"
 
 ### App name
 #
@@ -144,7 +142,7 @@ sketchybar --add item ram right                        \
            --set ram    script="$PLUGIN_DIR/ram.sh"    \
                         update_freq=5 
 
-### cpu
+### CPU
 #
 
 sketchybar 	--add item cpu.percent right 					        \
