@@ -1,0 +1,11 @@
+theme = catppuccin-macchiato
+font-family = 0xProto Nerd Font Mono
+font-variation= wght=600
+font-family-bold = 0xProto Nerd Font Mono Bold
+font-feature = ss20
+font-feature = calt
+font-feature = ss01
+font-synthetic-style = bold
+window-decoration = false
+macos-titlebar-style = hidden
+font-size = 20
