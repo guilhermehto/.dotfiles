@@ -187,6 +187,7 @@
     neovim
     alacritty
     ghostty
+    wezterm
     git
     lazygit
     nodejs_20
