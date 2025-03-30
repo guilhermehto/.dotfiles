@@ -6,15 +6,25 @@
 PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
 FONT="AzeretMono Nerd Font"
 
-BASE_COLOR=0xff24273a 
-SURFACE_COLOR=0xff363a4f
-SURFACE_COLOR_2=0xff5b6078
-TEXT_COLOR=0xffcad3f5
-ICON_COLOR=0xff8aadf4
-RED_COLOR=0xffed8796
-GREEN_COLOR=0xffa6da95
-SAPPHIRE_COLOR=0xff7dc4e4
-PINK_COLOR=0xfff5bde6
+# BASE_COLOR=0xff24273a 
+# SURFACE_COLOR=0xff363a4f
+# SURFACE_COLOR_2=0xff5b6078
+# TEXT_COLOR=0xffcad3f5
+# ICON_COLOR=0xff8aadf4
+# RED_COLOR=0xffed8796
+# GREEN_COLOR=0xffa6da95
+# SAPPHIRE_COLOR=0xff7dc4e4
+# PINK_COLOR=0xfff5bde6
+
+BASE_COLOR=0xff282828
+SURFACE_COLOR=0xff928374
+SURFACE_COLOR_2=0xffa89984
+TEXT_COLOR=0xffebdbb2
+ICON_COLOR=0xfffe8019
+RED_COLOR=0xfffb4934
+GREEN_COLOR=0xffb8bb26
+SAPPHIRE_COLOR=0xff83a598
+PINK_COLOR=0xffd3869b
 
 ##### Bar Appearance #####
 # Configuring the general appearance of the bar, these are only some of the

@@ -7,7 +7,7 @@ local config = wezterm.config_builder()
 -- This is where you actually apply your config choices
 
 -- For example, changing the color scheme:
-config.color_scheme = "Catppuccin Macchiato"
+config.color_scheme = 'Gruvbox dark, soft (base16)'
 
 -- Font config
 --
@@ -18,7 +18,7 @@ config.font = wezterm.font({
 	harfbuzz_features = { "ss01=1" },
 })
 -- config.harfbuzz_features = { "ss01" }
-config.font_size = 16
+config.font_size = 20
 config.freetype_load_flags = "NO_HINTING"
 
 config.freetype_render_target = "HorizontalLcd"
