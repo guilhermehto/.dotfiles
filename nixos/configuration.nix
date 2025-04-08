@@ -232,6 +232,7 @@
     feh
     fzf
     flameshot
+    libresprite
 
 
     # Rice Wayland
