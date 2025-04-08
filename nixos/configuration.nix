@@ -206,6 +206,7 @@
     insomnia
     godot_4
     blender
+    gnumake
 
     # Utilities
     wget
