@@ -233,6 +233,7 @@
     fzf
     flameshot
     libresprite
+    ollama
 
 
     # Rice Wayland
