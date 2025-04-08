@@ -231,6 +231,7 @@
     picom
     feh
     fzf
+    flameshot
 
 
     # Rice Wayland
