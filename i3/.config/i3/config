@@ -37,14 +37,14 @@ exec --no-startup-id nm-applet
 # CUSTOM
 exec --no-startup-id picom
 exec --no-startup-id polybar
-exec --no-startup-id feh --bg-scale ~/Documents/wallpaper-2.png
+exec --no-startup-id feh --bg-scale ~/Downloads/gruvbox_wallpaper.png
 
 bindsym Control+space exec "rofi -show combi"
 
 gaps inner 20px
 default_border pixel 5
-client.focused  #fff #fff #fff #fff #c6a0f6
-client.unfocused  #fff #fff #fff #fff #1e2030
+client.focused  #fff #fff #fff #fff #fe8019
+client.unfocused  #fff #fff #fff #fff #928374
 # CUSTOM ENDS
 
 # Use pactl to adjust volume in PulseAudio.
