@@ -7,26 +7,34 @@
                       :anchor "top center")
   :stacking "fg"
   :exclusive true
+ (centerbox
+    :orientation "h"
 
-  (box
-    :orientation "horizontal"
-    :halign "center"
-    :width "100%"
-    :space-evenly true
-    :class "bar-container"
-    :hexpand true
     (box 
+      :halign "start"
+      :space-evenly false
+      :class "container"
+      (label :text "Batata")
+    )
+
+    (box 
+      :space-evenly false
       :halign "center"
-      :space-evenly false
       :class "container"
+      :spacing 12
       (date)
-      (clock))
+      (clock)
+    )
+
     (box 
-      :halign "end"
       :space-evenly false
+      :halign "end"
       :class "container"
-      (disk))
-  )
+      :spacing 12
+      (disk)
+      (ram)
+      (cpu)
+  ))
 )
 
 (defpoll time :interval "1s"
@@ -59,4 +67,30 @@
     :space-evenly false
     (label :class "icon" :text "")
     (label :text "${floor(EWW_DISK['/'].free/1024/1024/1024)}gb")
+))
+
+(defwidget ram []
+  (box 
+    :halign "end"
+    :space-evenly false
+    (label :class "icon" :text "")
+    (label :text "${floor(EWW_RAM.used_mem_perc)}%")
+))
+
+
+(defwidget cpu []
+  (box 
+    :halign "end"
+    :space-evenly false
+    (label :class "icon" :text "")
+    (label :text "${floor(EWW_CPU.avg)}%")
+))
+
+(defwidget network []
+  (box 
+    :halign "end"
+    :space-evenly false
+    (label :class "icon" :text "")
+    ;; (label :text "${floor(EWW_NET['wlan0'].up)}%")
+    (label :text "${floor(EWW_NET['wlan0'].NET_DOWN/1000)}kb/s")
 ))
