@@ -159,6 +159,12 @@ sketchybar 	--add item cpu.percent right 					        \
  						--set cpu.percent script="$PLUGIN_DIR/cpu.sh" \
                   update_freq=1
 
+### CPU
+#
+
+sketchybar 	--add item border.up right 					        \
+ 						--set border_refresh script="$PLUGIN_DIR/borders.sh" \
+									update_freq=1
 ##### Finalizing Setup #####
 # The below command is only needed at the end of the initial configuration and
 # should never be run in an item script.
