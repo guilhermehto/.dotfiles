@@ -1,0 +1,35 @@
+$background: #282828;
+$black: #1d2021;
+$text: #ebdbb2;
+$success: #b8bb25;
+$warning: #fabd2f;
+$failure: #fb4934;
+$accent_1: #83a598;
+$accent_2: #d3869b;
+$accent_3: #8ec07c;
+
+
+* {
+  font-family: "0xProto Nerd Font";
+  font-weight: bold;
+}
+
+.bar {
+  background-color: transparent;
+  padding: 0 12px;
+  color: $text;
+}
+
+.icon {
+  padding: 0 8px;
+  color: $accent_1;
+}
+
+.container {
+  background-color: $background;
+  border-radius: 12px;
+  padding: 0 12px;
+  border: 2px solid $black;
+}
+
+.bar-container {}
