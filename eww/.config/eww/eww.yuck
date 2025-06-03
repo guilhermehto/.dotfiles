@@ -91,6 +91,5 @@
     :halign "end"
     :space-evenly false
     (label :class "icon" :text "")
-    ;; (label :text "${floor(EWW_NET['wlan0'].up)}%")
     (label :text "${floor(EWW_NET['wlan0'].NET_DOWN/1000)}kb/s")
 ))
