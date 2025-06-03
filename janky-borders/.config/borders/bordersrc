@@ -6,6 +6,7 @@ options=(
 	hidpi=on
 	active_color=0xfffe8019
 	inactive_color=0xff928374
+	blacklist=Loom
 )
 
 borders "${options[@]}"
