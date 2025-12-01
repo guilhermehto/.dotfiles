@@ -20,12 +20,19 @@ return {
 	{
 		"nvim-mini/mini.pick",
 		version = false,
-		opts = {},
+		opts = {
+			source = {
+				files = {
+					respect_gitignore = false,
+					visibility = { hidden = true },
+				},
+			},
+		},
 		keys = {
 			{
 				"<C-p>",
 				function()
-					require("mini.pick").builtin.files()
+					require("mini.pick").builtin.files({visibility = {hidden = true}})
 				end,
 			},
 			{
