@@ -13,6 +13,7 @@
   "mini.icons": { "branch": "main", "commit": "ff2e4f1d29f659cc2bad0f9256f2f6195c6b2428" },
   "mini.indentscope": { "branch": "main", "commit": "0308f949f31769e509696af5d5f91cebb2159c69" },
   "mini.notify": { "branch": "main", "commit": "135dcfdaf3826a7d2ba8fcf760d07d3bdb5d34e5" },
+  "mini.pairs": { "branch": "main", "commit": "472ec50092a3314ec285d2db2baa48602d71fe93" },
   "mini.statusline": { "branch": "main", "commit": "14919901649d20d020e659c63c03baa75cd94f33" },
   "nvim-lspconfig": { "branch": "master", "commit": "effe4bf2e1afb881ea67291c648b68dd3dfc927a" },
   "nvim-treesitter": { "branch": "main", "commit": "00c906abb9550e72bc0c640545b5499b9525bb40" },
