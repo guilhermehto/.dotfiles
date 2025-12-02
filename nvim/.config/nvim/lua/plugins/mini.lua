@@ -17,53 +17,53 @@ return {
 	{ "nvim-mini/mini.icons", version = false, opts = {} },
 	{ "nvim-mini/mini.animate", version = false, opts = {} },
 	{ "nvim-mini/mini.statusline", version = false, opts = {} },
-	{
-		"nvim-mini/mini.pick",
-		version = false,
-		opts = {
-			source = {
-				files = {
-					respect_gitignore = false,
-					visibility = { hidden = true },
-				},
-			},
-		},
-		keys = {
-			{
-				"<C-p>",
-				function()
-					require("mini.pick").builtin.files({visibility = {hidden = true}})
-				end,
-			},
-			{
-				"<leader><space>",
-				function()
-					require("mini.pick").builtin.buffers()
-				end,
-			},
-		},
-	},
-	{
-		"nvim-mini/mini.extra",
-		version = false,
-		opts = {},
-		keys = {
-			{
-				"<leader>ff",
-				function()
-					require("mini.extra").pickers.buf_lines()
-				end,
-				desc = "[F]ile [F]ind",
-			},
-			{
-				"<leader>cd",
-				function()
-					require("mini.extra").pickers.diagnostic()
-				end,
-				desc = "[C]ode [D]iagnostic",
-			},
-		},
-	},
+	-- {
+	-- 	"nvim-mini/mini.pick",
+	-- 	version = false,
+	-- 	opts = {
+	-- 		source = {
+	-- 			files = {
+	-- 				respect_gitignore = false,
+	-- 				visibility = { hidden = true },
+	-- 			},
+	-- 		},
+	-- 	},
+	-- 	keys = {
+	-- 		{
+	-- 			"<C-p>",
+	-- 			function()
+	-- 				require("mini.pick").builtin.files({visibility = {hidden = true}})
+	-- 			end,
+	-- 		},
+	-- 		{
+	-- 			"<leader><space>",
+	-- 			function()
+	-- 				require("mini.pick").builtin.buffers()
+	-- 			end,
+	-- 		},
+	-- 	},
+	-- },
+	-- {
+	-- 	"nvim-mini/mini.extra",
+	-- 	version = false,
+	-- 	opts = {},
+	-- 	keys = {
+	-- 		{
+	-- 			"<leader>ff",
+	-- 			function()
+	-- 				require("mini.extra").pickers.buf_lines()
+	-- 			end,
+	-- 			desc = "[F]ile [F]ind",
+	-- 		},
+	-- 		{
+	-- 			"<leader>cd",
+	-- 			function()
+	-- 				require("mini.extra").pickers.diagnostic()
+	-- 			end,
+	-- 			desc = "[C]ode [D]iagnostic",
+	-- 		},
+	-- 	},
+	-- },
 	{
 		"nvim-mini/mini.hues",
 		version = false,
