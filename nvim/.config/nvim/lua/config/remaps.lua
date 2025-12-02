@@ -11,6 +11,8 @@ vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right win
 vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
 vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
 
+vim.keymap.set('n', '<leader>yp', function() vim.fn.setreg('+', vim.fn.expand('%:.')) end, { desc = '[Y]ank [P]ath' })
+
 nmap("gd", function()
 	local ft = vim.bo.filetype
 	if ft == "typescript" or ft == "typescriptreact" then
