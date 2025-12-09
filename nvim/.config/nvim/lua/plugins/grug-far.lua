@@ -16,24 +16,28 @@ return {
 			function()
 				require("grug-far").open()
 			end,
+			desc = "[G]grug [F]ind [A]ll",
 		},
 		{
 			"<leader>gfw",
 			function()
 				require("grug-far").open({ prefills = { search = vim.fn.expand("<cword>") } })
 			end,
+			desc = "[G]grug [F]ind [W]ord",
 		},
 		{
 			"<leader>gff",
 			function()
 				require("grug-far").open({ prefills = { paths = "./" .. vim.fn.expand("%") } })
 			end,
+			desc = "[G]grug [F]ind [F]ile",
 		},
 		{
 			"<leader>gft",
 			function()
 				require("grug-far").open({ prefills = { filesFilter = "*{ts,tsx}" } })
 			end,
+			desc = "[G]grug [F]ind [T]ypescript",
 		},
 	},
 }
