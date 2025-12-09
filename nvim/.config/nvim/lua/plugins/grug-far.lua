@@ -28,7 +28,7 @@ return {
 		{
 			"<leader>gff",
 			function()
-				require("grug-far").open({ prefills = { paths = "./" .. vim.fn.expand("%") } })
+				require("grug-far").open({ prefills = { paths = "./" .. vim.fn.expand("%:.") } })
 			end,
 			desc = "[G]grug [F]ind [F]ile",
 		},
