@@ -1,3 +1,23 @@
+local function findPackageRoot()
+	local root = vim.fs.dirname(
+		vim.fs.find("package.json", { upward = true, path = start or vim.api.nvim_buf_get_name(0) })[1] or ""
+	)
+
+	return root
+end
+
+local function lsp_refs_buffer_quick()
+	local fzf = require("fzf-lua")
+	local current_file = vim.fn.expand("%") -- Relative path from cwd
+	fzf.lsp_references({
+		includeDeclaration = false,
+		prompt = "References (buffer) > ",
+		fzf_opts = {
+			["--query"] = current_file,
+		},
+	})
+end
+
 local grep_opts = {
 	"rg",
 	"--vimgrep",
@@ -47,47 +67,75 @@ return {
 		{
 			"<leader><space>",
 			"<cmd>FzfLua buffers<cr>",
-			desc = "Find files",
+			desc = "Find Buffers",
 		},
 		{
 			"<leader>fg",
 			"<cmd>FzfLua live_grep<cr>",
-			desc = "Find grep",
+			desc = "[F]ind [G]rep",
 		},
 		{
 			"<leader>ff",
 			"<cmd>FzfLua blines<cr>",
-			desc = "Find visual",
+			desc = "[F]ind [F]ile",
 		},
 		{
 			"<leader>fr",
 			"<cmd>FzfLua resume<cr>",
-			desc = "Find resume",
+			desc = "[F]ind [R]esume",
 		},
 		{
 			"<leader>fdd",
 			"<cmd>FzfLua diagnostics_document<cr>",
-			desc = "Find resume",
+			desc = "[F]ind [D]iagnostics [D]ocument",
 		},
 		{
 			"<leader>fdw",
 			"<cmd>FzfLua diagnostics_workspace<cr>",
-			desc = "Find resume",
+			desc = "[F]ind [D]iagnostics [W]orkspace",
 		},
 		{
 			"<leader>fo",
 			"<cmd>FzfLua oldfiles<cr>",
-			desc = "Find old files",
+			desc = "[F]ind [O]ld files",
 		},
 		{
 			"<leader>cr",
 			"<cmd>FzfLua lsp_references<cr>",
-			desc = "Find code references",
+			desc = "[C]ode [R]eferences",
 		},
 		{
-			"<leader>fc",
-			"<cmd>FzfLua git_status<cr>",
-			desc = "Find code references",
+			"<leader>cR",
+			function()
+				lsp_refs_buffer_quick()
+			end,
+			desc = "[C]ode [R]eferences in Buffer",
+		},
+		{
+			"<leader>fpg",
+			function()
+				local fzf = require("fzf-lua")
+				local root = findPackageRoot()
+				fzf.live_grep({ cwd = root })
+			end,
+			desc = "[F]ind [P]ackage [G]rep",
+		},
+		{
+			"<leader>fpp",
+			function()
+				local fzf = require("fzf-lua")
+				local root = findPackageRoot()
+				fzf.files({ cwd = root })
+			end,
+			desc = "[F]ind [P]ackage",
+		},
+		{
+			"<leader>ca",
+			function()
+				local fzf = require("fzf-lua")
+				fzf.lsp_code_actions()
+			end,
+			desc = "[C]ode [A]ctions",
 		},
 	},
 }
