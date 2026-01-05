@@ -137,5 +137,13 @@ return {
 			end,
 			desc = "[C]ode [A]ctions",
 		},
+		{
+			"<leader>ds",
+			function()
+				local fzf = require("fzf-lua")
+				fzf.lsp_document_symbols()
+			end,
+			desc = "[D]ocument [S]ymbols",
+		},
 	},
 }
