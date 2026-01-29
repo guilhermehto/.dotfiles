@@ -105,7 +105,7 @@ return {
 			desc = "[C]ode [R]eferences",
 		},
 		{
-			"<leader>cR",
+			"<leader>fcr",
 			function()
 				lsp_refs_buffer_quick()
 			end,
