@@ -145,6 +145,17 @@ sketchybar --add item system.label left                                         
            --set system.label script="sketchybar --set \$NAME label=\"\$INFO\"" \
            --subscribe system.label front_app_switched
 
+### Taskwarrior
+#
+sketchybar --add item taskwarrior left                          \
+           --set taskwarrior update_freq=10                     \
+                             script="$PLUGIN_DIR/taskwarrior.sh" \
+                             label.font="$FONT:Regular:12.0"    \
+                             icon.font="$FONT:Bold:14.0"        \
+                             icon.color=$SAPPHIRE_COLOR          \
+                             label.color=$TEXT_COLOR              \
+                             padding_left=8
+
 ### Ram
 #
 
