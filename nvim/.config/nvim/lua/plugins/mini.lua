@@ -81,14 +81,14 @@ return {
 		end,
 	},
 	{ "nvim-mini/mini.statusline", version = false, opts = {} },
-	{
-		"nvim-mini/mini.hues",
-		version = false,
-		config = function()
-			require("mini.hues").setup({ background = "#002734", foreground = "#c0c8cc", n_hues = 6 })
-			vim.cmd.colorscheme("miniwinter")
-		end,
-	},
+	-- {
+	-- 	"nvim-mini/mini.hues",
+	-- 	version = false,
+	-- 	config = function()
+	-- 		require("mini.hues").setup({ background = "#002734", foreground = "#c0c8cc", n_hues = 6 })
+	-- 		vim.cmd.colorscheme("miniwinter")
+	-- 	end,
+	-- },
 	{ "nvim-mini/mini.indentscope", version = false, opts = {} },
 	{ "nvim-mini/mini.pairs", version = false, opts = {} },
 	{
