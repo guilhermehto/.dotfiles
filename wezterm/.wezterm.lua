@@ -7,7 +7,7 @@ local config = wezterm.config_builder()
 -- This is where you actually apply your config choices
 
 -- For example, changing the color scheme:
-config.color_scheme = "Gruvbox dark, soft (base16)"
+config.color_scheme = "Ayu Dark (Gogh)"
 
 -- Font config
 --
