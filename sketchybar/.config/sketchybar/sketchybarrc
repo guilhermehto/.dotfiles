@@ -16,15 +16,26 @@ FONT="AzeretMono Nerd Font"
 # SAPPHIRE_COLOR=0xff7dc4e4
 # PINK_COLOR=0xfff5bde6
 
-BASE_COLOR=0xff282828
-SURFACE_COLOR=0xff928374
-SURFACE_COLOR_2=0xffa89984
-TEXT_COLOR=0xffebdbb2
-ICON_COLOR=0xfffe8019
-RED_COLOR=0xfffb4934
-GREEN_COLOR=0xffb8bb26
-SAPPHIRE_COLOR=0xff83a598
-PINK_COLOR=0xffd3869b
+# BASE_COLOR=0xff282828
+# SURFACE_COLOR=0xff928374
+# SURFACE_COLOR_2=0xffa89984
+# TEXT_COLOR=0xffebdbb2
+# ICON_COLOR=0xfffe8019
+# RED_COLOR=0xfffb4934
+# GREEN_COLOR=0xffb8bb26
+# SAPPHIRE_COLOR=0xff83a598
+# PINK_COLOR=0xffd3869b
+
+# Ayu
+BASE_COLOR=0xff0b0e14
+SURFACE_COLOR=0xff11151c
+SURFACE_COLOR_2=0xff686868
+TEXT_COLOR=0xffbfbdb6
+ICON_COLOR=0xffffb454
+RED_COLOR=0xfff07178
+GREEN_COLOR=0xffaad94c
+SAPPHIRE_COLOR=0xff59c2ff
+PINK_COLOR=0xffd2a6ff
 
 ##### Bar Appearance #####
 # Configuring the general appearance of the bar, these are only some of the
@@ -72,7 +83,7 @@ do
                               icon.padding_right=8                       \
                               background.padding_left=5                  \
                               background.padding_right=5                 \
-                              background.color=0xff363a4f                \
+                              background.color=0xff11151c                \
                               background.height=22                       \
                               background.drawing=off                     \
                               label.drawing=off                          \
