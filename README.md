@@ -34,6 +34,7 @@ So `stow nvim` from inside this repo creates `~/.config/nvim` as a symlink.
 | WezTerm    | `wezterm/`                 | Ayu, 0xProto Nerd Font                   |
 | Ghostty    | `ghostty/`                 | Catppuccin Macchiato, 0xProto Nerd Font  |
 | Rofi       | `rofi/`                    |                                          |
+| pi         | `pi/`                      | [pi-coding-agent](https://github.com/mariozechner/pi-coding-agent) global settings |
 
 ### macOS
 | Tool          | Path              | Notes                                  |
