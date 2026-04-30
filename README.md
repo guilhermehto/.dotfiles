@@ -26,7 +26,7 @@ So `stow nvim` from inside this repo creates `~/.config/nvim` as a symlink.
 ### Cross-platform
 | Tool       | Path                       | Notes                                    |
 | ---------- | -------------------------- | ---------------------------------------- |
-| Neovim     | `nvim/`                    | Submodule → [kickstart.nvim fork](https://github.com/guilhermehto/kickstart.nvim) |
+| Neovim     | `nvim/`                    | Personal config based on [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) |
 | tmux       | `tmux/`                    | `C-a` prefix, vim-aware pane nav, `sesh` popup |
 | zsh        | `zsh/`                     | oh-my-zsh + agnoster + zoxide + fnm      |
 | Alacritty  | `alacritty/`               |                                          |
@@ -58,7 +58,7 @@ So `stow nvim` from inside this repo creates `~/.config/nvim` as a symlink.
 ## Installation
 
 ```bash
-git clone --recurse-submodules git@github.com:<you>/.dotfiles.git ~/.dotfiles
+git clone git@github.com:<you>/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Pick the packages you want for the current machine, e.g. on macOS:
@@ -66,11 +66,6 @@ stow nvim tmux zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders
 
 # On Linux:
 stow nvim tmux zsh alacritty hypr waybar rofi
-```
-
-If you forgot `--recurse-submodules`:
-```bash
-git submodule update --init --recursive
 ```
 
 ## Dependencies
@@ -97,4 +92,4 @@ Most of these are optional, but the configs assume they exist:
 
 - Split `zsh/.zshrc` by OS (currently has hardcoded Linux paths).
 - Commit the yabai helper scripts referenced from `skhd/skhdrc`.
-- Track `nvim/lazy-lock.json` for reproducibility.
+- Track `nvim/.config/nvim/lazy-lock.json` for reproducibility.
