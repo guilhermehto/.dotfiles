@@ -26,7 +26,7 @@ So `stow nvim` from inside this repo creates `~/.config/nvim` as a symlink.
 ### Cross-platform
 | Tool       | Path                       | Notes                                    |
 | ---------- | -------------------------- | ---------------------------------------- |
-| Neovim     | `nvim/`                    | Hand-rolled config (lazy.nvim)           |
+| Neovim     | `nvim/`                    | Hand-rolled config                       |
 | tmux       | `tmux/`                    | `C-a` prefix, vim-aware pane nav, `sesh` popup |
 | zsh        | `zsh/`                     | oh-my-zsh + agnoster + zoxide + fnm      |
 | Alacritty  | `alacritty/`               |                                          |
