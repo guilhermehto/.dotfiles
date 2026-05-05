@@ -29,6 +29,11 @@ const ICON_BEHIND = "\uF063";
 const ICON_STASH = "\uF02E";
 
 const POLL_MS = 5000;
+// If a full refresh takes longer than this, switch to lite mode
+// (branch + worktree only, no polling). Useful for huge monorepos.
+const SLOW_THRESHOLD_MS = 1500;
+// Hard cap on any single git command. Anything slower is treated as failure.
+const GIT_TIMEOUT_MS = 3000;
 
 interface GitInfo {
 	branch: string;
@@ -50,13 +55,44 @@ async function git(args: string[], cwd: string, signal?: AbortSignal): Promise<s
 		const { stdout } = await execFileAsync("git", args, {
 			cwd,
 			signal,
-			timeout: 2000,
+			timeout: GIT_TIMEOUT_MS,
 			maxBuffer: 1024 * 1024,
 		});
 		return stdout;
 	} catch {
 		return null;
 	}
+}
+
+async function collectLite(cwd: string, signal?: AbortSignal): Promise<GitInfo | null> {
+	const inside = await git(["rev-parse", "--is-inside-work-tree"], cwd, signal);
+	if (!inside || inside.trim() !== "true") return null;
+
+	const [gitDir, commonDir, branchName, sha] = await Promise.all([
+		git(["rev-parse", "--absolute-git-dir"], cwd, signal),
+		git(["rev-parse", "--path-format=absolute", "--git-common-dir"], cwd, signal),
+		git(["branch", "--show-current"], cwd, signal),
+		git(["rev-parse", "--short", "HEAD"], cwd, signal),
+	]);
+	const isWorktree = !!(gitDir && commonDir && gitDir.trim() !== commonDir.trim());
+	const trimmed = (branchName ?? "").trim();
+	const branch = trimmed || (sha ? `@${sha.trim()}` : "@detached");
+	const detached = !trimmed;
+
+	return {
+		branch,
+		detached,
+		added: 0,
+		modified: 0,
+		deleted: 0,
+		linesAdded: 0,
+		linesDeleted: 0,
+		ahead: 0,
+		behind: 0,
+		isWorktree,
+		stash: 0,
+		state: "",
+	};
 }
 
 async function collect(cwd: string, signal?: AbortSignal): Promise<GitInfo | null> {
@@ -251,6 +287,9 @@ export default function (pi: ExtensionAPI) {
 	let timer: NodeJS.Timeout | undefined;
 	let inflight: AbortController | undefined;
 	let lastRender = "";
+	// When true, this repo is too slow for full refreshes — only show branch + worktree.
+	let liteMode = false;
+	let lastCwd: string | undefined;
 
 	async function refresh(ctx: ExtensionContext) {
 		// Cancel any in-flight refresh
@@ -258,8 +297,26 @@ export default function (pi: ExtensionAPI) {
 		const ac = new AbortController();
 		inflight = ac;
 
-		const info = await collect(ctx.cwd, ac.signal);
+		// Reset slow detection when cwd changes
+		if (ctx.cwd !== lastCwd) {
+			liteMode = false;
+			lastCwd = ctx.cwd;
+		}
+
+		const start = Date.now();
+		const info = liteMode ? await collectLite(ctx.cwd, ac.signal) : await collect(ctx.cwd, ac.signal);
 		if (ac.signal.aborted) return;
+		const elapsed = Date.now() - start;
+
+		// Promote to lite mode if a full refresh was too slow
+		if (!liteMode && info && elapsed > SLOW_THRESHOLD_MS) {
+			liteMode = true;
+			stopPolling();
+			ctx.ui.notify(
+				`git-status: repo is slow (${elapsed} ms), switching to lite mode (branch only, no polling)`,
+				"info",
+			);
+		}
 
 		if (!info) {
 			if (lastRender !== "") {
@@ -314,10 +371,12 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("git-status", {
-		description: "Force-refresh the git status footer",
+		description: "Force-refresh the git status footer (retries full mode if previously degraded)",
 		handler: async (_args, ctx) => {
+			liteMode = false; // give full mode another chance
 			await refresh(ctx);
-			ctx.ui.notify("Git status refreshed", "info");
+			if (!timer) startPolling(ctx);
+			ctx.ui.notify(liteMode ? "Git status refreshed (lite mode)" : "Git status refreshed", "info");
 		},
 	});
 }
