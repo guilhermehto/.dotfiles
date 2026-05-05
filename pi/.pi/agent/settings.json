@@ -5,6 +5,7 @@
   "defaultModel": "claude-opus-4-7",
   "defaultThinkingLevel": "medium",
   "packages": [
-    "npm:@benvargas/pi-claude-code-use"
+    "npm:@benvargas/pi-claude-code-use",
+    "npm:pi-subagents"
   ]
 }
