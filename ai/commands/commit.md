@@ -30,4 +30,4 @@ Rules:
 - Do not include co-author trailers, emojis, or marketing language.
 - If the **already-staged** diff mixes unrelated concerns, stop and tell me — suggest splitting before committing.
 
-Extra context from me (may be empty): $@
+Extra context from me (may be empty): $ARGUMENTS

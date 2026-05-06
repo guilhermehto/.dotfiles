@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+#
+# opencode-sync-ai
+#
+# Reconciles ~/.config/opencode/{agents,commands,skills} with one or more
+# source roots that contain agents/, commands/, and skills/ subdirectories.
+# Designed to be re-run safely (idempotent). Files placed by hand inside
+# ~/.config/opencode (e.g. work-only resources) are never touched.
+#
+# Conflict policy: if two source roots define the same agent/command/skill
+# name, the script aborts and writes nothing.
+#
+# Prune policy: only symlinks whose target resolves into a known source
+# root are eligible for removal. Anything else is left alone.
+#
+# Compatible with bash 3.2 (macOS system bash) and later.
+
+set -euo pipefail
+shopt -s nullglob
+
+# ---------- Configuration ----------
+
+OPENCODE_AI_SOURCES=(
+  "$HOME/.dotfiles/ai"
+)
+
+OPENCODE_HOME="$HOME/.config/opencode"
+RESOURCE_DIRS=(agents commands skills)
+
+# ---------- Helpers ----------
+
+resolve_path() {
+  python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$1"
+}
+
+# Returns 0 if the given literal path is rooted in any configured source.
+path_in_known_source() {
+  local p="$1" rs src
+  for src in "${OPENCODE_AI_SOURCES[@]}"; do
+    rs="$(resolve_path "$src")"
+    case "$p" in
+      "$rs"/*|"$src"/*) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+# Parallel arrays act as our desired-link map:
+#   desired_keys[i]    e.g. "agents/code-explorer.md"
+#   desired_targets[i] e.g. "/Users/.../.dotfiles/ai/agents/code-explorer.md"
+desired_keys=()
+desired_targets=()
+
+# Look up the index of a key in desired_keys. Echoes the index or -1.
+desired_index() {
+  local key="$1" i
+  for (( i = 0; i < ${#desired_keys[@]}; i++ )); do
+    if [[ "${desired_keys[$i]}" == "$key" ]]; then
+      printf '%s' "$i"
+      return 0
+    fi
+  done
+  printf '%s' '-1'
+}
+
+conflicts=0
+
+add_desired() {
+  local key="$1" target="$2" idx
+  idx="$(desired_index "$key")"
+  if [[ "$idx" != "-1" ]]; then
+    printf 'conflict: %s defined in:\n  %s\n  %s\n' \
+      "$key" "${desired_targets[$idx]}" "$target" >&2
+    conflicts=$((conflicts + 1))
+    return
+  fi
+  desired_keys+=("$key")
+  desired_targets+=("$target")
+}
+
+# ---------- Build desired-link map ----------
+
+for src in "${OPENCODE_AI_SOURCES[@]}"; do
+  if [[ ! -d "$src" ]]; then
+    printf 'warn: source root missing: %s\n' "$src" >&2
+    continue
+  fi
+
+  if [[ -d "$src/agents" ]]; then
+    for f in "$src/agents"/*.md; do
+      add_desired "agents/$(basename "$f")" "$(resolve_path "$f")"
+    done
+  fi
+
+  if [[ -d "$src/commands" ]]; then
+    for f in "$src/commands"/*.md; do
+      add_desired "commands/$(basename "$f")" "$(resolve_path "$f")"
+    done
+  fi
+
+  if [[ -d "$src/skills" ]]; then
+    for d in "$src/skills"/*/; do
+      d="${d%/}"
+      [[ -f "$d/SKILL.md" ]] || continue
+      add_desired "skills/$(basename "$d")" "$(resolve_path "$d")"
+    done
+  fi
+done
+
+if (( conflicts > 0 )); then
+  printf '\nAborting due to %d conflict(s). No changes made.\n' "$conflicts" >&2
+  exit 1
+fi
+
+# ---------- Reconcile ----------
+
+for d in "${RESOURCE_DIRS[@]}"; do
+  mkdir -p "$OPENCODE_HOME/$d"
+done
+
+created_list=()
+updated_list=()
+pruned_list=()
+skipped_user_list=()
+skipped_external_list=()
+unchanged=0
+
+for (( i = 0; i < ${#desired_keys[@]}; i++ )); do
+  key="${desired_keys[$i]}"
+  abs_target="${desired_targets[$i]}"
+  dest="$OPENCODE_HOME/$key"
+
+  if [[ -L "$dest" ]]; then
+    current="$(resolve_path "$dest")"
+    if [[ "$current" == "$abs_target" ]]; then
+      unchanged=$((unchanged + 1))
+    elif path_in_known_source "$current"; then
+      ln -snf "$abs_target" "$dest"
+      updated_list+=("$key")
+    else
+      skipped_external_list+=("$key -> $current")
+    fi
+  elif [[ -e "$dest" ]]; then
+    skipped_user_list+=("$key")
+  else
+    ln -s "$abs_target" "$dest"
+    created_list+=("$key")
+  fi
+done
+
+# ---------- Prune stale managed symlinks ----------
+
+for d in "${RESOURCE_DIRS[@]}"; do
+  dir="$OPENCODE_HOME/$d"
+  [[ -d "$dir" ]] || continue
+  for entry in "$dir"/*; do
+    [[ -L "$entry" ]] || continue
+    name="$(basename "$entry")"
+    key="$d/$name"
+    if [[ "$(desired_index "$key")" != "-1" ]]; then
+      continue
+    fi
+
+    literal="$(readlink "$entry")"
+    if path_in_known_source "$literal"; then
+      rm "$entry"
+      pruned_list+=("$key")
+      continue
+    fi
+    if resolved="$(resolve_path "$entry" 2>/dev/null)" \
+      && path_in_known_source "$resolved"; then
+      rm "$entry"
+      pruned_list+=("$key")
+    fi
+  done
+done
+
+# ---------- Report ----------
+
+print_section() {
+  local label="$1"; shift
+  (( $# > 0 )) || return 0
+  printf '\n%s:\n' "$label"
+  printf '  %s\n' "$@"
+}
+
+if (( ${#created_list[@]} > 0 ));          then print_section "Created"                 "${created_list[@]}";          fi
+if (( ${#updated_list[@]} > 0 ));          then print_section "Updated"                 "${updated_list[@]}";          fi
+if (( ${#pruned_list[@]} > 0 ));           then print_section "Pruned"                  "${pruned_list[@]}";           fi
+if (( ${#skipped_user_list[@]} > 0 ));     then print_section "Skipped (user-managed)"  "${skipped_user_list[@]}";     fi
+if (( ${#skipped_external_list[@]} > 0 )); then print_section "Skipped (external link)" "${skipped_external_list[@]}"; fi
+
+printf '\nSummary: %d created, %d updated, %d unchanged, %d pruned, %d skipped (user), %d skipped (external)\n' \
+  "${#created_list[@]}" "${#updated_list[@]}" "$unchanged" \
+  "${#pruned_list[@]}" "${#skipped_user_list[@]}" "${#skipped_external_list[@]}"
