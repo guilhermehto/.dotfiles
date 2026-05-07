@@ -3,7 +3,8 @@
 Stow package for [OpenCode](https://opencode.ai) configuration that depends on
 this dotfiles repo. Currently ships:
 
-- `bin/opencode-sync-ai` — symlinks the central `~/.dotfiles/ai/{agents,commands,skills}`
+- `AGENTS.md` — symlink to the shared global rules in `~/.dotfiles/ai/AGENTS.md`.
+- `bin/opencode-sync-ai` — symlinks the central `~/.dotfiles/ai/{AGENTS.md,agents,commands,skills}`
   resources into OpenCode's expected global paths.
 - `commands/update-config.md` — `/update-config` slash command that runs the
   sync script from inside an OpenCode session.
@@ -16,6 +17,7 @@ machine/account-specific values (MCP auth headers, provider base URLs).
 
 ```
 opencode/.config/opencode/
+├── AGENTS.md -> ../../../ai/AGENTS.md
 ├── bin/
 │   └── opencode-sync-ai
 └── commands/
@@ -26,17 +28,18 @@ After `cd ~/.dotfiles && stow opencode` the entries land at:
 
 ```
 ~/.config/opencode/bin/opencode-sync-ai
+~/.config/opencode/AGENTS.md
 ~/.config/opencode/commands/update-config.md
 ```
 
 ## Why this exists
 
-OpenCode discovers global agents/commands/skills from
-`~/.config/opencode/{agents,commands,skills}`. The same resources are also
+OpenCode discovers global rules/agents/commands/skills from
+`~/.config/opencode/{AGENTS.md,agents,commands,skills}`. The same resources are also
 consumed by other agent harnesses (pi.dev, Rovo Dev CLI) that read from
 `~/.dotfiles/ai/`. To avoid duplication and per-resource symlink maintenance,
 `opencode-sync-ai` reconciles the two: it creates one symlink in
-`~/.config/opencode/...` for every agent / command / skill found under
+`~/.config/opencode/...` for `AGENTS.md` and every agent / command / skill found under
 the configured source roots.
 
 Resources placed directly in `~/.config/opencode` (regular files or
@@ -58,9 +61,10 @@ OPENCODE_AI_SOURCES=(
 )
 ```
 
-Each source root is expected to (optionally) contain `agents/`, `commands/`,
-and `skills/` subdirectories with the same shapes OpenCode discovers natively:
+Each source root is expected to optionally contain `AGENTS.md`, `agents/`,
+`commands/`, and `skills/` with the same shapes OpenCode discovers natively:
 
+- `AGENTS.md`
 - `agents/<name>.md`
 - `commands/<name>.md`
 - `skills/<name>/SKILL.md`
@@ -82,9 +86,9 @@ agent for a short summary.
 
 ### What it does
 
-For every `agents/*.md`, `commands/*.md`, and `skills/<name>/` (with
-`SKILL.md` present) found under the source roots, the script ensures
-`~/.config/opencode/<resource_dir>/<name>` is a symlink to the source.
+For `AGENTS.md`, every `agents/*.md`, every `commands/*.md`, and every
+`skills/<name>/` (with `SKILL.md` present) found under the source roots, the script ensures
+the matching path under `~/.config/opencode/` is a symlink to the source.
 
 Every run also prunes managed symlinks whose source no longer exists.
 
