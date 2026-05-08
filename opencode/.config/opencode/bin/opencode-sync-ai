@@ -2,12 +2,12 @@
 #
 # opencode-sync-ai
 #
-# Reconciles ~/.config/opencode/{agents,commands,skills} with one or more
-# source roots that contain agents/, commands/, and skills/ subdirectories.
+# Reconciles ~/.config/opencode/{AGENTS.md,agents,commands,skills} with one or
+# more source roots that contain AGENTS.md, agents/, commands/, and skills/.
 # Designed to be re-run safely (idempotent). Files placed by hand inside
 # ~/.config/opencode (e.g. work-only resources) are never touched.
 #
-# Conflict policy: if two source roots define the same agent/command/skill
+# Conflict policy: if two source roots define the same rule/agent/command/skill
 # name, the script aborts and writes nothing.
 #
 # Prune policy: only symlinks whose target resolves into a known source
@@ -46,7 +46,7 @@ path_in_known_source() {
 }
 
 # Parallel arrays act as our desired-link map:
-#   desired_keys[i]    e.g. "agents/code-explorer.md"
+#   desired_keys[i]    e.g. "AGENTS.md" or "agents/code-explorer.md"
 #   desired_targets[i] e.g. "/Users/.../.dotfiles/ai/agents/code-explorer.md"
 desired_keys=()
 desired_targets=()
@@ -84,6 +84,10 @@ for src in "${OPENCODE_AI_SOURCES[@]}"; do
   if [[ ! -d "$src" ]]; then
     printf 'warn: source root missing: %s\n' "$src" >&2
     continue
+  fi
+
+  if [[ -f "$src/AGENTS.md" ]]; then
+    add_desired "AGENTS.md" "$(resolve_path "$src/AGENTS.md")"
   fi
 
   if [[ -d "$src/agents" ]]; then
@@ -174,6 +178,19 @@ for d in "${RESOURCE_DIRS[@]}"; do
     fi
   done
 done
+
+entry="$OPENCODE_HOME/AGENTS.md"
+if [[ -L "$entry" && "$(desired_index "AGENTS.md")" == "-1" ]]; then
+  literal="$(readlink "$entry")"
+  if path_in_known_source "$literal"; then
+    rm "$entry"
+    pruned_list+=("AGENTS.md")
+  elif resolved="$(resolve_path "$entry" 2>/dev/null)" \
+    && path_in_known_source "$resolved"; then
+    rm "$entry"
+    pruned_list+=("AGENTS.md")
+  fi
+fi
 
 # ---------- Report ----------
 
