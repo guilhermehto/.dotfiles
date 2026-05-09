@@ -63,7 +63,7 @@ git clone git@github.com:<you>/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Pick the packages you want for the current machine, e.g. on macOS:
-stow nvim tmux zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders
+stow nvim tmux tmuxinator zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders
 
 # On Linux:
 stow nvim tmux zsh alacritty hypr waybar rofi
@@ -78,7 +78,8 @@ Most of these are optional, but the configs assume they exist:
   [yazi](https://github.com/sxyazi/yazi),
   [oh-my-zsh](https://ohmyz.sh/), `zsh-vi-mode`, `zsh-autosuggestions`
 - **tmux:** [sesh](https://github.com/joshmedeski/sesh),
-  [gum](https://github.com/charmbracelet/gum)
+  [gum](https://github.com/charmbracelet/gum),
+  [tmuxinator](https://github.com/tmuxinator/tmuxinator) (required for `prefix+O` IDE popup)
 - **Fonts:** [0xProto Nerd Font](https://www.nerdfonts.com/), AzeretMono Nerd Font
 - **macOS:** yabai, skhd, sketchybar, janky-borders, aerospace (all via Homebrew)
 - **Linux:** depends on distro / WM choice

@@ -51,7 +51,7 @@ base-index: 1
 windows:
   - opencode:
       panes:
-        - atlas opencode
+        - opencode
 
   - tools:
       layout: 82b8,120x40,0,0{59x40,0,0,17,60x40,60,0[60x19,60,0,18,60x20,60,20,19]}
