@@ -125,11 +125,11 @@ Each run prints sections only when they have content:
 
 ```
 Created:
-  agents/code-explorer.md
+  agents/magos-explorator-code-explorer.md
   commands/commit.md
 
 Updated:
-  agents/diff-reviewer.md
+  agents/magos-reductor-diff-reviewer.md
 
 Pruned:
   commands/old-command.md

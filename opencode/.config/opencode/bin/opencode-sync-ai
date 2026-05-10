@@ -46,8 +46,8 @@ path_in_known_source() {
 }
 
 # Parallel arrays act as our desired-link map:
-#   desired_keys[i]    e.g. "AGENTS.md" or "agents/code-explorer.md"
-#   desired_targets[i] e.g. "/Users/.../.dotfiles/ai/agents/code-explorer.md"
+#   desired_keys[i]    e.g. "AGENTS.md" or "agents/magos-explorator-code-explorer.md"
+#   desired_targets[i] e.g. "/Users/.../.dotfiles/ai/agents/magos-explorator-code-explorer.md"
 desired_keys=()
 desired_targets=()
 
