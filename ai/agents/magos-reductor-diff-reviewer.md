@@ -6,6 +6,8 @@ permission:
   webfetch: deny
   bash:
     "*": ask
+    "cat *": allow
+    "sed *": allow
     "git status*": allow
     "git log*": allow
     "git show*": allow
