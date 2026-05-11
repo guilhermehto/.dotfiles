@@ -177,6 +177,15 @@ Exploration files are append-only. `kb-curator` MUST NOT edit prior content in a
 - Append a new subsection: `### YYYY-MM-DD — <topic>` followed by the new content.
 - Update the `last_updated` field in frontmatter.
 
+Write exploration findings as terse field notes:
+
+- Prefer bullets over paragraphs.
+- Each bullet should be one concrete claim, optional impact, and inline citation.
+- Skip preambles, recap paragraphs, and background already present in the file.
+- Use exact technical names; short fragments are OK when clear.
+- Add a small Mermaid diagram only when it clarifies flow, ownership, dependencies, state, or data shape.
+- Do not add diagrams for simple lists, one-file findings, or obvious call chains.
+
 ### Corrections
 
 When prior findings turn out to be wrong:
@@ -293,18 +302,18 @@ tags: []
 # <Topic>
 
 ## Goal
-<what we're trying to learn or decide>
+<one line: what we're trying to learn or decide>
+
+## Map
+_(optional Mermaid diagram when flow, ownership, dependencies, state, or data shape matters)_
 
 ## Findings
 _(populated by /kb-capture; append-only)_
 
-## Open threads
+## Open questions
 - ...
 
-## Next steps
-- ...
-
-## References
+## Next
 - ...
 ```
 

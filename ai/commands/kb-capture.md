@@ -20,11 +20,16 @@ Steps:
      - One → use it.
      - Multiple → tiebreak by most recent `last_updated`. If still tied, tiebreak by lexicographic filename (descending). Use the result.
 5. **Synthesize findings** from the current session's recent context:
-   - Summarize what was investigated since the last capture (or the start of the session).
-   - Include `<repo-alias>/<path>:<line>` citations for every concrete claim, using the project's `repos:` aliases.
-   - Group findings by topic if there are multiple. Otherwise one block.
+   - Write terse field notes, not prose.
+   - Max 7 bullets by default unless the user asks for depth.
+   - Each bullet: one concrete claim, optional impact, inline `<repo-alias>/<path>:<line>` citation.
+   - No background already present in the exploration.
+   - No preambles or filler: avoid "we investigated", "it appears", "this means", "the following".
+   - Use exact technical names; short fragments are OK when clear.
+   - Add a small Mermaid diagram only when it clarifies flow, ownership, dependencies, state, or data shape.
+   - Do not add diagrams for simple lists, one-file findings, or obvious call chains.
    - Format as ready-to-append markdown content (no top-level heading; the curator wraps it in a `### YYYY-MM-DD — <topic>` subsection).
-6. Choose a short topic label for the dated subsection (5-8 words capturing what was learned).
+6. Choose a short topic label for the dated subsection (3-6 words capturing what was learned).
 7. Show the user what you're about to capture: a summary of the new content and the target file. Ask for confirmation: `Append to <file>? [Y/n]`. Default Y.
 8. On confirmation, invoke `kb-curator` with `action: append-exploration` and payload:
    - project dir name
@@ -40,3 +45,4 @@ Rules:
 - Curator updates the exploration's `last_updated` and `summary.md`'s `updated`.
 - If the user declines confirmation, do nothing.
 - Do not invent citations. Every `<alias>/path:line` must come from something actually examined in the session.
+- Keep captures concise. Prefer `Fact. Impact. citation` over narrative explanation.

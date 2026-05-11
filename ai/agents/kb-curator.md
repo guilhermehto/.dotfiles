@@ -65,6 +65,20 @@ Exploration files are append-only. For `append-exploration`:
 
 Never edit prior content. If the supervisor asks you to "fix" a prior finding, refuse and instruct them to either (a) append a `## Update YYYY-MM-DD` block, or (b) supersede the exploration via frontmatter.
 
+## Exploration writing style
+
+When creating or appending exploration content, write terse field notes. Technical substance stays; fluff dies.
+
+- Prefer bullets over paragraphs.
+- Use short sentences or fragments when clear.
+- Each finding should be one concrete claim, optional impact, and inline citation.
+- Do not write preambles, recap paragraphs, or phrases like "this investigation looked at", "it appears", "the following section".
+- Preserve exact code symbols, package names, commands, errors, and API names.
+- Use diagrams when they clarify flow, ownership, dependencies, state, or data shape. Keep them small and use Mermaid.
+- Do not add diagrams for simple lists, one-file findings, or obvious call chains.
+
+Pattern: `<fact>. <impact if useful>. <citation>.`
+
 ## Immutable decisions
 
 `decisions/NNNN-<slug>.md` files are immutable once written. For `write-decision`:
