@@ -15,7 +15,7 @@ Steps:
 4. Identify which of the five dimensions need clarification (goal & success criteria, scope & non-goals, constraints, edge cases & failure modes, assumptions to surface). Skip dimensions already answered in the brief.
 5. Run the interview per the skill's protocol:
    - One dimension per round, 3-6 questions per round, never more than 7.
-   - Prefer `mcp_Question` with multiple-choice options; drop to open-ended only when the skill's rules call for it.
+   - Every question uses `mcp_Question` with multiple-choice options. Free-form prose is allowed only under the narrow exceptions listed in the skill; never as a default or convenience.
    - After each round, briefly summarise what you learned and move to the next dimension.
 6. After the final dimension, produce the alignment recap in the skill's prescribed shape.
 7. Wait for explicit affirmative go-ahead before starting any implementation work. Silence is not consent. If the user corrects the recap, edit it in place and re-confirm.

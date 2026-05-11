@@ -50,17 +50,24 @@ Goal and scope come first because they cheaply rule out whole branches of work. 
 
 ## Question protocol
 
-Prefer the `mcp_Question` tool with multiple-choice options plus the implicit "type your own" escape hatch. Multiple-choice forces you to enumerate the realistic answer space, which is itself a useful exercise and lowers the user's reply cost.
+**Every question uses `mcp_Question` with multiple-choice options.** This is the default and the rule, not a preference. The tool already provides a "type your own" escape hatch, so multiple-choice never costs the user expressiveness — it only forces you to enumerate the realistic answer space, which lowers their reply cost and surfaces options they hadn't considered.
 
-Drop to open-ended prose only when:
+If you catch yourself about to ask a free-form question, stop and enumerate 3-5 plausible answers first. "The user might want something I haven't listed" is not a reason to skip enumeration — that is exactly what "type your own" is for. List your best guesses and let the escape hatch handle the long tail.
 
-- The answer space is genuinely unbounded (names, URLs, free-text descriptions).
-- Options would mislead by suggesting a false set of possibilities.
-- The user has already started answering in prose and forcing options would feel awkward.
+### When free-form is allowed
+
+Free-form prose is the narrow exception. Use it only when one of these is strictly true, and never out of laziness or because options feel hard to draft:
+
+- The answer is intrinsically open string content with no meaningful buckets: a name, identifier, URL, file path, free-text description, or arbitrary value.
+- You attempted to enumerate options and the realistic answer space genuinely exceeds ~8 distinct, non-overlapping choices.
+- The question is a closing "anything I'm missing?" / "ready to go?" prompt at the end of a round or recap.
+
+If none of these apply, the question is multiple-choice. No exceptions for "this one is nuanced" or "I want to leave it open" — nuance lives in the options and the type-your-own escape.
 
 ### Question-crafting rules
 
 - One concept per question. If a question contains "and" between two distinct decisions, split it.
+- Aim for 3-5 options per question. Fewer than 2 is not multiple-choice; more than 6 means the question is too broad and should be split.
 - Every option must be a plausible real answer. No filler. No "Other" — `mcp_Question` already provides "type your own".
 - Make options mutually distinct. If two options blur together, merge or rewrite.
 - Lead with the user's most likely intent when you have a strong prior, and mark it `(Recommended)`. Do not mark a recommendation when you genuinely don't have one.
@@ -113,7 +120,7 @@ Rules:
 
 ## Mid-task pause-and-ask
 
-The interview is not only for the start of a task. Whenever, mid-task, you would otherwise silently make a material assumption — pause and ask one focused question. Prefer `mcp_Question` with 2-4 options.
+The interview is not only for the start of a task. Whenever, mid-task, you would otherwise silently make a material assumption — pause and ask one focused question via `mcp_Question` with 2-4 options. The free-form exceptions above apply here too and are equally narrow.
 
 A material assumption is one where guessing wrong would mean throwing away work, breaking something the user cares about, or shipping a different feature than requested. Cosmetic choices (naming, ordering of unrelated bullets) do not qualify.
 
@@ -123,6 +130,7 @@ Format the mid-task ask as a single short question, not a new round. Get the ans
 
 - Never run the interview when the user has explicitly said "just do it" or equivalent.
 - Never invent questions to look thorough; every question must change what you do next.
+- Never use free-form prose for a question with 3-5 plausible enumerable answers. Enumerate them as `mcp_Question` options and let "type your own" cover the long tail.
 - Never bury the user's likely intent inside a generic "Other" or "It depends". Split the question instead.
 - Never ask what you can answer by reading the repo.
 - Never proceed past the recap without an affirmative go-ahead.
