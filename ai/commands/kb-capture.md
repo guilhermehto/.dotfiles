@@ -11,7 +11,7 @@ Steps:
 
 1. Parse arguments. `$1` is the project query (required). `$2` is the optional exploration slug or filename.
    - If `$1` is missing, error: `Usage: /kb-capture <query> [exploration-slug]`.
-2. Resolve `<KB_ROOT>`. Error if missing.
+2. Use `~/work-kb` as the KB root. Error if it does not exist.
 3. Resolve `$1` to a project.
 4. **Pick the target exploration**:
    - If `$2` is provided: match it against `explorations/` filenames (substring on the slug part). If multiple match, list and prompt; if zero, error: `No exploration matches '<slug>' in <project>.`

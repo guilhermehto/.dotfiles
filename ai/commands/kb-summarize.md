@@ -11,7 +11,7 @@ Steps:
 
 1. Parse arguments. `$1` is project query.
    - If missing, error: `Usage: /kb-summarize <query>`.
-2. Resolve `<KB_ROOT>`. Error if missing.
+2. Use `~/work-kb` as the KB root. Error if it does not exist.
 3. Resolve `$1` to a project.
 4. **Pre-flight sentinel check** (do this BEFORE any synthesis work):
    - Read the existing `summary.md`.
@@ -37,7 +37,7 @@ Steps:
 9. On confirmation, invoke `kb-curator` with `action: regenerate-summary` and payload:
    - project dir name
    - the full new summary content
-10. The curator re-validates sentinel balance on the new content (defense in depth) and writes. Report: `Regenerated <KB_ROOT>/projects/<dir>/summary.md.`
+10. The curator re-validates sentinel balance on the new content (defense in depth) and writes. Report: `Regenerated ~/work-kb/projects/<dir>/summary.md.`
 
 Rules:
 

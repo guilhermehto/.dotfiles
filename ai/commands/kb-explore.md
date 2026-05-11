@@ -11,7 +11,7 @@ Steps:
 
 1. Parse arguments. `$1` is the project query. The remaining arguments form the topic (everything after the first arg).
    - If either is missing, error: `Usage: /kb-explore <query> <topic>`.
-2. Resolve `<KB_ROOT>`. Error if missing.
+2. Use `~/work-kb` as the KB root. Error if it does not exist.
 3. Resolve `$1` to a project using the skill's resolution rules.
 4. Derive the exploration slug from the topic: lowercase, replace whitespace with `-`, strip non-`[a-z0-9-]`, collapse repeated `-`, trim. Cap at 60 chars.
 5. Compute the filename: `explorations/YYYY-MM-DD--<slug>.md` using today's date.
@@ -20,7 +20,7 @@ Steps:
    - project dir name
    - exploration filename
    - topic (used as the H1 and the goal placeholder)
-8. Report: `Created exploration at <KB_ROOT>/projects/<dir>/explorations/<file>. Status: in-progress.`
+8. Report: `Created exploration at ~/work-kb/projects/<dir>/explorations/<file>. Status: in-progress.`
 
 Rules:
 

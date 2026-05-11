@@ -11,7 +11,7 @@ Steps:
 
 1. Parse arguments. `$1` is project query, `$2` is the URL, `$3..` is the optional title.
    - If `$1` or `$2` is missing, error: `Usage: /kb-link <query> <url> [title]`.
-2. Resolve `<KB_ROOT>`. Error if missing.
+2. Use `~/work-kb` as the KB root. Error if it does not exist.
 3. Resolve `$1` to a project.
 4. **Normalize the URL for dedup** (display URL stays as supplied):
    - Strip trailing `/`.

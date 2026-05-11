@@ -7,7 +7,7 @@ A local knowledge base for multi-repo code explorations. Captures findings as yo
 - One folder per project, one file per exploration.
 - Plain markdown. Open in any editor.
 - Agents read it via `/kb-resume`; agents write to it via `/kb-capture`.
-- All projects live in `~/work-kb` (override with `KB_ROOT`).
+- All projects live in `~/work-kb`.
 
 ## First-time setup
 

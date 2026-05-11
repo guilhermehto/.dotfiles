@@ -11,10 +11,10 @@ Steps:
 
 1. Parse arguments. `$1` is the search text (required). `$2` is an optional project query to scope the search.
    - If `$1` is missing, error: `Usage: /kb-search <text> [project-query]`.
-2. Resolve `<KB_ROOT>`. Error if missing.
+2. Use `~/work-kb` as the KB root. Error if it does not exist.
 3. **Compute search scope**:
-   - If `$2` is provided, resolve it to a project. Search root: `<KB_ROOT>/projects/<dir>/`.
-   - Else search root: `<KB_ROOT>/projects/`.
+   - If `$2` is provided, resolve it to a project. Search root: `~/work-kb/projects/<dir>/`.
+   - Else search root: `~/work-kb/projects/`.
 4. Run ripgrep over the search root with sensible defaults:
    - Case-insensitive (`-i`).
    - Show file paths with line numbers (default `rg` output).
@@ -28,4 +28,4 @@ Rules:
 
 - Read-only. Never invoke `kb-curator`.
 - Use `rg` directly. No content modification.
-- Repo-relative paths (relative to `<KB_ROOT>`), not absolute.
+- Repo-relative paths (relative to `~/work-kb`), not absolute.

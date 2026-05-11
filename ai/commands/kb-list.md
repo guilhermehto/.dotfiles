@@ -9,8 +9,8 @@ Arguments: $ARGUMENTS
 
 Steps:
 
-1. Resolve `<KB_ROOT>`. If it does not exist, error: `KB not found at <path>. Run /kb-init first.`
-2. List directories under `<KB_ROOT>/projects/`. If empty, print: `No projects yet. Run /kb-init <TICKET-ID> to create one.` and stop.
+1. Use `~/work-kb` as the KB root. If it does not exist, error: `KB not found at ~/work-kb. Run /kb-init first.`
+2. List directories under `~/work-kb/projects/`. If empty, print: `No projects yet. Run /kb-init <TICKET-ID> to create one.` and stop.
 3. If a filter argument is provided (`$1`), filter the project list using a case-insensitive substring match against the directory name (matches both ticket-id and slug parts).
 4. For each project, read `summary.md` frontmatter to get `status` and `updated`. Count files in `explorations/` whose frontmatter has `status: in-progress`.
 5. Print a table:

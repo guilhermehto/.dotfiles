@@ -5,22 +5,23 @@ description: Local knowledge base for multi-repo code explorations. Load when ha
 
 # kb-workflow
 
-Conventions for the local knowledge base at `~/work-kb` (overridable via the `KB_ROOT` env var). Every `/kb-*` command and the `kb-curator` subagent must follow these rules.
+Conventions for the local knowledge base at `~/work-kb`. Every `/kb-*` command and the `kb-curator` subagent must follow these rules.
 
-## KB root resolution
+## KB root
 
-1. If the env var `KB_ROOT` is set and non-empty, use it.
-2. Otherwise default to `~/work-kb`.
-3. If the resulting directory does not exist:
-   - `/kb-init` prompts the user (`No KB at <path> yet, create it? [Y/n]`) and on confirmation creates the directory, drops `README.md` (see template below), and creates `projects/`.
-   - All other commands exit with: `KB not found at <path>. Run /kb-init first.`
+The KB root is always `~/work-kb`. It is not configurable.
+
+If the directory does not exist:
+
+- `/kb-init` prompts the user (`No KB at ~/work-kb yet, create it? [Y/n]`) and on confirmation creates the directory, drops `README.md` (see template below), and creates `projects/`.
+- All other commands exit with: `KB not found at ~/work-kb. Run /kb-init first.`
 
 When citing the path back to the user, expand `~` to the absolute path so it's unambiguous.
 
 ## Directory layout
 
 ```
-<KB_ROOT>/
+~/work-kb/
 ├── README.md
 └── projects/
     └── <TICKET-ID>-<slug>/
@@ -53,7 +54,7 @@ Commands that take a `<query>` argument resolve it against `projects/*` director
 3. **Prefix match** (case-insensitive) against either the ticket-id or the slug → if exactly one project matches, use it.
 4. **Substring match** (case-insensitive) against the full directory name → if exactly one project matches, use it.
 5. **Multiple matches** → list the matches and prompt: `Multiple projects match '<query>'. Pick one: [1] ... [2] ...`. In a non-interactive session, error and print the list instead of prompting.
-6. **Zero matches** → error: `No project matches '<query>' in <KB_ROOT>/projects. Run /kb-list to see available projects.`
+6. **Zero matches** → error: `No project matches '<query>' in ~/work-kb/projects. Run /kb-list to see available projects.`
 
 Tags and frontmatter content are NOT searched. Lookup is by directory name only.
 
@@ -208,7 +209,7 @@ Documented but never changed by commands. Users flip these manually.
 
 ## Templates
 
-### `<KB_ROOT>/README.md` (created by `/kb-init` on first run)
+### `~/work-kb/README.md` (created by `/kb-init` on first run)
 
 ```markdown
 # Knowledge base
@@ -394,7 +395,7 @@ The curator validates the action against this skill's rules, performs the writes
 
 ## Hard rules
 
-- Never write outside `<KB_ROOT>`. The `external_directory` permission enforces this; the curator additionally refuses any path it computes that would escape.
+- Never write outside `~/work-kb`. The `external_directory` permission enforces this; the curator additionally refuses any path it computes that would escape.
 - Never modify prior content of explorations or decisions.
 - Never write a citation with an unmapped alias without prompting.
 - Never silently overwrite hand-written summary sections; always validate sentinel balance first.

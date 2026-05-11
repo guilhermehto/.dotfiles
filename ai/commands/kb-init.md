@@ -14,12 +14,12 @@ Steps:
    - Sanitize the ticket ID per the skill's rules. If it contains control characters or non-ASCII, error with the offending character and stop.
 2. If `$2` is missing, prompt the user: `Optional slug for ticket <TICKET-ID> (kebab-case, blank to skip):`. Accept blank.
 3. Compute the project directory name: `<sanitized-ticket>` if no slug, else `<sanitized-ticket>-<slug>`.
-4. Resolve `<KB_ROOT>` (env var `KB_ROOT`, default `~/work-kb`).
+4. The KB root is `~/work-kb`.
 5. **Bootstrap if needed**:
-   - If `<KB_ROOT>` does not exist, prompt the user: `No KB at <KB_ROOT> yet, create it? [Y/n]`. Default Y.
+   - If `~/work-kb` does not exist, prompt the user: `No KB at ~/work-kb yet, create it? [Y/n]`. Default Y.
    - On confirmation, invoke `kb-curator` with `action: bootstrap-kb-root` to create the directory, write `README.md` from the skill's template, and create `projects/`.
    - On decline, exit without doing anything.
-6. **Refuse overwrite**: if `<KB_ROOT>/projects/<dir>/summary.md` already exists, error: `Project <dir> already exists at <path>. Refusing to overwrite.` Suggest `/kb-list` to see existing projects.
+6. **Refuse overwrite**: if `~/work-kb/projects/<dir>/summary.md` already exists, error: `Project <dir> already exists at <path>. Refusing to overwrite.` Suggest `/kb-list` to see existing projects.
 7. **Gather project metadata** by prompting the user (one batch):
    - One-liner (one sentence describing the project).
    - Initial key links (URLs, one per line; blank line to finish). For each, optionally accept a title; otherwise use the URL itself as the placeholder.
@@ -29,10 +29,10 @@ Steps:
    - `projects/<dir>/explorations/`
    - `projects/<dir>/decisions/`
    - `projects/<dir>/plans/`
-9. Report back to the user: `Created project <dir> at <KB_ROOT>/projects/<dir>`. List the files written.
+9. Report back to the user: `Created project <dir> at ~/work-kb/projects/<dir>`. List the files written.
 
 Rules:
 
-- Never write outside `<KB_ROOT>`.
+- Never write outside `~/work-kb`.
 - Never overwrite an existing project.
 - The Context section in `summary.md` is left blank initially with a placeholder; the user fills it in their editor or via a follow-up exploration.

@@ -9,7 +9,7 @@ Arguments: $ARGUMENTS
 
 Steps:
 
-1. Resolve `<KB_ROOT>`. If it does not exist, error: `KB not found at <path>. Run /kb-init first.`
+1. Use `~/work-kb` as the KB root. If it does not exist, error: `KB not found at ~/work-kb. Run /kb-init first.`
 2. Resolve `$1` to a project using the skill's project resolution rules (exact → ticket-id → prefix → substring). On multiple matches, list and prompt; on zero matches, error and suggest `/kb-list`.
 3. Read into the current session:
    - The full `summary.md` (verbatim).

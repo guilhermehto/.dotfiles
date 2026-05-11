@@ -11,7 +11,7 @@ Steps:
 
 1. Parse arguments. `$1` is project query, `$2..` is the human title.
    - If either is missing, error: `Usage: /kb-decide <query> <title>`.
-2. Resolve `<KB_ROOT>`. Error if missing.
+2. Use `~/work-kb` as the KB root. Error if it does not exist.
 3. Resolve `$1` to a project.
 4. Derive a slug from the title (lowercase, kebab-case, ≤60 chars).
 5. Gather decision body content from the user (one batch prompt):

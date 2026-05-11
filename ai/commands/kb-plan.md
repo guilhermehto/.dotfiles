@@ -11,7 +11,7 @@ Steps:
 
 1. Parse arguments. `$1` is project query, `$2..` is the plan name (used to derive the slug and title).
    - If either is missing, error: `Usage: /kb-plan <query> <name>`.
-2. Resolve `<KB_ROOT>`. Error if missing.
+2. Use `~/work-kb` as the KB root. Error if it does not exist.
 3. Resolve `$1` to a project.
 4. Derive a slug from the name (lowercase, kebab-case, ≤60 chars).
 5. Compute filename: `plans/YYYY-MM-DD--<slug>.md`. If it already exists, error: `Plan already exists at <path>.`
