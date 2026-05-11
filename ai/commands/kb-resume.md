@@ -11,35 +11,29 @@ Steps:
 
 1. Use `~/work-kb` as the KB root. If it does not exist, error: `KB not found at ~/work-kb. Run /kb-init first.`
 2. Resolve `$1` to a project using the skill's project resolution rules (exact → ticket-id → prefix → substring). On multiple matches, list and prompt; on zero matches, error and suggest `/kb-list`.
-3. Read into the current session:
-   - The full `summary.md` (verbatim).
-   - All exploration files in `explorations/` whose frontmatter has `status: in-progress`. For each, print the file path then its full contents.
-   - The most recent 3 decisions in `decisions/` by `number` descending. Print path then contents.
-   - If `links.md` exists, print it.
-4. Format the output as a structured preamble:
+3. Enumerate target files (do not read contents yet):
+   - `summary.md` (known path).
+   - In-progress explorations: run a single `grep` for `^status: in-progress` across `~/work-kb/projects/<dir>/explorations/*.md` to get the file list.
+   - Recent decisions: glob `~/work-kb/projects/<dir>/decisions/*.md`, sort by filename descending (NNNN-prefix sorts naturally), take the first 3.
+   - `links.md` if present.
+4. Load all enumerated files into context with parallel `Read` tool calls in a single assistant turn. Do NOT echo file contents in the response text. The tool results place contents in your context; that is sufficient.
+5. Print only a short orientation, e.g.:
 
    ```
-   # KB context — <PROJECT-DIR>
+   Loaded <project>:
+   - summary.md
+   - N active explorations: <slug-list>
+   - M recent decisions: <NNNN-list>
+   - links.md (if loaded)
 
-   ## Summary
-   <summary.md contents>
-
-   ## Active explorations (N)
-   ### explorations/<file>
-   <file contents>
-
-   ## Recent decisions (N)
-   ### decisions/<file>
-   <file contents>
-
-   ## Links
-   <links.md contents, if any>
+   Continue from <most recently updated exploration path> (last_updated <date>). Open questions are in summary.md.
    ```
 
-5. After the preamble, give a brief one-paragraph orientation to the agent (yourself): "You now have context for <project>. Open questions are listed in summary.md. Active explorations are <list>. Continue from where the most recent `last_updated` exploration left off."
+   If zero active explorations, say so explicitly and suggest `/kb-explore <project> "<topic>"`.
 
 Rules:
 
 - Read-only. Never invoke `kb-curator`.
-- Do not summarize the contents — print them verbatim. The point is to load context, not compress it.
+- Do NOT regenerate file contents in the assistant response. Use parallel `Read` tool calls; the tool results put contents in context. Print only the orientation summary.
+- Read each file in full (no offset/limit). Explorations are append-only field notes; truncation risks dropping the latest finding.
 - If the project has zero active explorations, say so explicitly and suggest `/kb-explore <project> "<topic>"`.
