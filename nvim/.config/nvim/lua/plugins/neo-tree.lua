@@ -36,6 +36,15 @@ return {
 				hide_gitignored = false,
 			},
 		},
+		-- Show line numbers in the tree so relative-number jumps (e.g. `7j`) work.
+		event_handlers = {
+			{
+				event = "neo_tree_buffer_enter",
+				handler = function()
+					vim.cmd([[setlocal relativenumber]])
+				end,
+			},
+		},
 	},
 	config = function(_, opts)
 		require("neo-tree").setup(opts)
