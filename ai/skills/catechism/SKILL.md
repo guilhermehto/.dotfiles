@@ -50,9 +50,37 @@ Goal and scope come first because they cheaply rule out whole branches of work. 
 
 ## Question protocol
 
-**Every question uses `mcp_Question` with multiple-choice options.** This is the default and the rule, not a preference. The tool already provides a "type your own" escape hatch, so multiple-choice never costs the user expressiveness — it only forces you to enumerate the realistic answer space, which lowers their reply cost and surfaces options they hadn't considered.
+**Every question is asked via the `question` tool with multiple-choice options.** This is the default and the rule, not a preference. The tool already provides a "type your own" escape hatch, so multiple-choice never costs the user expressiveness — it only forces you to enumerate the realistic answer space, which lowers their reply cost and surfaces options they hadn't considered.
 
 If you catch yourself about to ask a free-form question, stop and enumerate 3-5 plausible answers first. "The user might want something I haven't listed" is not a reason to skip enumeration — that is exactly what "type your own" is for. List your best guesses and let the escape hatch handle the long tail.
+
+### The `question` tool
+
+`question` is an opencode built-in tool ([docs](https://opencode.ai/docs/tools/#question)), not an MCP server. Depending on your runtime it may appear in your tool list under a prefixed name (e.g. `mcp_Question`); the underlying tool is the same. If you don't see it, attempt the call before concluding it's unavailable — opencode surfaces a clear error if it isn't.
+
+Call shape — pass `questions` as a real array, not a stringified JSON value:
+
+```json
+{
+  "questions": [
+    {
+      "header": "Short label (≤30 chars)",
+      "question": "Full question text.",
+      "options": [
+        {"label": "1-5 word choice", "description": "One-line explanation."},
+        {"label": "Another choice", "description": "..."}
+      ],
+      "multiple": false
+    }
+  ]
+}
+```
+
+Notes:
+
+- A "type your own answer" option is appended automatically; never add "Other" or a catch-all yourself.
+- Set `multiple: true` only when the user can legitimately pick more than one option for that question.
+- Multiple questions in a single call are batched into one prompt — use this for whole-dimension rounds.
 
 ### When free-form is allowed
 
@@ -68,7 +96,7 @@ If none of these apply, the question is multiple-choice. No exceptions for "this
 
 - One concept per question. If a question contains "and" between two distinct decisions, split it.
 - Aim for 3-5 options per question. Fewer than 2 is not multiple-choice; more than 6 means the question is too broad and should be split.
-- Every option must be a plausible real answer. No filler. No "Other" — `mcp_Question` already provides "type your own".
+- Every option must be a plausible real answer. No filler. No "Other" — `question` already provides "type your own".
 - Make options mutually distinct. If two options blur together, merge or rewrite.
 - Lead with the user's most likely intent when you have a strong prior, and mark it `(Recommended)`. Do not mark a recommendation when you genuinely don't have one.
 - No leading language in the question stem. Recommendations belong on the option, not the question.
@@ -83,7 +111,7 @@ Batch by dimension. Aim for 3-6 questions per round; never more than 7. Asking 2
 Loop:
 
 1. Pick the next unresolved dimension.
-2. Ask its batch via `mcp_Question` (or open-ended if the rules above call for it).
+2. Ask its batch via `question` (or open-ended if the rules above call for it).
 3. Read the answers. If new ambiguity appeared, queue follow-ups for the next round.
 4. When the current dimension is settled, move to the next.
 5. After the last dimension, deliver the recap (below) and ask "anything I'm missing?" or "ready for me to go?".
@@ -120,7 +148,7 @@ Rules:
 
 ## Mid-task pause-and-ask
 
-The interview is not only for the start of a task. Whenever, mid-task, you would otherwise silently make a material assumption — pause and ask one focused question via `mcp_Question` with 2-4 options. The free-form exceptions above apply here too and are equally narrow.
+The interview is not only for the start of a task. Whenever, mid-task, you would otherwise silently make a material assumption — pause and ask one focused question via `question` with 2-4 options. The free-form exceptions above apply here too and are equally narrow.
 
 A material assumption is one where guessing wrong would mean throwing away work, breaking something the user cares about, or shipping a different feature than requested. Cosmetic choices (naming, ordering of unrelated bullets) do not qualify.
 
@@ -130,7 +158,7 @@ Format the mid-task ask as a single short question, not a new round. Get the ans
 
 - Never run the interview when the user has explicitly said "just do it" or equivalent.
 - Never invent questions to look thorough; every question must change what you do next.
-- Never use free-form prose for a question with 3-5 plausible enumerable answers. Enumerate them as `mcp_Question` options and let "type your own" cover the long tail.
+- Never use free-form prose for a question with 3-5 plausible enumerable answers. Enumerate them as `question` options and let "type your own" cover the long tail.
 - Never bury the user's likely intent inside a generic "Other" or "It depends". Split the question instead.
 - Never ask what you can answer by reading the repo.
 - Never proceed past the recap without an affirmative go-ahead.
