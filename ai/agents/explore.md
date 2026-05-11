@@ -1,7 +1,7 @@
 ---
 description: Cheap codebase search. Answers "where is X?", "which files contain Y?", "find the code that does Z". Returns repo-relative `path:line` citations with one-line annotations plus a brief synthesized answer. Caller specifies thoroughness — `quick` (one search angle, no follow-ups), `medium` (2-3 angles + light cross-checking), `very thorough` (exhaustive incl. naming variants, callers, configs, tests). Fire multiple in parallel for broad sweeps. Use when multiple search angles are needed, the module structure is unfamiliar, cross-layer pattern discovery is required, or the main agent's context is getting heavy. Avoid when you already know the exact path/symbol, a single keyword suffices, or the same area was just searched. Read-only.
 mode: subagent
-model: anthropic/claude-haiku-4-5
+model: anthropic/claude-sonnet-4-6
 temperature: 0.1
 permission:
   edit: deny
