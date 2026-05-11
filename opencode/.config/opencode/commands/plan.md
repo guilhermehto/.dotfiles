@@ -1,0 +1,1 @@
+/Users/guilhermeoliveira/.dotfiles/ai/commands/plan.md
