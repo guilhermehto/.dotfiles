@@ -30,7 +30,7 @@ Answer the prompts: one-liner, key links, repos involved (`alias` → URL).
 /kb-explore <TICKET-ID> "the question I'm answering"
 ```
 
-Then use `magos-explorator-code-explorer` (or whatever) to investigate. When you have findings:
+Then use `explorator` (or whatever) to investigate. When you have findings:
 
 ```
 /kb-capture <TICKET-ID>
@@ -51,7 +51,7 @@ Loads summary, in-progress explorations, and recent decisions into your current 
 ```
 /kb-summarize <TICKET-ID>      # refresh summary.md from explorations + decisions
 /kb-plan <TICKET-ID> <name>    # generate a plan doc from findings
-@magos-logis-plan-reviewer     # review the plan
+@logis     # review the plan
 ```
 
 ## Command reference

@@ -33,7 +33,7 @@ Steps:
    - body (markdown)
    - `derived_from`: list of exploration paths used (relative to the project dir).
 10. The curator validates citation aliases against `repos:` (prompting for unmapped aliases as needed), writes the plan, and bumps `summary.updated`.
-11. Report: `Wrote plan to <path>. Run @magos-logis-plan-reviewer to review it.`
+11. Report: `Wrote plan to <path>. Run @logis to review it.`
 
 Rules:
 
