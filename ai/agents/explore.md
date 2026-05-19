@@ -25,6 +25,7 @@ permission:
     "wc *": allow
     "head *": allow
     "tree *": allow
+    "echo *": allow
 tools:
   skill: false
 ---
