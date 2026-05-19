@@ -5,7 +5,7 @@ description: Local implementation-plan workspace at .scriptorum/YYYY-MM-DD--<slu
 
 # plan-workflow
 
-Conventions for the local implementation-plan workspace at `<repo-root>/.scriptorum/`. The `/plan`, `/plan-list`, `/work` commands, the `magos-iterator` (planner-only) and `magos-fabricator` (light end-to-end) primary agents, and the `magos-artisan` subagent must follow these rules.
+Conventions for the local implementation-plan workspace at `<repo-root>/.scriptorum/`. The `/plan`, `/plan-list`, `/work` commands, the `magos-iterator` (planner-only) and `fabricator` (light end-to-end) primary agents, and the `magos-artisan` subagent must follow these rules.
 
 This skill is the local-task counterpart to a future KB workflow. It captures the structured, trackable plan for a single in-the-moment task next to the code it touches.
 
@@ -384,13 +384,13 @@ Other actions (`update-status`, `tick-task`, `append-note`, `supersede`) do **no
 
 ## /work contract
 
-`/work` is the entry point for the orchestration agents (`magos-fabricator` for light end-to-end tasks, `magos-iterator` for deep planner-only tasks). It is a thin **router**; it does not do the work itself. See `commands/work.md` for the full behaviour. The relevant facts here:
+`/work` is the entry point for the orchestration agents (`fabricator` for light end-to-end tasks, `magos-iterator` for deep planner-only tasks). It is a thin **router**; it does not do the work itself. See `commands/work.md` for the full behaviour. The relevant facts here:
 
 - `/work` (no args) → resume mode: list `.scriptorum/*--*.md` plans with `status ∈ {not-started, in-progress, unknown}`, sorted newest first, and recommend switching into `magos-iterator` with the chosen slug.
-- `/work <task>` → recommend switching into `magos-fabricator` with `<task>`.
+- `/work <task>` → recommend switching into `fabricator` with `<task>`.
 - `/work --deep <task>` or `/work -d <task>` → recommend switching into `magos-iterator` with `<task>`.
 
-Because opencode commands run inside the current agent and cannot directly switch primary agents, `/work` prints the recommended `@magos-fabricator <args>` / `@magos-iterator <args>` invocation and stops. The user runs it.
+Because opencode commands run inside the current agent and cannot directly switch primary agents, `/work` prints the recommended `@fabricator <args>` / `@magos-iterator <args>` invocation and stops. The user runs it.
 
 ## Templates
 
