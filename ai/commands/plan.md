@@ -1,9 +1,9 @@
 ---
-description: Generate a local implementation plan via catechism alignment; write to .scriptorum/<slug>.md
+description: Generate a local implementation plan via catechism alignment; write to .scriptorum/YYYY-MM-DD--<slug>.md with checkbox steps and tracked status
 argument-hint: "<task description>"
 ---
 
-Load the `plan-workflow` skill and the `catechism` skill before doing anything else. `plan-workflow` defines the scriptorum root, slug rules, frontmatter, plan template, citation format, overwrite policy, and the `magos-artisan` delegation contract. `catechism` defines the alignment interview that drives the slug and the plan body.
+Load the `plan-workflow` skill and the `catechism` skill before doing anything else. `plan-workflow` defines the scriptorum root, filename format (`YYYY-MM-DD--<slug>.md`), slug rules, frontmatter schema (including `status` and `updated`), the five-section plan template with checkbox tasks, citation format, slug-to-file resolution, overwrite policy, and the `magos-artisan` delegation contract (actions: `write-plan`, `update-status`, `tick-task`, `append-note`, `supersede`). `catechism` defines the alignment interview that drives the slug and the plan body.
 
 Arguments: $ARGUMENTS
 
@@ -25,18 +25,24 @@ Steps:
 
 7. **Resolve the scriptorum root.** Run `git rev-parse --show-toplevel`. If it succeeds, use that. If not, fall back to cwd and print: `No git repo found; using cwd as scriptorum root: <abs-path>`.
 
-8. **Compute the target path:** `<scriptorum-root>/.scriptorum/<slug>.md`.
+8. **Compute the target path:** `<scriptorum-root>/.scriptorum/<TODAY>--<slug>.md` (TODAY = ISO date).
 
-9. **Check for existing plan.** If the file exists, prompt: `Plan exists at <path>. Overwrite? [y/N]`.
+9. **Check for same-day collision.** If the target file exists, prompt: `Plan exists at <path>. Overwrite? [y/N]`.
    - Empty answer or anything other than `y`/`Y` → exit with `Aborted; existing plan not modified.`
    - `y`/`Y` → set `overwrite = true`.
    Otherwise `overwrite = false`.
 
-10. **Synthesize the plan body** matching the five required sections (Summary, Scope, Numbered steps, Acceptance criteria, File touchpoints) per the `plan-workflow` template. Do **not** include the catechism recap verbatim — use it as the synthesis source only. Use plain `path:line` citations for every concrete reference to existing code; bare paths for new files.
+10. **Surface cross-date collisions.** Glob `<scriptorum-root>/.scriptorum/*--<slug>.md`. If matches exist on other dates, print to the user: `Note: other plans with slug "<slug>" exist on dates [<list>]. Proceeding will create a NEW dated plan; use the supersede action if you mean to replace one.` Continue.
 
-11. **Show the user the preview.** Print the frontmatter and the full body. Ask: `Write plan to <path>? [Y/n]`. Default Y.
+11. **Synthesize the plan body** matching the five required sections (Summary, Scope, Numbered steps, Acceptance criteria, File touchpoints) per the `plan-workflow` template. Use **checkbox grammar**:
+    - Numbered steps: `1. [ ] step text`, `2. [ ] step text`, ...
+    - Acceptance criteria: `- [ ] criterion`, `- [ ] criterion`, ...
+    - File touchpoints: regular bullets (`- \`path:line\` — new|update — note`), no checkboxes.
+    Do **not** include the catechism recap verbatim — use it as the synthesis source only. Use plain `path:line` citations for every concrete reference to existing code; bare paths for new files.
 
-12. **On confirmation**, dispatch to the `magos-artisan` subagent via the task tool with:
+12. **Show the user the preview.** Print the frontmatter and the full body. Ask: `Write plan to <path>? [Y/n]`. Default Y.
+
+13. **On confirmation**, dispatch to the `magos-artisan` subagent via the task tool with:
     ```
     action: write-plan
     payload:
@@ -45,11 +51,14 @@ Steps:
       title: <H1 title>
       body: <markdown body, sections only — no frontmatter>
       overwrite: <true | false>
+      supersedes: []
     ```
 
-13. **Report.** Surface the curator's return:
-    - On success: `Wrote plan to <abs-path>.` If any `citation_warnings` were returned, list them: `Warning: <path>:<N> — <reason>`. Then suggest: `Run @magos-logis-plan-reviewer <abs-path> to review it.`
-    - On `error: "exists"` (shouldn't happen after step 9, but defensive): print the curator's error and stop.
+14. **Report.** Surface the artisan's return:
+    - On success: `Wrote plan to <abs-path> (status: not-started).` If any `citation_warnings` were returned, list them: `Warning: <path>:<N> — <reason>`. Then suggest both:
+      - `Run @magos-logis-plan-reviewer <abs-path> to review it.`
+      - `Run /work --resume <slug> to start executing.` (only if the slug is unique, otherwise show the dated form: `/work --resume <TODAY>--<slug>`.)
+    - On `error: "exists"` (shouldn't happen after step 9, but defensive): print the artisan's error and stop.
     - On `error: "malformed-body"`: print the missing/out-of-order sections and stop. Do not retry silently.
 
 Rules:
@@ -60,3 +69,4 @@ Rules:
 - Citations are plain `path:line`. No repo aliases.
 - This command never writes directly. Only `magos-artisan` writes.
 - If the user declines the final preview confirmation, write nothing and exit cleanly.
+- Numbered steps and Acceptance criteria MUST use checkbox grammar. File touchpoints MUST NOT — they describe locations, not work units.
