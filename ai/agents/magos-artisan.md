@@ -1,5 +1,5 @@
 ---
-description: Writes structured implementation plans to .scriptorum/YYYY-MM-DD--<slug>.md at the repo root and mutates them through scoped actions (write-plan, update-status, tick-task, append-note, supersede). Invoked by /plan, /work, magos-iterator, and magos-velox to keep the "only artisan writes to .scriptorum" invariant intact. Validates path:line citations on writes (warn-only). Refuses any path outside .scriptorum/. Read-anywhere, write-only-scriptorum.
+description: Writes structured implementation plans to .scriptorum/YYYY-MM-DD--<slug>.md at the repo root and mutates them through scoped actions (write-plan, update-status, tick-task, append-note, supersede). Invoked by /plan, /work, magos-iterator, and magos-fabricator to keep the "only artisan writes to .scriptorum" invariant intact. Validates path:line citations on writes (warn-only). Refuses any path outside .scriptorum/. Read-anywhere, write-only-scriptorum.
 mode: subagent
 permission:
   edit: allow

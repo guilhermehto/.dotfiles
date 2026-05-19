@@ -1,5 +1,5 @@
 ---
-description: Entry point for the orchestration agents. With no args, lists in-progress plans for resume. With a task, recommends magos-velox (light) or magos-iterator (deep) based on flags. Thin router — does not do the work itself.
+description: Entry point for the orchestration agents. With no args, lists in-progress plans for resume. With a task, recommends magos-fabricator (light, end-to-end) or magos-iterator (deep, planner-only) based on flags. Thin router — does not do the work itself.
 argument-hint: "[--deep|-d] [task description]   |   [no args = resume picker]"
 ---
 
@@ -32,14 +32,14 @@ Steps:
       Status markers: `[ ]` not-started, `[~]` in-progress, `[?]` unknown.
    7. Below the list, print:
       ```
-      Resume one of these by switching into magos-iterator with the slug:
+      Resume one of these by switching into magos-iterator with the slug (it will show you status and let you tick steps as you complete them elsewhere):
 
         @magos-iterator <slug>
 
       Or start fresh:
 
-        @magos-velox <task>          # light, in-chat plan
-        @magos-iterator <task>       # deep, persisted plan
+        @magos-fabricator <task>     # light, in-chat plan, end-to-end execution
+        @magos-iterator <task>       # deep, persisted plan + review; you execute in another agent
       ```
       Then stop. Do not prompt the user to pick interactively — they'll just type the command.
 
@@ -49,10 +49,10 @@ Steps:
    ```
    Light flow recommended. Switch to:
 
-     @magos-velox <task>
+     @magos-fabricator <task>
 
    This will plan in chat (no .scriptorum file) and implement directly.
-   If the task turns out to be larger than expected, magos-velox will recommend escalating to magos-iterator.
+   If the task turns out to be larger than expected, magos-fabricator will recommend escalating to magos-iterator.
 
    To force the deep flow up front:
 
@@ -68,7 +68,7 @@ Steps:
 
      @magos-iterator <task>
 
-   This will run Understand → Plan → Implement with a persisted .scriptorum plan, auto plan review, and auto diff review at the end.
+   This will run Understand → Plan with a persisted .scriptorum plan, auto plan review, and then hand off. magos-iterator does NOT write code — you execute the plan in @magos-fabricator (or the default chat agent), then return to @magos-iterator <slug> to mark progress and run the final diff review.
    ```
    Then stop.
 
@@ -76,7 +76,7 @@ Steps:
 
    Run Case A.
 
-3. **Do not switch agents yourself.** Commands cannot switch primary agents in opencode. Your job is to print the right recommendation and let the user invoke `@magos-velox` or `@magos-iterator`.
+3. **Do not switch agents yourself.** Commands cannot switch primary agents in opencode. Your job is to print the right recommendation and let the user invoke `@magos-fabricator` or `@magos-iterator`.
 
 4. **Do not run the workflow inline.** If a user pastes a task and expects you to start working on it, the recommendation output is the right answer — they should switch agents to get the system-prompt discipline that the workflow needs.
 
