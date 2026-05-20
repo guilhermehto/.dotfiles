@@ -1,6 +1,5 @@
 ---
 description: Sync agents/commands/skills from ~/.dotfiles/ai into ~/.config/opencode
-agent: build
 ---
 
 Sync output:
