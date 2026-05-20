@@ -61,6 +61,14 @@ outer.bottom =     12
 outer.top =        52
 outer.right =      12
 
+# Keep primary workspaces on main display and dedicate T to second monitor
+[workspace-to-monitor-force-assignment]
+Q = 'main'
+W = 'main'
+E = 'main'
+R = 'main'
+T = 'secondary'
+
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
 # 'main' binding mode must be always presented
