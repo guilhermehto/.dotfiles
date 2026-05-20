@@ -8,25 +8,58 @@ permission:
     "*": ask
     "~/work-kb/**": allow
   bash:
-    "*": ask
-    "ls *": allow
-    "find *": allow
-    "rg *": allow
-    "grep *": allow
-    "wc *": allow
-    "head *": allow
-    "tree *": allow
-    "git status*": allow
-    "git log*": allow
-    "git show*": allow
-    "git blame*": allow
-    "git diff*": allow
-    "git ls-files*": allow
-    "git rev-parse*": allow
-    "git symbolic-ref*": allow
-    "git for-each-ref*": allow
-    "git branch --show-current": allow
-    "mkdir -p *": allow
+    "*": allow
+
+    # Privilege escalation
+    "sudo *": deny
+    "doas *": deny
+    "su *": deny
+
+    # Catastrophic deletion
+    "rm -rf /": deny
+    "rm -rf /*": deny
+    "rm -rf ~": deny
+    "rm -rf ~/*": deny
+    "rm -rf $HOME*": deny
+    "rm -rf .": deny
+    "rm -rf ./*": deny
+    "rm -rf ..*": deny
+
+    # Disk / filesystem destruction
+    "dd *of=/dev/*": deny
+    "mkfs*": deny
+    "fdisk *": deny
+
+    # Remote pipe-to-shell
+    "curl *|sh*": deny
+    "curl *| sh*": deny
+    "curl *|bash*": deny
+    "curl *| bash*": deny
+    "wget *|sh*": deny
+    "wget *| sh*": deny
+    "wget *|bash*": deny
+    "wget *| bash*": deny
+
+    # Permission breakage
+    "chmod -R 777*": deny
+    "chown -R *": deny
+
+    # Git history rewriting / work loss
+    "git push*": deny
+    "git reset --hard*": deny
+    "git rebase*": deny
+    "git filter-branch*": deny
+    "git filter-repo*": deny
+    "git stash drop*": deny
+    "git stash clear*": deny
+    "git clean -f*": deny
+    "git clean -d*": deny
+    "git clean -x*": deny
+    "git branch -D*": deny
+    "git checkout -- *": deny
+    "git checkout . *": deny
+    "git restore *": deny
+    "git update-ref *": deny
 tools:
   skill: true
 ---
