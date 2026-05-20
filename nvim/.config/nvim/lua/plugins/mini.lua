@@ -12,30 +12,6 @@ return {
 			MiniIcons.mock_nvim_web_devicons()
 		end,
 	},
-	{
-		"nvim-mini/mini.animate",
-		version = false,
-		config = function()
-			local animate = require("mini.animate")
-			animate.setup({
-				cursor = {
-					timing = animate.gen_timing.cubic({ duration = 200, easing = "in", unit = "total" }),
-				},
-				scroll = {
-					timing = animate.gen_timing.cubic({ duration = 200, easing = "in", unit = "total" }),
-				},
-				resize = {
-					timing = animate.gen_timing.cubic({ duration = 100, easing = "in", unit = "total" }),
-				},
-				open = {
-					timing = animate.gen_timing.cubic({ duration = 200, easing = "in", unit = "total" }),
-				},
-				close = {
-					timing = animate.gen_timing.cubic({ duration = 200, easing = "in", unit = "total" }),
-				},
-			})
-		end,
-	},
 	{ "nvim-mini/mini.statusline", version = false, opts = {} },
 	-- {
 	-- 	"nvim-mini/mini.hues",
