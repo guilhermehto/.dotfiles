@@ -159,6 +159,11 @@ Notes:
 
 The `weight` frontmatter field tunes how meaty each step's contract is. The five sections above are mandatory at every weight — what changes is the per-step shape under `## Numbered steps`.
 
+At every weight ≥ standard, `Done when:` bullets must describe **observable behavior** of the system — what an outside observer (user, integration test, curl, log line) sees when interacting with it. They are **not** a restatement of the implementation paragraph. If a bullet reads as "the code uses X" or "field Y is configured", it's an implementation echo and should be rewritten as "GIVEN/WHEN/THEN" against the system, or moved to the implementation paragraph / `Verification:` line.
+
+Bad: `better-auth instance uses drizzleAdapter(db, { provider: "pg" })`
+Good: `GIVEN POST /api/auth/sign-in/email with valid creds, server returns 200 + Set-Cookie`
+
 **light** — quick fixes, single-file edits, well-understood territory. One-line steps; no per-step sub-items. Plan-level `## File touchpoints` carries the file list for the whole plan.
 
 ```markdown
@@ -171,30 +176,50 @@ The `weight` frontmatter field tunes how meaty each step's contract is. The five
 ```markdown
 1. [ ] Add GET /users/:id endpoint returning user JSON
    Done when:
-     - Endpoint registered with auth middleware in `api/router.go`
-     - Returns 200 + user JSON for an existing user
-     - Returns 404 + error envelope for a missing user
-     - Returns 401 when the request is unauthenticated
+     - GIVEN a valid auth token and an existing user, GET /users/:id returns 200 + the user JSON.
+     - GIVEN no auth header, the same request returns 401.
+     - GIVEN a valid token but a missing user, the request returns 404 with the standard error envelope.
+     - GIVEN a malformed `:id`, the request returns 400.
    Touchpoints: `api/users.go`, `api/router.go`
 ```
 
-**heavy** — multi-module changes, unfamiliar territory, work where one wrong assumption costs real time. Standard + any of:
+**heavy** — multi-module changes, unfamiliar territory, work where one wrong assumption costs real time. Standard + two **required** fields and any of three optional fields:
+
+Required for heavy:
+
+- `Outcome:` — single sentence describing the user-visible result of this step. Phrased so a non-engineer could repeat it back. Anchors the step's reason for existing; the rest of the contract serves this line.
+- `Independent Test:` — the concrete behavioral check the executing agent runs to gain confidence the `Outcome:` holds. Either a runnable command (`pnpm test path/to/file.test.ts`, `curl -i ...`) or — when the agent cannot run the check (needs docker-compose, a browser, an OAuth provider) — a 2-4 line manual repro the agent documents in its commit message so a human can repro. A valid escape hatch for pure refactors: `Independent Test: n/a — pure refactor; behavior covered by existing test <path>`.
+
+Optional for heavy (use when they add signal):
 
 - `Anti-touch:` — files explicitly off-limits to this step (handled elsewhere or out of scope).
-- `Verification:` — the command, test name, or manual check that proves the step worked.
+- `Verification:` — the static gates that must pass (typecheck, lint, build, unit tests on changed modules). Behavioral checks go in `Independent Test:`, not here.
 - `Pre-conditions:` — what must be true before this step starts (prior step landed, env var set, migration applied, etc.).
 
+Field order under a heavy step:
+
+1. Step text
+2. `Outcome:`
+3. `Done when:`
+4. `Touchpoints:`
+5. `Anti-touch:` (if present)
+6. `Verification:` (if present)
+7. `Independent Test:`
+8. `Pre-conditions:` (if present)
+
 ```markdown
-1. [ ] Migrate `users` table to add `email_verified_at` column
+1. [ ] Add admin login via better-auth
+   Outcome: An operator can sign into the admin console with valid credentials and is rejected (with feedback) on invalid credentials.
    Done when:
-     - Migration file added under `db/migrations/`
-     - Forward migration applies cleanly on a fresh DB
-     - Down migration drops the column without dropping the table
-     - Existing rows backfilled with NULL
-   Touchpoints: `db/migrations/`, `db/schema.sql`
-   Anti-touch: any application code reading `users` (handled in step 3)
-   Verification: `make db-migrate && make db-rollback && make db-migrate`
-   Pre-conditions: working DB on `localhost:5432`, no other in-flight migrations
+     - GIVEN an unauthenticated GET `/admin`, the server returns 302 → `/login`.
+     - GIVEN POST `/api/auth/sign-in/email` with valid creds, the server returns 200 and sets a SameSite=Lax session cookie; a subsequent GET `/admin` returns 200.
+     - GIVEN the same POST with wrong creds, the server returns 401 and sets no cookie.
+     - GIVEN a fresh DB (`count(users) = 0`) with `SPOOR_ADMIN_*` env set, after boot the admin user exists and can log in.
+   Touchpoints: `src/lib/auth.ts`, `src/lib/auth-middleware.ts`, `src/views/login.tsx`, `src/server.ts`
+   Anti-touch: `src/db/schema.ts` (auth tables migrated in step 2; don't re-touch)
+   Verification: `pnpm typecheck && pnpm lint && pnpm build`
+   Independent Test: `pnpm test src/lib/auth.test.ts` — supertest harness exercising all four scenarios above against an in-process Hono app. If harness not yet wired: `curl -i http://localhost:3000/admin` (expect 302) plus `curl -i -X POST http://localhost:3000/api/auth/sign-in/email -d '{"email":"...","password":"..."}'` (expect 200 + Set-Cookie); paste both transcripts into the commit message.
+   Pre-conditions: better-auth installed; auth schema migrated; `SPOOR_BASE_URL`, `BETTER_AUTH_SECRET`, `SPOOR_ADMIN_EMAIL`, `SPOOR_ADMIN_PASSWORD` in `.env.test`.
 ```
 
 `## Acceptance criteria` is **cross-cutting** at every weight — invariants that span steps, not outcomes scoped to one step. Examples: "no regression in the existing test suite", "p95 latency unchanged", "all migrations reversible", "no new lint violations", "documented in CHANGELOG". If a candidate criterion only describes the outcome of one step, push it into that step's `Done when:` instead.

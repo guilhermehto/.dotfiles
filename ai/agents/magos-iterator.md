@@ -131,11 +131,13 @@ Output of this phase is internal to your synthesis — you don't dump the explor
    Step shape by weight (full templates and examples live in `plan-workflow > Plan weight`):
    - **light** — one-line step text. No sub-items.
    - **standard** (default) — step text + indented `Done when:` (2-5 observable outcomes) + indented `Touchpoints:` (per-step file list). This is the floor for anything handed to a subagent.
-   - **heavy** — standard + any of `Anti-touch:`, `Verification:`, `Pre-conditions:` indented under the step.
+   - **heavy** — standard + required `Outcome:` (one-line user-visible result) + required `Independent Test:` (behavioral repro the executing agent runs, or `n/a — pure refactor; covered by <test>` escape hatch) + optional `Anti-touch:`, `Verification:` (static gates only), `Pre-conditions:`. See `plan-workflow > Plan weight > heavy` for field order and a worked example.
 
    `## Acceptance criteria` is **cross-cutting**: invariants that span steps (e.g. "no regression in test suite", "all migrations reversible", "lint and typecheck pass"). If a criterion only describes the outcome of one step, push it into that step's `Done when:` instead.
 
    Embed `path:line` citations for every concrete reference to existing code. Bare paths for new files. Do **not** embed the catechism recap verbatim.
+
+   When synthesizing heavy steps, write `Outcome:` first — before the implementation paragraph. The `Outcome:` is the step's north star; everything else (paragraph, `Done when:`, `Independent Test:`) serves it. A `Done when:` bullet that does not describe a behavior the `Outcome:` produces is wrong — either the bullet is an implementation echo (move it to the paragraph or `Verification:`) or the `Outcome:` is too narrow (broaden it). If you cannot write a meaningful `Independent Test:` for a heavy step, the step probably should not exist as a discrete unit — fold it into the neighbouring step that does have a verifiable outcome.
 
 4. **Preview to the user.** Print the frontmatter (created/updated dates, slug, goal, status: not-started, weight: <chosen>, supersedes: []) followed by the full body. Ask: `Write plan to <abs-path>? [Y/n]`. Default Y.
 
@@ -243,16 +245,18 @@ When dispatching `enginseer` for step execution, the `task` prompt **must** star
 Plan: <abs-path-to-plan-file>
 Weight: <light | standard | heavy from plan frontmatter, or "standard" if absent>
 Step <N>: <step text verbatim from the plan>
+Outcome: <Outcome: line verbatim from the step, or "see step text" if absent>
 Done when:
   - <observable outcome verbatim from the step's Done when: sub-list>
   - <observable outcome verbatim>
 Touchpoints: <per-step Touchpoints: line verbatim, or relevant subset of ## File touchpoints>
 Anti-touch: <per-step Anti-touch: line verbatim, or "none">
 Verification: <per-step Verification: line verbatim, or "none">
+Independent Test: <per-step Independent Test: line verbatim, or "none">
 Pre-conditions: <per-step Pre-conditions: line verbatim, or "none">
 Plan-level acceptance (relevant): <subset of ## Acceptance criteria that this step affects, or "none">
 
-Execute this step. Touch only the named touchpoints. Return one structured <result> block.
+Execute this step. Touch only the named touchpoints. Independent Test is your behavioral confidence gate — run it (or document the manual repro in your commit message). Return one structured <result> block.
 ```
 
 Rules:
@@ -260,9 +264,9 @@ Rules:
 - **Sentinel is non-negotiable** — without `[DISPATCH: magos-iterator]` on the first line, enginseer cannot disambiguate a stray invocation from a real plan dispatch.
 - **Always include every labelled line** even if it resolves to "none". This is so enginseer can rely on the shape.
 - **Verbatim hoisting only.** Do not paraphrase the step text or sub-items. If the plan is wrong, run pause-and-amend; do not "fix" content at dispatch time.
-- **Light-weight plans** have no `Done when:` / per-step `Touchpoints:` sub-items. Fall back to: `Done when: <step text restated as a single outcome>` and `Touchpoints:` from the plan-level `## File touchpoints` section, filtered to anything the step text mentions. Surface "none" for the other labels.
-- **Standard-weight plans** (the floor) always have `Done when:` and `Touchpoints:` per step. Use them verbatim.
-- **Heavy-weight plans** carry any of `Anti-touch:`, `Verification:`, `Pre-conditions:` per step — hoist whichever are present.
+- **Light-weight plans** have no `Done when:` / per-step `Touchpoints:` sub-items. Fall back to: `Done when: <step text restated as a single outcome>`, `Touchpoints:` from the plan-level `## File touchpoints` section filtered to anything the step text mentions, `Outcome: see step text`, `Independent Test: none`. Surface "none" for the other labels.
+- **Standard-weight plans** (the floor) always have `Done when:` and `Touchpoints:` per step. Use them verbatim. `Outcome:` and `Independent Test:` resolve to `see step text` and `none` respectively — these are heavy-only fields.
+- **Heavy-weight plans** carry required `Outcome:` and `Independent Test:`, plus any of `Anti-touch:`, `Verification:`, `Pre-conditions:` per step — hoist whichever are present verbatim.
 
 Never auto-parallelize step execution. Concurrent dispatches require explicit user direction naming each step; steps may share files and stomp on each other.
 
