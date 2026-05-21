@@ -98,7 +98,8 @@ payload:
   title: <H1 title>
   body: <markdown body, sections only — no frontmatter>
   overwrite: <true | false>
-  supersedes: [<slug>, ...]   # optional, default []
+  weight: light | standard | heavy   # optional; omit to leave the field out of frontmatter (consumers default to standard on read)
+  supersedes: [<slug>, ...]          # optional, default []
 ```
 
 ### Steps
@@ -131,6 +132,7 @@ payload:
    slug: <slug>
    goal: <single-line goal>
    status: not-started
+   weight: <weight>           # only emitted when present in payload or preserved from existing file
    supersedes: <list>
    ---
 
@@ -140,6 +142,7 @@ payload:
    ```
    - `goal` must be a single line; if the supplied `goal` contains newlines, flatten them to spaces before writing.
    - On overwrite, `status` is preserved from the existing file if present; otherwise `not-started`.
+   - `weight` is emitted only when (a) the payload supplied it, or (b) the existing file (on overwrite) had it. If both are present, the payload value wins. If `weight` resolves to neither, the field is omitted entirely — consumers default to `standard` on read.
    - `supersedes` reflects the payload (default `[]`).
 9. Write the file using `edit`/`write`.
 10. **Cascade supersedes.** If `supersedes` is non-empty, dispatch an internal `update-status abandoned` on each predecessor slug (same algorithm as the `update-status` action). Collect results into `superseded: [{slug, path, previous_status}, ...]`. Continue even if one fails; report the error inline in the entry.
@@ -334,7 +337,7 @@ When reading or writing frontmatter:
 
 - Use a tolerant parser (treat malformed frontmatter as findable but skip the malformed fields, never crash). Surface malformed states in `notes`.
 - Preserve unknown fields verbatim on rewrite — do not drop them.
-- Use the order: `created`, `updated`, `slug`, `goal`, `status`, `supersedes`, then any preserved unknowns. This is for human readability; consumers tolerate any order.
+- Use the order: `created`, `updated`, `slug`, `goal`, `status`, `weight` (if present), `supersedes`, then any preserved unknowns. This is for human readability; consumers tolerate any order.
 - `supersedes: []` is written as an empty inline list, not as YAML omitted.
 - Dates are ISO `YYYY-MM-DD` (no time component).
 

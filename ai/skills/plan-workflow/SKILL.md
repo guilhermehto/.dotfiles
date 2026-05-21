@@ -80,6 +80,7 @@ updated: 2026-05-19
 slug: <slug>
 goal: <single-line goal, copied verbatim from the catechism recap's Goal: line>
 status: not-started
+weight: standard
 supersedes: []
 ---
 ```
@@ -91,6 +92,7 @@ Rules:
 - `slug` matches the filename slug component (the part after `YYYY-MM-DD--`).
 - `goal` is one line; embedded newlines are flattened to spaces before writing.
 - `status` is one of: `not-started`, `in-progress`, `complete`, `abandoned`. Defaults to `not-started` on creation.
+- `weight` is one of: `light`, `standard`, `heavy`. Optional; defaults to `standard`. Controls how meaty per-step contracts are — see [Plan weight](#plan-weight). Unknown values default to `standard` on read; artisan preserves any value verbatim.
 - `supersedes` is a list of slugs (without date prefix) that this plan replaces. Optional; defaults to `[]`. Setting a value also marks each referenced predecessor as `abandoned` via the `supersede` action.
 - Unknown fields in an existing file are preserved on rewrite.
 
@@ -127,13 +129,19 @@ After the frontmatter, the plan body has these five sections in this exact order
 - <bullet list of what is in this pass>
 
 ## Numbered steps
-1. [ ] <step — concrete, executable>
+1. [ ] <action-oriented step text>
+   Done when:
+     - <observable outcome>
+     - <observable outcome>
+   Touchpoints: <files>
 2. [ ] <step>
-3. [ ] <step>
+   Done when:
+     - <observable outcome>
+   Touchpoints: <files>
 
 ## Acceptance criteria
-- [ ] <observable criterion>
-- [ ] <observable criterion>
+- [ ] <cross-cutting invariant that must hold across all steps>
+- [ ] <cross-cutting invariant>
 
 ## File touchpoints
 - `path/to/file.ts:42` — <new | update> — <one-line note>
@@ -145,6 +153,51 @@ Notes:
 - The H1 is a short human title for the plan, not the full goal sentence. Derive it from the goal (e.g. trim to ~6-10 words, title-case acceptable).
 - Section names are fixed. Do **not** add `Out of scope`, `Risks`, `Open questions`, or `Verification` sections by default — the agreed minimum is five. The user can extend a written plan manually.
 - The catechism recap is **not** embedded in the plan body. It drives slug + body synthesis only.
+- Per-step `Done when:` / `Touchpoints:` / `Anti-touch:` / `Verification:` / `Pre-conditions:` lines are **sub-items**, not primary checkboxes. Indent them under the step text. Artisan's tick algorithm enumerates only primary `- [ ]` / `N. [ ]` items in document order, so sub-items never receive a checkbox and never get ticked by `tick-task`.
+
+### Plan weight
+
+The `weight` frontmatter field tunes how meaty each step's contract is. The five sections above are mandatory at every weight — what changes is the per-step shape under `## Numbered steps`.
+
+**light** — quick fixes, single-file edits, well-understood territory. One-line steps; no per-step sub-items. Plan-level `## File touchpoints` carries the file list for the whole plan.
+
+```markdown
+1. [ ] Bump dependency `foo` from 1.2.3 to 1.2.4 in `package.json`.
+2. [ ] Run `npm install` and commit the lockfile change.
+```
+
+**standard** (default) — most engineering work. Each step gets `Done when:` (2-5 observable outcomes) and `Touchpoints:` (per-step file list). This is the floor for any work handed off to a subagent.
+
+```markdown
+1. [ ] Add GET /users/:id endpoint returning user JSON
+   Done when:
+     - Endpoint registered with auth middleware in `api/router.go`
+     - Returns 200 + user JSON for an existing user
+     - Returns 404 + error envelope for a missing user
+     - Returns 401 when the request is unauthenticated
+   Touchpoints: `api/users.go`, `api/router.go`
+```
+
+**heavy** — multi-module changes, unfamiliar territory, work where one wrong assumption costs real time. Standard + any of:
+
+- `Anti-touch:` — files explicitly off-limits to this step (handled elsewhere or out of scope).
+- `Verification:` — the command, test name, or manual check that proves the step worked.
+- `Pre-conditions:` — what must be true before this step starts (prior step landed, env var set, migration applied, etc.).
+
+```markdown
+1. [ ] Migrate `users` table to add `email_verified_at` column
+   Done when:
+     - Migration file added under `db/migrations/`
+     - Forward migration applies cleanly on a fresh DB
+     - Down migration drops the column without dropping the table
+     - Existing rows backfilled with NULL
+   Touchpoints: `db/migrations/`, `db/schema.sql`
+   Anti-touch: any application code reading `users` (handled in step 3)
+   Verification: `make db-migrate && make db-rollback && make db-migrate`
+   Pre-conditions: working DB on `localhost:5432`, no other in-flight migrations
+```
+
+`## Acceptance criteria` is **cross-cutting** at every weight — invariants that span steps, not outcomes scoped to one step. Examples: "no regression in the existing test suite", "p95 latency unchanged", "all migrations reversible", "no new lint violations", "documented in CHANGELOG". If a candidate criterion only describes the outcome of one step, push it into that step's `Done when:` instead.
 
 ### Checkbox grammar
 
@@ -403,6 +456,7 @@ updated: 2026-05-19
 slug: add-feature-flag-for-new-checkout
 goal: Add a feature flag for the new checkout flow so we can roll it out to a subset of users.
 status: not-started
+weight: standard
 supersedes: []
 ---
 
@@ -417,14 +471,28 @@ Wire a new boolean flag `checkout.v2` through the existing flag service so the n
 - Default value: off in all environments.
 
 ## Numbered steps
-1. [ ] Add `checkout.v2` to `src/flags/registry.ts:1` alongside existing entries.
-2. [ ] Read the flag in `src/pages/CheckoutPage.tsx:24` and render `CheckoutV2` when on, `CheckoutV1` when off.
-3. [ ] Update the flag-service mock in `tests/mocks/flags.ts:1` so tests can toggle it.
+1. [ ] Register `checkout.v2` in the flag registry
+   Done when:
+     - Entry added to `src/flags/registry.ts:1` alongside existing entries.
+     - Default value is `false`.
+     - Type signature matches existing boolean flags (no new shape).
+   Touchpoints: `src/flags/registry.ts:1`
+2. [ ] Branch `CheckoutPage` on the flag
+   Done when:
+     - `src/pages/CheckoutPage.tsx:24` reads the flag via the existing flag service.
+     - Renders `CheckoutV2` when the flag is on, `CheckoutV1` when off.
+     - `CheckoutV2` component shell exists at `src/pages/CheckoutV2.tsx` (empty body OK).
+   Touchpoints: `src/pages/CheckoutPage.tsx:24`, `src/pages/CheckoutV2.tsx`
+3. [ ] Expose the flag in the test mock
+   Done when:
+     - `tests/mocks/flags.ts:1` lets a test set `checkout.v2` to true or false.
+     - No change to other mocked flags.
+   Touchpoints: `tests/mocks/flags.ts:1`
 
 ## Acceptance criteria
-- [ ] `checkout.v2` appears in the flag registry and is `false` by default.
-- [ ] `CheckoutPage` renders `CheckoutV2` when the flag is enabled, `CheckoutV1` otherwise.
-- [ ] All existing `CheckoutPage` tests still pass with the flag off.
+- [ ] All existing `CheckoutPage` tests pass with the flag off (no regression).
+- [ ] Lint and typecheck pass.
+- [ ] No production traffic reaches `CheckoutV2` until the flag is flipped (default off everywhere).
 
 ## File touchpoints
 - `src/flags/registry.ts:1` — update — add `checkout.v2` entry.
@@ -442,6 +510,7 @@ updated: 2026-05-20
 slug: add-feature-flag-for-new-checkout
 goal: ...
 status: in-progress
+weight: standard
 supersedes: []
 ---
 
@@ -454,15 +523,29 @@ supersedes: []
 ...
 
 ## Numbered steps
-1. [x] Add `checkout.v2` to `src/flags/registry.ts:1` alongside existing entries.
-2. [ ] Read the flag in `src/pages/CheckoutPage.tsx:24` and render `CheckoutV2` when on, `CheckoutV1` when off.
+1. [x] Register `checkout.v2` in the flag registry
+   Done when:
+     - Entry added to `src/flags/registry.ts:1` alongside existing entries.
+     - Default value is `false`.
+     - Type signature matches existing boolean flags (no new shape).
+   Touchpoints: `src/flags/registry.ts:1`
+2. [ ] Branch `CheckoutPage` on the flag
+   Done when:
+     - `src/pages/CheckoutPage.tsx:24` reads the flag via the existing flag service.
+     - Renders `CheckoutV2` when the flag is on, `CheckoutV1` when off.
+     - `CheckoutV2` component shell exists at `src/pages/CheckoutV2.tsx` (empty body OK).
+   Touchpoints: `src/pages/CheckoutPage.tsx:24`, `src/pages/CheckoutV2.tsx`
    > note: blocked — CheckoutPage was refactored yesterday; line 24 is now elsewhere. Re-locate before continuing.
-3. [ ] Update the flag-service mock in `tests/mocks/flags.ts:1` so tests can toggle it.
+3. [ ] Expose the flag in the test mock
+   Done when:
+     - `tests/mocks/flags.ts:1` lets a test set `checkout.v2` to true or false.
+     - No change to other mocked flags.
+   Touchpoints: `tests/mocks/flags.ts:1`
 
 ## Acceptance criteria
-- [x] `checkout.v2` appears in the flag registry and is `false` by default.
-- [ ] `CheckoutPage` renders `CheckoutV2` when the flag is enabled, `CheckoutV1` otherwise.
-- [ ] All existing `CheckoutPage` tests still pass with the flag off.
+- [ ] All existing `CheckoutPage` tests pass with the flag off (no regression).
+- [ ] Lint and typecheck pass.
+- [ ] No production traffic reaches `CheckoutV2` until the flag is flipped (default off everywhere).
 
 ## File touchpoints
 ...

@@ -119,17 +119,27 @@ Output of this phase is internal to your synthesis — you don't dump the explor
 
 1. **Catechism.** Load the `catechism` skill and run the protocol — unless the user's initial task description already contains an explicit Goal, Scope, Constraints, and at least one edge case. In that case, restate your understanding in 1-2 lines, confirm with one focused question, and skip the multi-round interview. The catechism is mandatory only when alignment is genuinely needed; running it on a fully-specified task wastes the user's attention.
 
-2. **Synthesize the plan body.** Match the five required sections from `plan-workflow`:
+2. **Decide plan weight.** Pick `light`, `standard`, or `heavy` per the `plan-workflow > Plan weight` section. Default to `standard`. Go `light` only for trivial single-file work (rename, version bump, comment fix); go `heavy` for multi-module changes, unfamiliar territory, or anything where wrong assumptions would cost real time. If the catechism recap doesn't make the right tier obvious, ask one focused question via `question` before synthesizing. Record the choice — it goes in frontmatter and shapes the step bodies below.
+
+3. **Synthesize the plan body.** Match the five required sections from `plan-workflow`:
    - `## Summary` (1-3 sentences)
    - `## Scope` (bullets)
-   - `## Numbered steps` (numbered checkbox list — `1. [ ] step text`)
+   - `## Numbered steps` (numbered checkbox list — `1. [ ] step text`, with per-step sub-items at the chosen weight)
    - `## Acceptance criteria` (unordered checkbox list — `- [ ] criterion`)
    - `## File touchpoints` (regular bullets — no checkboxes)
+
+   Step shape by weight (full templates and examples live in `plan-workflow > Plan weight`):
+   - **light** — one-line step text. No sub-items.
+   - **standard** (default) — step text + indented `Done when:` (2-5 observable outcomes) + indented `Touchpoints:` (per-step file list). This is the floor for anything handed to a subagent.
+   - **heavy** — standard + any of `Anti-touch:`, `Verification:`, `Pre-conditions:` indented under the step.
+
+   `## Acceptance criteria` is **cross-cutting**: invariants that span steps (e.g. "no regression in test suite", "all migrations reversible", "lint and typecheck pass"). If a criterion only describes the outcome of one step, push it into that step's `Done when:` instead.
+
    Embed `path:line` citations for every concrete reference to existing code. Bare paths for new files. Do **not** embed the catechism recap verbatim.
 
-3. **Preview to the user.** Print the frontmatter (created/updated dates, slug, goal, status: not-started, supersedes: []) followed by the full body. Ask: `Write plan to <abs-path>? [Y/n]`. Default Y.
+4. **Preview to the user.** Print the frontmatter (created/updated dates, slug, goal, status: not-started, weight: <chosen>, supersedes: []) followed by the full body. Ask: `Write plan to <abs-path>? [Y/n]`. Default Y.
 
-4. **On confirmation, dispatch `magos-artisan` via the `task` tool**:
+5. **On confirmation, dispatch `magos-artisan` via the `task` tool**:
    ```
    action: write-plan
    payload:
@@ -138,13 +148,14 @@ Output of this phase is internal to your synthesis — you don't dump the explor
      title: <H1 title>
      body: <markdown body, sections only — no frontmatter>
      overwrite: <true if user accepted the overwrite prompt>
+     weight: light | standard | heavy   # optional; omit to default to standard
      supersedes: []
    ```
    Surface the artisan's return verbatim (path, citation warnings, etc.).
 
-5. **Dispatch `logis`** with the absolute path of the plan you just wrote. This is automatic — do not ask. Surface its return.
+6. **Dispatch `logis`** with the absolute path of the plan you just wrote. This is automatic — do not ask. Surface its return.
 
-6. **Triage the review.**
+7. **Triage the review.**
    - If the review's verdict is `approve` or the `## Blocking concerns` section is `_(none)_` → proceed to Handoff.
    - If there are blocking concerns → propose amendments to the plan to address each one. Show the user the diff against the current plan body. Ask: `Apply these amendments and re-write the plan? [Y/n]`.
      - On Y → dispatch `magos-artisan` with `write-plan`, `overwrite: true`, new body. Re-dispatch the reviewer if the changes were substantial.
@@ -175,7 +186,7 @@ Track mode is **reactive**. You read the plan, show the user where things stand,
 ### On entry
 
 1. Resolve the file via `plan-workflow`'s slug-to-file resolution. If ambiguous, ask the user to disambiguate.
-2. Read the plan. Parse frontmatter: `status`, `goal`, `supersedes`, `updated`. Parse `## Numbered steps` and `## Acceptance criteria` to count `[ ]` / `[x]` per section.
+2. Read the plan. Parse frontmatter: `status`, `goal`, `weight` (default `standard` if absent), `supersedes`, `updated`. Parse `## Numbered steps` and `## Acceptance criteria` to count `[ ]` / `[x]` per section.
 3. Handle status edge cases:
    - `status: complete` → report `Plan <slug> is already complete (updated <date>).` Ask: reopen (dispatch `update-status in-progress`) / start a fresh plan / nothing.
    - `status: abandoned` → similar; offer to reopen or stay closed.
@@ -225,19 +236,33 @@ Interpret natural-language updates and dispatch the appropriate `magos-artisan` 
 
 ### Dispatch template for `enginseer`
 
-When dispatching `enginseer` for step execution, the `task` prompt **must** start with the sentinel `[DISPATCH: magos-iterator]`. Use this shape:
+When dispatching `enginseer` for step execution, the `task` prompt **must** start with the sentinel `[DISPATCH: magos-iterator]`. The payload hoists the step's contract from the plan verbatim — no content is invented at dispatch time.
 
 ```
 [DISPATCH: magos-iterator]
 Plan: <abs-path-to-plan-file>
+Weight: <light | standard | heavy from plan frontmatter, or "standard" if absent>
 Step <N>: <step text verbatim from the plan>
-Touchpoints: <file paths from ## File touchpoints relevant to this step>
-Acceptance hint: <acceptance criteria relevant to this step, or "none">
+Done when:
+  - <observable outcome verbatim from the step's Done when: sub-list>
+  - <observable outcome verbatim>
+Touchpoints: <per-step Touchpoints: line verbatim, or relevant subset of ## File touchpoints>
+Anti-touch: <per-step Anti-touch: line verbatim, or "none">
+Verification: <per-step Verification: line verbatim, or "none">
+Pre-conditions: <per-step Pre-conditions: line verbatim, or "none">
+Plan-level acceptance (relevant): <subset of ## Acceptance criteria that this step affects, or "none">
 
 Execute this step. Touch only the named touchpoints. Return one structured <result> block.
 ```
 
-The sentinel is non-negotiable — without it, enginseer cannot disambiguate a stray invocation from a real plan dispatch. Always include all four lines (`Plan`, `Step`, `Touchpoints`, `Acceptance hint`) even if one resolves to "none".
+Rules:
+
+- **Sentinel is non-negotiable** — without `[DISPATCH: magos-iterator]` on the first line, enginseer cannot disambiguate a stray invocation from a real plan dispatch.
+- **Always include every labelled line** even if it resolves to "none". This is so enginseer can rely on the shape.
+- **Verbatim hoisting only.** Do not paraphrase the step text or sub-items. If the plan is wrong, run pause-and-amend; do not "fix" content at dispatch time.
+- **Light-weight plans** have no `Done when:` / per-step `Touchpoints:` sub-items. Fall back to: `Done when: <step text restated as a single outcome>` and `Touchpoints:` from the plan-level `## File touchpoints` section, filtered to anything the step text mentions. Surface "none" for the other labels.
+- **Standard-weight plans** (the floor) always have `Done when:` and `Touchpoints:` per step. Use them verbatim.
+- **Heavy-weight plans** carry any of `Anti-touch:`, `Verification:`, `Pre-conditions:` per step — hoist whichever are present.
 
 Never auto-parallelize step execution. Concurrent dispatches require explicit user direction naming each step; steps may share files and stomp on each other.
 
