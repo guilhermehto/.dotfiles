@@ -1,12 +1,11 @@
 {
-  "lastChangelogVersion": "0.73.0",
+  "lastChangelogVersion": "0.75.5",
   "theme": "ayu-dark",
   "defaultProvider": "anthropic",
   "defaultModel": "claude-opus-4-7",
   "defaultThinkingLevel": "medium",
   "packages": [
-    "npm:@benvargas/pi-claude-code-use",
-    "npm:pi-subagents",
-    "npm:pi-web-access"
+    "npm:pi-web-access",
+    "npm:@benvargas/pi-claude-code-use"
   ]
 }
