@@ -1,7 +1,10 @@
 /**
  * opencode-agents extension
  *
- * Reuses opencode-style agent definitions placed in `~/.pi/agent/agents/*.md`.
+ * Reuses opencode-style agent definitions discovered from (in order, later shadows earlier):
+ *   - `~/.pi/agent/agents/*.md`      (global, pi-native)
+ *   - `<cwd>/.opencode/agent/*.md`   (opencode project-local)
+ *   - `<cwd>/.pi/agents/*.md`        (pi project-local)
  *
  * Frontmatter schema (subset of https://opencode.ai/docs/agents/):
  *   description: string
@@ -65,7 +68,8 @@ interface AgentDef {
 	tools?: Record<string, boolean>;
 }
 
-const AGENTS_DIR = join(homedir(), ".pi", "agent", "agents");
+const GLOBAL_AGENTS_DIR = join(homedir(), ".pi", "agent", "agents");
+const PROJECT_AGENT_DIRS = [".opencode/agent", ".pi/agents"];
 const STATE_TYPE = "opencode-agent-selection";
 const SELF_PATH = import.meta?.url
 	? new URL(import.meta.url).pathname
@@ -137,17 +141,26 @@ function parseFrontmatter(text: string): { fm: Record<string, any>; body: string
 	return { fm: root, body };
 }
 
-function loadAgents(): Map<string, AgentDef> {
+function loadAgents(cwd: string): Map<string, AgentDef> {
 	const agents = new Map<string, AgentDef>();
+	const dirs = [
+		GLOBAL_AGENTS_DIR,
+		...PROJECT_AGENT_DIRS.map((p) => join(cwd, p)),
+	];
+	for (const dir of dirs) loadAgentsFromDir(dir, agents);
+	return agents;
+}
+
+function loadAgentsFromDir(dir: string, agents: Map<string, AgentDef>): void {
 	let entries: string[] = [];
 	try {
-		entries = readdirSync(AGENTS_DIR);
+		entries = readdirSync(dir);
 	} catch {
-		return agents;
+		return;
 	}
 	for (const entry of entries) {
 		if (!entry.endsWith(".md")) continue;
-		const full = join(AGENTS_DIR, entry);
+		const full = join(dir, entry);
 		try {
 			const st = statSync(full);
 			if (!st.isFile()) continue;
@@ -167,6 +180,7 @@ function loadAgents(): Map<string, AgentDef> {
 			// Longest pattern first so we test specific rules before the catch-all.
 			bash.sort((a, b) => b.pattern.length - a.pattern.length);
 
+			// Later directories shadow earlier ones for same agent name.
 			agents.set(name, {
 				name,
 				path: full,
@@ -183,10 +197,9 @@ function loadAgents(): Map<string, AgentDef> {
 				tools: fm.tools && typeof fm.tools === "object" ? (fm.tools as Record<string, boolean>) : undefined,
 			});
 		} catch (err) {
-			console.error(`opencode-agents: failed to parse ${entry}:`, err);
+			console.error(`opencode-agents: failed to parse ${full}:`, err);
 		}
 	}
-	return agents;
 }
 
 function normLevel(v: any, fallback: PermLevel = "ask"): PermLevel {
@@ -225,7 +238,7 @@ const taskParams = Type.Object({
 type TaskParams = Static<typeof taskParams>;
 
 export default function (pi: ExtensionAPI) {
-	let agents = loadAgents();
+	let agents = loadAgents(process.cwd());
 	let current: AgentDef | undefined;
 
 	// Auto-activation in child processes spawned by the task tool.
@@ -301,7 +314,7 @@ export default function (pi: ExtensionAPI) {
 	// ───── lifecycle ─────
 
 	pi.on("session_start", async (_event, ctx) => {
-		agents = loadAgents();
+		agents = loadAgents(ctx.cwd);
 
 		// Restore persisted selection, if any.
 		let restored: string | undefined;
@@ -403,9 +416,10 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("agents", {
 		description: "List opencode-style agents",
 		handler: async (_args, ctx) => {
-			const lines = [...agents.values()].map(
-				(a) => `${a.name === current?.name ? "● " : "  "}${a.name.padEnd(20)} [${a.mode}] ${a.description ?? ""}`,
-			);
+			const lines = [...agents.values()].map((a) => {
+				const origin = a.path.startsWith(GLOBAL_AGENTS_DIR) ? "global" : "project";
+				return `${a.name === current?.name ? "● " : "  "}${a.name.padEnd(20)} [${a.mode}] (${origin}) ${a.description ?? ""}`;
+			});
 			ctx.ui.notify(lines.join("\n") || "no agents", "info");
 		},
 	});
