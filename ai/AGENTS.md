@@ -25,15 +25,9 @@ Be direct, concise, and outcome-first.
 - Do not commit, amend, or push unless explicitly asked.
 - Prefer concrete evidence over speculation.
 - If unsure, say what is known, what is unknown, and the next check.
+- Do not add comments to code unless necessary.
 
 ## Final Responses
 
 Keep final responses compact.
 
-Use this shape when code or config changed:
-
-- Changed: `<short summary>`
-- Verified: `<commands run or not run>`
-- Notes: `<only important caveats>`
-
-Skip sections that do not add value.
