@@ -16,7 +16,7 @@ Always load the `plan-workflow` skill first. It defines the scriptorum root, fil
 The old `magos-iterator` primary agent enforced this via `edit: deny` permissions. The host agent (archmagos) is write-capable, so this invariant is now **instruction-enforced, not permission-enforced**. That makes it more important to follow explicitly, not less.
 
 Rules:
-- Every `.scriptorum/` mutation goes through `magos-artisan` via the `task` tool. No exceptions.
+- Every `.scriptorum/` mutation goes through `magos-artisan` (dispatched as a subagent). No exceptions.
 - Code implementation is delegated to `enginseer` (in-session dispatch) or to the user's own session. Never implement steps directly.
 - If you catch yourself about to edit a file outside `.scriptorum/`, stop. Dispatch `enginseer` or redirect the user instead.
 - The blast radius of this workflow is bounded to `.scriptorum/` by design. Honour that boundary even though the host agent could cross it.
@@ -37,7 +37,7 @@ If the input is ambiguous between Fresh and Track (looks like both a slug and a 
 
 Ground every claim in the plan in real code. Skip in Track mode — the original plan already did this work.
 
-1. Dispatch `explore` via the `task` tool with the user's task as the question, asking for a written answer with evidence. Use `medium` thoroughness for narrowly scoped tasks; increase to `high` when you need a complete explainer across many files.
+1. Dispatch `explore` as a subagent with the user's task as the question, asking for a written answer with evidence. Use `medium` thoroughness for narrowly scoped tasks; increase to `high` when you need a complete explainer across many files.
 2. Read the agent's output. Open and verify the most load-bearing files yourself (via `read`) before using them in the plan. Treat the subagent's `path:line` references as a map, not final evidence — verify before citing.
 3. If the explorer returned significant unknown unknowns or open questions, surface them to the user before planning. Decide together whether they need answering now or can be deferred into the plan as `> note:` lines.
 
@@ -66,7 +66,7 @@ The explorer's full writeup stays internal — don't dump it to the user unless 
 
 4. **Preview to the user.** Print the frontmatter (created/updated dates, slug, goal, status: not-started, weight: <chosen>, supersedes: []) followed by the full body. Ask: `Write plan to <abs-path>? [Y/n]`. Default Y.
 
-5. **On confirmation, dispatch `magos-artisan`** via the `task` tool:
+5. **On confirmation, dispatch `magos-artisan`** as a subagent:
    ```
    action: write-plan
    payload:
@@ -80,12 +80,12 @@ The explorer's full writeup stays internal — don't dump it to the user unless 
    ```
    Surface the artisan's return verbatim.
 
-6. **Dispatch `logis`** with the absolute path of the plan just written. This is automatic — do not ask. Surface its return.
+6. **Dispatch `logis`** as a subagent with the absolute path of the plan just written. This is automatic — do not ask. Surface its return.
 
 7. **Triage the review.**
    - If verdict is `approve` or `## Blocking concerns` is `_(none)_` → proceed to Handoff.
    - If there are blocking concerns → propose amendments, show the diff against the current plan body, ask: `Apply these amendments and re-write the plan? [Y/n]`.
-     - On Y → dispatch `magos-artisan` with `write-plan`, `overwrite: true`, new body. Re-dispatch `logis` if the changes were substantial.
+      - On Y → dispatch `magos-artisan` (subagent) with `write-plan`, `overwrite: true`, new body. Re-dispatch `logis` if the changes were substantial.
      - On N → ask the user how to proceed (skip the concern with an `append-note` justification / amend partially / abandon plan).
 
 ## Handoff (end of Fresh mode)
@@ -161,7 +161,7 @@ Interpret natural-language updates and dispatch the appropriate `magos-artisan` 
 
 ### Dispatch template for `enginseer`
 
-When dispatching `enginseer` for step execution, the `task` prompt **must** start with the sentinel `[DISPATCH: magos-iterator]`. The payload hoists the step's contract from the plan verbatim — no content is invented at dispatch time.
+When dispatching `enginseer` as a subagent for step execution, the prompt **must** start with the sentinel `[DISPATCH: magos-iterator]`. The payload hoists the step's contract from the plan verbatim — no content is invented at dispatch time.
 
 ```
 [DISPATCH: magos-iterator]
@@ -228,11 +228,11 @@ When the user invokes autopilot (`go`, `execute all remaining`, `run the rest`, 
 
 ### Pause-and-amend
 
-If the user reports that the plan itself is wrong (a step is impossible as written; a touchpoint moved; an assumption is broken), do **not** silently work around it. Ask via `question` with three options:
+If the user reports that the plan itself is wrong (a step is impossible as written; a touchpoint moved; an assumption is broken), do **not** silently work around it. Ask a multiple-choice question with three options:
 
-- `Amend the plan` → propose a revised body that fixes the affected sections, show it to the user, and on confirmation dispatch `magos-artisan` with `write-plan`, `overwrite: true`. Re-dispatch `logis` if the change was substantial. Resume Track.
-- `Continue with a caveat` → dispatch `append-note` on the affected step explaining the deviation. Continue Track.
-- `Abandon the plan` → dispatch `update-status abandoned`. Stop.
+- `Amend the plan` → propose a revised body that fixes the affected sections, show it to the user, and on confirmation dispatch `magos-artisan` (subagent) with `write-plan`, `overwrite: true`. Re-dispatch `logis` if the change was substantial. Resume Track.
+- `Continue with a caveat` → dispatch `magos-artisan` with `append-note` on the affected step explaining the deviation. Continue Track.
+- `Abandon the plan` → dispatch `magos-artisan` with `update-status abandoned`. Stop.
 
 ## Phase 4 — Close
 
@@ -241,11 +241,11 @@ Triggered when the user says "mark complete" or "this is done", or implicitly wh
 Before transitioning the plan to `complete`:
 
 1. **Sanity-check coverage.** If any `## Numbered steps` or `## Acceptance criteria` are still `[ ]`, surface them and ask the user: tick remaining / waive (via `append-note` with a justification) / abort the Close.
-2. **Dispatch `magos-reductor`** via the `task` tool. Tell it to review the working-tree diff against `HEAD` (or the diff since the plan started, if a meaningful base ref is known). Surface its output verbatim.
+2. **Dispatch `magos-reductor`** as a subagent. Tell it to review the working-tree diff against `HEAD` (or the diff since the plan started, if a meaningful base ref is known). Surface its output verbatim.
 3. **Triage the diff review.**
    - Blocking issues → surface them; ask whether to (a) un-mark for fixing (don't transition to complete), (b) record as a `> note:` on a relevant step, or (c) waive with the user's acknowledgement.
    - Non-blocking / refactoring opportunities → surface; default is to defer (plan is closing) unless the user wants to act.
-4. **Mark the plan complete.** Dispatch `magos-artisan` with `update-status complete`. Report the final path.
+4. **Mark the plan complete.** Dispatch `magos-artisan` (subagent) with `update-status complete`. Report the final path.
 5. **Summarise.** End with the compact shape from the project's `AGENTS.md`:
    ```
    - Changed: <short summary of what landed across all steps>
@@ -258,17 +258,17 @@ Before transitioning the plan to `complete`:
 
 | Subagent | When to dispatch |
 |---|---|
-| `explore` | Understand phase — code exploration before planning. |
-| `magos-artisan` | Every `.scriptorum/` mutation: `write-plan`, `tick-task`, `append-note`, `update-status`, `supersede`. |
-| `logis` | After every plan write and after substantial amendments. |
-| `enginseer` | Step execution in Track mode, via the `[DISPATCH: magos-iterator]` sentinel. Enginseer commits per step and returns a SHA. |
-| `magos-reductor` | Close phase — diff review before transitioning to `complete`. |
-| `servitor` | Commits when the user asks at the end of Close. |
+| `explore` | Understand phase — code exploration before planning. Dispatch as a subagent. |
+| `magos-artisan` | Every `.scriptorum/` mutation: `write-plan`, `tick-task`, `append-note`, `update-status`, `supersede`. Dispatch as a subagent. |
+| `logis` | After every plan write and after substantial amendments. Dispatch as a subagent. |
+| `enginseer` | Step execution in Track mode, via the `[DISPATCH: magos-iterator]` sentinel. Dispatch as a subagent. Enginseer commits per step and returns a SHA. |
+| `magos-reductor` | Close phase — diff review before transitioning to `complete`. Dispatch as a subagent. |
+| `servitor` | Commits when the user asks at the end of Close. Dispatch as a subagent. |
 
 ## Hard rules
 
 - **Orchestrate only.** While in this workflow, never edit code directly. Dispatch `enginseer` for execution, or redirect the user to a separate session. This is instruction-enforced — the host agent is write-capable, so the discipline must be explicit.
-- **All `.scriptorum/` mutations go through `magos-artisan`.** The invariant "only artisan writes the scriptorum" must hold.
+- **All `.scriptorum/` mutations go through `magos-artisan` (dispatched as a subagent).** The invariant "only artisan writes the scriptorum" must hold.
 - **Do not implement code.** Not the steps, not "small helper" edits, not config tweaks.
 - **Do not auto-set `status: complete`.** Completion is an explicit `update-status complete` dispatch at the end of Close, after step coverage and diff review.
 - **Do not skip plan review.** `logis` runs after every plan write. Re-dispatch after substantial amendments.

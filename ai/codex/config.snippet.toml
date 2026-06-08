@@ -14,3 +14,14 @@
 [agents]
 max_depth = 2
 max_threads = 6
+
+# codex-sync-ai writes into ~/.agents/skills and ~/.codex (skills, TOML links,
+# AGENTS.md). The update-config skill runs it as the main Codex agent, whose
+# default sandbox is workspace-write. Without writable_roots, every re-sync
+# stalls on an escalation prompt rather than hard-failing — this entry removes
+# that friction so the skill runs unattended.
+[sandbox_workspace_write]
+writable_roots = [
+  "~/.agents",
+  "~/.codex",
+]

@@ -1,0 +1,348 @@
+#!/usr/bin/env bash
+#
+# codex-sync-ai
+#
+# Reconciles ~/.agents/skills and ~/.codex/agents/ with the ai/ dotfiles source,
+# and composes ~/.codex/AGENTS.md from ai/AGENTS.md + ai/agents/archmagos.md.
+#
+# Skills linked:
+#   - Shared skills:  ai/skills/*          → ~/.agents/skills/<name>
+#   - Codex skills:   ai/codex/skills/*    → ~/.agents/skills/<name>
+#
+# Subagent TOMLs linked:
+#   - ai/codex/agents/*.toml               → ~/.codex/agents/<name>.toml
+#
+# AGENTS.md composed:
+#   - ~/.codex/AGENTS.md = ai/AGENTS.md + ai/agents/archmagos.md
+#   - Regenerated idempotently via stable marker comments.
+#   - If a pre-existing real/foreign ~/.codex/AGENTS.md exists, backs it up to
+#     ~/.codex/AGENTS.md.bak ONCE (does not clobber an existing .bak) and warns.
+#
+# Prune policy: only symlinks whose target resolves into a known ai/ source path
+# are eligible for removal. Foreign entries (e.g. firecrawl skills) are never
+# touched. Real files are never touched.
+#
+# Re-running is a no-op when nothing has changed.
+#
+# Compatible with bash 3.2 (macOS system bash) and later.
+
+set -euo pipefail
+shopt -s nullglob
+
+# ---------- Configuration ----------
+
+# Resolve the dotfiles root relative to this script's location.
+# Script lives at ai/codex/bin/codex-sync-ai, so dotfiles root is three levels up.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DOTFILES_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+AI_ROOT="$DOTFILES_ROOT/ai"
+SHARED_SKILLS_DIR="$AI_ROOT/skills"
+CODEX_SKILLS_DIR="$AI_ROOT/codex/skills"
+CODEX_AGENTS_DIR="$AI_ROOT/codex/agents"
+AGENTS_MD_SOURCE="$AI_ROOT/AGENTS.md"
+ARCHMAGOS_SOURCE="$AI_ROOT/agents/archmagos.md"
+
+SKILLS_DEST="$HOME/.agents/skills"
+CODEX_AGENTS_DEST="$HOME/.codex/agents"
+CODEX_AGENTS_MD="$HOME/.codex/AGENTS.md"
+
+# Known source roots for prune-safety checks.
+KNOWN_SOURCES=(
+  "$AI_ROOT/skills"
+  "$AI_ROOT/codex/skills"
+  "$AI_ROOT/codex/agents"
+)
+
+# Stable markers for the composed AGENTS.md.
+MARKER_STANDARDS_BEGIN="<!-- codex-sync-ai: engineering-standards begin -->"
+MARKER_STANDARDS_END="<!-- codex-sync-ai: engineering-standards end -->"
+MARKER_PERSONA_BEGIN="<!-- codex-sync-ai: archmagos-persona begin -->"
+MARKER_PERSONA_END="<!-- codex-sync-ai: archmagos-persona end -->"
+
+# ---------- Helpers ----------
+
+resolve_path() {
+  python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$1"
+}
+
+# Returns 0 if the given literal path is rooted in any known source.
+path_in_known_source() {
+  local p="$1" rs src
+  for src in "${KNOWN_SOURCES[@]}"; do
+    rs="$(resolve_path "$src")"
+    case "$p" in
+      "$rs"/*|"$src"/*) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+# Parallel arrays for the desired skill-link map.
+desired_keys=()
+desired_targets=()
+
+desired_index() {
+  local key="$1" i
+  for (( i = 0; i < ${#desired_keys[@]}; i++ )); do
+    if [[ "${desired_keys[$i]}" == "$key" ]]; then
+      printf '%s' "$i"
+      return 0
+    fi
+  done
+  printf '%s' '-1'
+}
+
+conflicts=0
+
+add_desired_skill() {
+  local name="$1" target="$2" idx
+  idx="$(desired_index "$name")"
+  if [[ "$idx" != "-1" ]]; then
+    printf 'conflict: skill "%s" defined in:\n  %s\n  %s\n' \
+      "$name" "${desired_targets[$idx]}" "$target" >&2
+    conflicts=$((conflicts + 1))
+    return
+  fi
+  desired_keys+=("$name")
+  desired_targets+=("$target")
+}
+
+print_section() {
+  local label="$1"; shift
+  (( $# > 0 )) || return 0
+  printf '\n%s:\n' "$label"
+  printf '  %s\n' "$@"
+}
+
+# ---------- Build desired skill-link map ----------
+
+# Shared skills: ai/skills/*/
+if [[ -d "$SHARED_SKILLS_DIR" ]]; then
+  for d in "$SHARED_SKILLS_DIR"/*/; do
+    d="${d%/}"
+    [[ -f "$d/SKILL.md" ]] || continue
+    add_desired_skill "$(basename "$d")" "$(resolve_path "$d")"
+  done
+fi
+
+# Codex action-skills: ai/codex/skills/*/
+if [[ -d "$CODEX_SKILLS_DIR" ]]; then
+  for d in "$CODEX_SKILLS_DIR"/*/; do
+    d="${d%/}"
+    [[ -f "$d/SKILL.md" ]] || continue
+    add_desired_skill "$(basename "$d")" "$(resolve_path "$d")"
+  done
+fi
+
+if (( conflicts > 0 )); then
+  printf '\nAborting due to %d skill conflict(s). No changes made.\n' "$conflicts" >&2
+  exit 1
+fi
+
+# ---------- Reconcile skills ----------
+
+mkdir -p "$SKILLS_DEST"
+
+skills_created=()
+skills_updated=()
+skills_pruned=()
+skills_skipped_user=()
+skills_skipped_external=()
+skills_unchanged=0
+
+for (( i = 0; i < ${#desired_keys[@]}; i++ )); do
+  name="${desired_keys[$i]}"
+  abs_target="${desired_targets[$i]}"
+  dest="$SKILLS_DEST/$name"
+
+  if [[ -L "$dest" ]]; then
+    current="$(resolve_path "$dest")"
+    if [[ "$current" == "$abs_target" ]]; then
+      skills_unchanged=$((skills_unchanged + 1))
+    elif path_in_known_source "$current"; then
+      ln -snf "$abs_target" "$dest"
+      skills_updated+=("skills/$name")
+    else
+      skills_skipped_external+=("skills/$name -> $current")
+    fi
+  elif [[ -e "$dest" ]]; then
+    skills_skipped_user+=("skills/$name")
+  else
+    ln -s "$abs_target" "$dest"
+    skills_created+=("skills/$name")
+  fi
+done
+
+# ---------- Prune stale skill symlinks ----------
+
+if [[ -d "$SKILLS_DEST" ]]; then
+  for entry in "$SKILLS_DEST"/*/; do
+    entry="${entry%/}"
+    [[ -L "$entry" ]] || continue
+    name="$(basename "$entry")"
+    if [[ "$(desired_index "$name")" != "-1" ]]; then
+      continue
+    fi
+
+    literal="$(readlink "$entry")"
+    if path_in_known_source "$literal"; then
+      rm -rf "$entry"
+      skills_pruned+=("skills/$name")
+      continue
+    fi
+    if resolved="$(resolve_path "$entry" 2>/dev/null)" \
+      && path_in_known_source "$resolved"; then
+      rm -rf "$entry"
+      skills_pruned+=("skills/$name")
+    fi
+  done
+fi
+
+# ---------- Reconcile subagent TOMLs ----------
+
+mkdir -p "$CODEX_AGENTS_DEST"
+
+agents_created=()
+agents_updated=()
+agents_pruned=()
+agents_skipped_user=()
+agents_skipped_external=()
+agents_unchanged=0
+
+if [[ -d "$CODEX_AGENTS_DIR" ]]; then
+  for f in "$CODEX_AGENTS_DIR"/*.toml; do
+    name="$(basename "$f")"
+    abs_target="$(resolve_path "$f")"
+    dest="$CODEX_AGENTS_DEST/$name"
+
+    if [[ -L "$dest" ]]; then
+      current="$(resolve_path "$dest")"
+      if [[ "$current" == "$abs_target" ]]; then
+        agents_unchanged=$((agents_unchanged + 1))
+      elif path_in_known_source "$current"; then
+        ln -snf "$abs_target" "$dest"
+        agents_updated+=("agents/$name")
+      else
+        agents_skipped_external+=("agents/$name -> $current")
+      fi
+    elif [[ -e "$dest" ]]; then
+      agents_skipped_user+=("agents/$name")
+    else
+      ln -s "$abs_target" "$dest"
+      agents_created+=("agents/$name")
+    fi
+  done
+fi
+
+# Prune stale TOML symlinks (only those resolving into ai/codex/agents/).
+if [[ -d "$CODEX_AGENTS_DEST" ]]; then
+  for entry in "$CODEX_AGENTS_DEST"/*.toml; do
+    [[ -L "$entry" ]] || continue
+    name="$(basename "$entry")"
+    # Check if this TOML is still in our desired set.
+    still_desired=0
+    if [[ -f "$CODEX_AGENTS_DIR/$name" ]]; then
+      still_desired=1
+    fi
+    if (( still_desired )); then
+      continue
+    fi
+
+    literal="$(readlink "$entry")"
+    if path_in_known_source "$literal"; then
+      rm "$entry"
+      agents_pruned+=("agents/$name")
+      continue
+    fi
+    if resolved="$(resolve_path "$entry" 2>/dev/null)" \
+      && path_in_known_source "$resolved"; then
+      rm "$entry"
+      agents_pruned+=("agents/$name")
+    fi
+  done
+fi
+
+# ---------- Compose ~/.codex/AGENTS.md ----------
+
+agents_md_action="unchanged"
+
+if [[ ! -f "$AGENTS_MD_SOURCE" ]]; then
+  printf 'warn: ai/AGENTS.md not found at %s — skipping AGENTS.md composition\n' \
+    "$AGENTS_MD_SOURCE" >&2
+elif [[ ! -f "$ARCHMAGOS_SOURCE" ]]; then
+  printf 'warn: ai/agents/archmagos.md not found at %s — skipping AGENTS.md composition\n' \
+    "$ARCHMAGOS_SOURCE" >&2
+else
+  # Read source content (strip trailing newline for clean concatenation).
+  standards_content="$(cat "$AGENTS_MD_SOURCE")"
+  archmagos_content="$(cat "$ARCHMAGOS_SOURCE")"
+
+  # Build the composed content with stable markers.
+  composed="$MARKER_STANDARDS_BEGIN
+$standards_content
+$MARKER_STANDARDS_END
+
+$MARKER_PERSONA_BEGIN
+$archmagos_content
+$MARKER_PERSONA_END
+"
+
+  mkdir -p "$(dirname "$CODEX_AGENTS_MD")"
+
+  if [[ -e "$CODEX_AGENTS_MD" ]]; then
+    if [[ -L "$CODEX_AGENTS_MD" ]]; then
+      # It's a symlink — replace it with the composed file.
+      rm "$CODEX_AGENTS_MD"
+      printf '%s' "$composed" > "$CODEX_AGENTS_MD"
+      agents_md_action="created (replaced symlink)"
+    else
+      # It's a real file. Check if it's already our generated output.
+      if grep -qF "$MARKER_STANDARDS_BEGIN" "$CODEX_AGENTS_MD" 2>/dev/null; then
+        # Already generated — check if content differs.
+        existing="$(cat "$CODEX_AGENTS_MD")"
+        if [[ "$existing" == "$composed" ]]; then
+          agents_md_action="unchanged"
+        else
+          printf '%s' "$composed" > "$CODEX_AGENTS_MD"
+          agents_md_action="updated"
+        fi
+      else
+        # Foreign real file — back it up ONCE, then write.
+        bak="$CODEX_AGENTS_MD.bak"
+        if [[ -e "$bak" ]]; then
+          printf 'warn: ~/.codex/AGENTS.md is a foreign file and a .bak already exists.\n' >&2
+          printf '      Leaving existing .bak intact. Overwriting AGENTS.md with composed version.\n' >&2
+        else
+          cp "$CODEX_AGENTS_MD" "$bak"
+          printf 'warn: backed up foreign ~/.codex/AGENTS.md to %s\n' "$bak" >&2
+        fi
+        printf '%s' "$composed" > "$CODEX_AGENTS_MD"
+        agents_md_action="created (foreign file backed up)"
+      fi
+    fi
+  else
+    printf '%s' "$composed" > "$CODEX_AGENTS_MD"
+    agents_md_action="created"
+  fi
+fi
+
+# ---------- Report ----------
+
+all_created=("${skills_created[@]}" "${agents_created[@]}")
+all_updated=("${skills_updated[@]}" "${agents_updated[@]}")
+all_pruned=("${skills_pruned[@]}" "${agents_pruned[@]}")
+all_skipped_user=("${skills_skipped_user[@]}" "${agents_skipped_user[@]}")
+all_skipped_external=("${skills_skipped_external[@]}" "${agents_skipped_external[@]}")
+all_unchanged=$(( skills_unchanged + agents_unchanged ))
+
+print_section "Created"                 "${all_created[@]+"${all_created[@]}"}"
+print_section "Updated"                 "${all_updated[@]+"${all_updated[@]}"}"
+print_section "Pruned"                  "${all_pruned[@]+"${all_pruned[@]}"}"
+print_section "Skipped (user-managed)"  "${all_skipped_user[@]+"${all_skipped_user[@]}"}"
+print_section "Skipped (external link)" "${all_skipped_external[@]+"${all_skipped_external[@]}"}"
+
+printf '\nAGENTS.md: %s\n' "$agents_md_action"
+printf 'Summary: %d created, %d updated, %d unchanged, %d pruned, %d skipped (user), %d skipped (external)\n' \
+  "${#all_created[@]}" "${#all_updated[@]}" "$all_unchanged" \
+  "${#all_pruned[@]}" "${#all_skipped_user[@]}" "${#all_skipped_external[@]}"

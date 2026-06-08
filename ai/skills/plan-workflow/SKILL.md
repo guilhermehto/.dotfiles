@@ -51,7 +51,7 @@ Files of the shape `<slug>.md` (no date prefix) are **legacy plans** created bef
 
 ## Slug rules
 
-The slug is the part of the filename after the date prefix. It comes from the catechism recap's `Goal:` line and never from raw `$ARGUMENTS`.
+The slug is the part of the filename after the date prefix. It comes from the catechism recap's `Goal:` line and never from the raw prompt text directly.
 
 Derivation:
 
@@ -291,19 +291,19 @@ Plans on a **different** date with the same slug do not collide for `write-plan`
 `/plan` always runs the catechism interview before synthesis:
 
 1. Load the `catechism` skill.
-2. Run the protocol (rounds, multiple-choice via the `question` tool, recap).
+2. Run the protocol (rounds, multiple-choice questions, recap).
 3. Wait for affirmative confirmation of the recap.
 4. Only then derive the slug and synthesize the body.
 
 If the user aborts mid-interview (`stop`, `cancel`, `never mind`, or equivalent), write nothing and exit cleanly with `Aborted; no plan written.`
 
-If `$ARGUMENTS` is empty, the catechism still runs — synthesis is driven by the recap, not the args.
+If no task description is provided, the catechism still runs — synthesis is driven by the recap, not the initial prompt.
 
 The `magos-iterator` skill follows the same rule for the heavy work flow, but may **skip** the catechism when the incoming task description already contains an explicit goal, scope, and constraints (see the skill for the skip heuristic).
 
 ## magos-artisan delegation contract
 
-`magos-artisan` is the sole writer under `.scriptorum/`. Every consumer that mutates a plan file invokes it via the `task` tool with a structured request. Supported actions:
+`magos-artisan` is the sole writer under `.scriptorum/` on opencode. Every consumer that mutates a plan file dispatches it as a subagent with a structured request. Supported actions:
 
 ### `action: write-plan`
 

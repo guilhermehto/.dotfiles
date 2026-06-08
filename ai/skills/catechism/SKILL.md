@@ -50,37 +50,33 @@ Goal and scope come first because they cheaply rule out whole branches of work. 
 
 ## Question protocol
 
-**Every question is asked via the `question` tool with multiple-choice options.** This is the default and the rule, not a preference. The tool already provides a "type your own" escape hatch, so multiple-choice never costs the user expressiveness — it only forces you to enumerate the realistic answer space, which lowers their reply cost and surfaces options they hadn't considered.
+**Every question is presented with multiple-choice options.** This is the default and the rule, not a preference. Always include an implicit "none of the above / type your own" escape, so multiple-choice never costs the user expressiveness — it only forces you to enumerate the realistic answer space, which lowers their reply cost and surfaces options they hadn't considered.
 
-If you catch yourself about to ask a free-form question, stop and enumerate 3-5 plausible answers first. "The user might want something I haven't listed" is not a reason to skip enumeration — that is exactly what "type your own" is for. List your best guesses and let the escape hatch handle the long tail.
+If you catch yourself about to ask a free-form question, stop and enumerate 3-5 plausible answers first. "The user might want something I haven't listed" is not a reason to skip enumeration — that is exactly what the open-ended escape is for. List your best guesses and let the escape handle the long tail.
 
-### The `question` tool
+### Presenting multiple-choice questions
 
-`question` is an opencode built-in tool ([docs](https://opencode.ai/docs/tools/#question)), not an MCP server. Depending on your runtime it may appear in your tool list under a prefixed name (e.g. `mcp_Question`); the underlying tool is the same. If you don't see it, attempt the call before concluding it's unavailable — opencode surfaces a clear error if it isn't.
+Format each question as a numbered or lettered list of options. Include a brief one-line description for each option so the user can distinguish them at a glance. Always end with an implicit or explicit "Other / type your own" option so the user is never boxed in.
 
-Call shape — pass `questions` as a real array, not a stringified JSON value:
+Example shape (adapt formatting to your runtime's conventions):
 
-```json
-{
-  "questions": [
-    {
-      "header": "Short label (≤30 chars)",
-      "question": "Full question text.",
-      "options": [
-        {"label": "1-5 word choice", "description": "One-line explanation."},
-        {"label": "Another choice", "description": "..."}
-      ],
-      "multiple": false
-    }
-  ]
-}
 ```
+Question: <Full question text>
+
+  A) <1-5 word choice> — <One-line explanation>
+  B) <Another choice> — <...>
+  C) Other / describe your own
+
+(Multiple selections allowed if the question permits it.)
+```
+
+On opencode, use the `question` tool with structured `options` arrays — it renders the choices natively and appends "type your own" automatically. On other runtimes, render the same structure as prose. The discipline (enumerate options, include an escape) is the invariant; the rendering mechanism is runtime-specific.
 
 Notes:
 
-- A "type your own answer" option is appended automatically; never add "Other" or a catch-all yourself.
-- Set `multiple: true` only when the user can legitimately pick more than one option for that question.
-- Multiple questions in a single call are batched into one prompt — use this for whole-dimension rounds.
+- Never add a catch-all "Other" when using the opencode `question` tool — it appends "type your own" automatically.
+- Mark `multiple: true` (or note "multiple selections allowed") only when the user can legitimately pick more than one option.
+- Batch multiple questions into a single prompt when they belong to the same dimension round.
 
 ### When free-form is allowed
 
@@ -90,7 +86,7 @@ Free-form prose is the narrow exception. Use it only when one of these is strict
 - You attempted to enumerate options and the realistic answer space genuinely exceeds ~8 distinct, non-overlapping choices.
 - The question is a closing "anything I'm missing?" / "ready to go?" prompt at the end of a round or recap.
 
-If none of these apply, the question is multiple-choice. No exceptions for "this one is nuanced" or "I want to leave it open" — nuance lives in the options and the type-your-own escape.
+If none of these apply, the question is multiple-choice. No exceptions for "this one is nuanced" or "I want to leave it open" — nuance lives in the options and the open-ended escape.
 
 ### Question-crafting rules
 
@@ -111,7 +107,7 @@ Batch by dimension. Aim for 3-6 questions per round; never more than 7. Asking 2
 Loop:
 
 1. Pick the next unresolved dimension.
-2. Ask its batch via `question` (or open-ended if the rules above call for it).
+2. Ask its batch as multiple-choice questions (or open-ended if the rules above call for it).
 3. Read the answers. If new ambiguity appeared, queue follow-ups for the next round.
 4. When the current dimension is settled, move to the next.
 5. After the last dimension, deliver the recap (below) and ask "anything I'm missing?" or "ready for me to go?".
@@ -148,7 +144,7 @@ Rules:
 
 ## Mid-task pause-and-ask
 
-The interview is not only for the start of a task. Whenever, mid-task, you would otherwise silently make a material assumption — pause and ask one focused question via `question` with 2-4 options. The free-form exceptions above apply here too and are equally narrow.
+The interview is not only for the start of a task. Whenever, mid-task, you would otherwise silently make a material assumption — pause and ask one focused multiple-choice question with 2-4 options. The free-form exceptions above apply here too and are equally narrow.
 
 A material assumption is one where guessing wrong would mean throwing away work, breaking something the user cares about, or shipping a different feature than requested. Cosmetic choices (naming, ordering of unrelated bullets) do not qualify.
 
@@ -158,7 +154,7 @@ Format the mid-task ask as a single short question, not a new round. Get the ans
 
 - Never run the interview when the user has explicitly said "just do it" or equivalent.
 - Never invent questions to look thorough; every question must change what you do next.
-- Never use free-form prose for a question with 3-5 plausible enumerable answers. Enumerate them as `question` options and let "type your own" cover the long tail.
+- Never use free-form prose for a question with 3-5 plausible enumerable answers. Enumerate them as multiple-choice options and let the open-ended escape cover the long tail.
 - Never bury the user's likely intent inside a generic "Other" or "It depends". Split the question instead.
 - Never ask what you can answer by reading the repo.
 - Never proceed past the recap without an affirmative go-ahead.
