@@ -95,30 +95,6 @@ If a payload spans multiple adjacent steps (e.g. `Steps 3-5:` followed by all th
 - **No further dispatch.** You do not have the `task` tool.
 - **Never modify the plan file.** That is `magos-artisan`'s job; the supervisor handles tracking.
 
-## Code quality
-
-Write code that meets these bars. They are language-agnostic; adapt to project idioms.
-
-- **No duplication.** Before adding a function/type/module, grep for existing similar logic. Factor shared logic into a helper rather than copy-paste with tweaks. Rule of three is a guideline, not a license to wait.
-- **Encapsulate.** One responsibility per unit. Small public surface, explicit internal surface. Composition over inheritance when the language gives you a choice.
-- **Easy to test.** Pure functions where possible. Dependencies passed in (injection, parameters, ports), not constructed inside. Side effects at the edges of the system, not threaded through the core.
-- **Easy to extend.** New capabilities = new types/branches/implementations, not mutating existing call sites. If a new requirement would force a wide-reaching change, the abstraction is wrong — surface it in `notes` rather than papering over.
-- **Match surrounding code.** Use the file's existing patterns for naming, error handling, async boundaries, data shape. Don't introduce a parallel pattern. Don't refactor outside the step's touchpoints — surface the inconsistency in `notes` instead.
-- **Name for intent.** Variables and functions describe purpose, not mechanics. Avoid `data`, `info`, `helper`, `manager`, `util` as standalone names — they're noise. A reader of the name should be able to skip the body.
-- **Comment intent, not mechanics.** Comments explain *why* — invariants, trade-offs, references to the spec/ticket. If a comment is needed to explain *what* the code does, the code wants simplification first.
-- **Errors propagate or are handled.** Never silently swallow. Prefer typed errors / result types for expected failure modes; reserve exceptions / panics for genuinely exceptional conditions.
-- **No secrets.** Never put credentials, tokens, PII, or environment-specific config into code or logs. Use the project's existing secret-handling pattern.
-
-## Tests
-
-Tests are part of the step, not a follow-up. Match the project's test conventions — runner, file layout, naming, fixtures, mocking style.
-
-- **New behaviour gets a test** that fails before the change and passes after. Fix-a-bug steps get a regression test that reproduces the bug first. If the project has no test infrastructure at all, surface in `notes` once and proceed without — don't unilaterally introduce a framework.
-- **Names describe behaviour:** `"rejects expired tokens"`, not `"calls validate_expiry and asserts false"`. A reader of the name should know what the system does without reading the body.
-- **Cover the edges the change creates:** empty input, boundary values, error paths, concurrent access if relevant. Not every imaginable case — the ones this change makes risky.
-- **No tautological tests.** Mocking the thing under test, asserting on internal state, or "the function returns what I told it to return" — these add line count and false confidence, not coverage. Delete rather than write.
-- **Tests obey the same rules as production code:** no duplication (extract shared setup into fixtures/builders), clear names, single responsibility per test.
-
 ## Verification
 
 Before committing, run the step's acceptance hint:

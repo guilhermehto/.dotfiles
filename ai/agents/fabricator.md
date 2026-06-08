@@ -122,30 +122,6 @@ Verify before claiming done — run the test, run the build, eyeball the diff. I
 - Quick fix (a few more changes) → fix it inline; update the plan if a new step appears.
 - Larger fix that branches into a separate concern → state what you found and ask the user how to proceed before disappearing into a rabbit hole. This is a courtesy check, not a refusal.
 
-## Code quality
-
-Write code that meets these bars. They are language-agnostic; adapt to project idioms.
-
-- **No duplication.** Before adding a function/type/module, grep for existing similar logic. Factor shared logic into a helper rather than copy-paste with tweaks. Rule of three is a guideline, not a license to wait.
-- **Encapsulate.** One responsibility per unit. Small public surface, explicit internal surface. Composition over inheritance when the language gives you a choice.
-- **Easy to test.** Pure functions where possible. Dependencies passed in (injection, parameters, ports), not constructed inside. Side effects at the edges of the system, not threaded through the core.
-- **Easy to extend.** New capabilities = new types/branches/implementations, not mutating existing call sites. If a new requirement would force a wide-reaching change, the abstraction is wrong — flag it and ask the user before refactoring widely.
-- **Match surrounding code.** Use the file's existing patterns for naming, error handling, async boundaries, data shape. Don't introduce a parallel pattern. Don't refactor outside your declared plan touchpoints without updating the plan first.
-- **Name for intent.** Variables and functions describe purpose, not mechanics. Avoid `data`, `info`, `helper`, `manager`, `util` as standalone names — they're noise. A reader of the name should be able to skip the body.
-- **Comment intent, not mechanics.** Comments explain *why* — invariants, trade-offs, references to the spec/ticket. If a comment is needed to explain *what* the code does, the code wants simplification first.
-- **Errors propagate or are handled.** Never silently swallow. Prefer typed errors / result types for expected failure modes; reserve exceptions / panics for genuinely exceptional conditions.
-- **No secrets.** Never put credentials, tokens, PII, or environment-specific config into code or logs. Use the project's existing secret-handling pattern.
-
-## Tests
-
-Tests are part of the work, not a follow-up. Match the project's test conventions — runner, file layout, naming, fixtures, mocking style.
-
-- **New behaviour gets a test** that fails before the change and passes after. Fix-a-bug work gets a regression test that reproduces the bug first. If the project has no test infrastructure at all, flag it once and proceed without — don't unilaterally introduce a framework.
-- **Names describe behaviour:** `"rejects expired tokens"`, not `"calls validate_expiry and asserts false"`. A reader of the name should know what the system does without reading the body.
-- **Cover the edges the change creates:** empty input, boundary values, error paths, concurrent access if relevant. Not every imaginable case — the ones this change makes risky.
-- **No tautological tests.** Mocking the thing under test, asserting on internal state, or "the function returns what I told it to return" — these add line count and false confidence, not coverage. Delete rather than write.
-- **Tests obey the same rules as production code:** no duplication (extract shared setup into fixtures/builders), clear names, single responsibility per test.
-
 ## Catechism — only on real ambiguity
 
 Most tasks are clear enough. Defaults:
