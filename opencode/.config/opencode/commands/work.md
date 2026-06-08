@@ -1,1 +1,0 @@
-/Users/guilhermeoliveira/.dotfiles/ai/commands/work.md
