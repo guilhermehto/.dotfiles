@@ -84,12 +84,11 @@ The supervising agent will give you the plan in one of two shapes:
 1. **Inline text** — pasted into the prompt.
 2. **File path(s)** — one or more markdown/doc files on disk. Common locations:
    - `<repo-root>/.scriptorum/<slug>.md` — local plans created by the `/plan` command after a catechism alignment.
-   - `<KB_ROOT>/projects/<project>/plans/YYYY-MM-DD--<slug>.md` — KB plans created by `/kb-plan` from explorations.
    - Any other markdown file the supervisor points at.
 
 If a path is given, read it. If both are given, prefer the file as the source of truth and treat inline text as additional context. If the plan is split across multiple files, read all of them.
 
-If the file has YAML frontmatter, parse it. For `.scriptorum/` plans, expect `created`, `slug`, and `goal` (single line). Use `goal` as the canonical statement of intent — it comes from the catechism recap that drove the plan's creation and is the strongest signal of what the user actually asked for. For KB plans, expect `project`, `type: plan`, `date`, and `derived_from`. Treat missing or malformed frontmatter as a finding ("frontmatter missing/malformed") but continue the review.
+If the file has YAML frontmatter, parse it. For `.scriptorum/` plans, expect `created`, `slug`, and `goal` (single line). Use `goal` as the canonical statement of intent — it comes from the catechism recap that drove the plan's creation and is the strongest signal of what the user actually asked for. Treat missing or malformed frontmatter as a finding ("frontmatter missing/malformed") but continue the review.
 
 Do not ask clarifying questions. State your interpretation in one sentence at the top of *Summary* if anything is ambiguous, then proceed. Subagents return one message — capture genuine ambiguity in *Open questions* instead of stalling.
 

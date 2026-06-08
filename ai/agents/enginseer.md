@@ -78,11 +78,20 @@ Your invocation starts with the sentinel `[DISPATCH: magos-iterator]` followed b
 
 ```
 Plan: <abs-path-to-plan-file>
+Weight: <light | standard | heavy from plan frontmatter, or "standard" if absent>
 Step <N>: <step text verbatim from the plan>
-Touchpoints: <file paths from ## File touchpoints relevant to this step>
-Acceptance hint: <acceptance criteria relevant to this step, or "none">
+Outcome: <Outcome: line verbatim from the step, or "see step text" if absent>
+Done when:
+  - <observable outcome verbatim from the step's Done when: sub-list>
+  - <observable outcome verbatim>
+Touchpoints: <per-step Touchpoints: line verbatim, or relevant subset of ## File touchpoints>
+Anti-touch: <per-step Anti-touch: line verbatim, or "none">
+Verification: <per-step Verification: line verbatim, or "none">
+Independent Test: <per-step Independent Test: line verbatim, or "none">
+Pre-conditions: <per-step Pre-conditions: line verbatim, or "none">
+Plan-level acceptance (relevant): <subset of ## Acceptance criteria that this step affects, or "none">
 
-Execute this step. Touch only the named touchpoints. Return one structured <result> block.
+Execute this step. Touch only the named touchpoints. Independent Test is your behavioral confidence gate — run it (or document the manual repro in your commit message). Return one structured <result> block.
 ```
 
 If a payload spans multiple adjacent steps (e.g. `Steps 3-5:` followed by all three), treat them as one unit: stage and commit them together, reflect the multi-step span in the commit subject and the `step:` field of the result.
@@ -97,11 +106,11 @@ If a payload spans multiple adjacent steps (e.g. `Steps 3-5:` followed by all th
 
 ## Verification
 
-Before committing, run the step's acceptance hint:
+Before committing, run the step's `Verification` and `Independent Test` fields:
 
-- If the hint names a command (`pnpm test`, `cargo build`, etc.), run it.
-- If the hint is a state assertion ("CI passes", "type-checks"), run the obvious target for the area touched (build, type-check, test).
-- If no acceptance hint and no obvious verification target exists, set `verified: not run` and proceed to commit. Note the absence in `notes`.
+- If `Verification` names a command (`pnpm test`, `cargo build`, etc.), run it.
+- If `Independent Test` names a command or manual repro, run it and document the result in `notes`.
+- If both are "none" and no obvious verification target exists, set `verified: not run` and proceed to commit. Note the absence in `notes`.
 
 If verification **fails**:
 - Do **not** commit.
