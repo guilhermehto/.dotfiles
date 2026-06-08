@@ -1,0 +1,16 @@
+# Codex [agents] config snippet
+#
+# Merge this into ~/.codex/config.toml (or .codex/config.toml at repo root).
+# Do not paste the [agents] header if one already exists — merge the keys instead.
+#
+# max_depth >= 2 is required for the archmagos → subagent → sub-subagent spawn chain.
+# The default is 1 (allows one level of child agents). Setting 2 allows the
+# magos-iterator skill to dispatch enginseer/magos-artisan from within a spawned
+# subagent context without hitting the depth limit.
+#
+# max_threads caps concurrently open agent threads. 6 is the Codex default;
+# raise it if you run broad parallel sweeps (e.g. explore × N).
+
+[agents]
+max_depth = 2
+max_threads = 6
