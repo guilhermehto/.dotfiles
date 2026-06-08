@@ -329,11 +329,11 @@ fi
 
 # ---------- Report ----------
 
-all_created=("${skills_created[@]}" "${agents_created[@]}")
-all_updated=("${skills_updated[@]}" "${agents_updated[@]}")
-all_pruned=("${skills_pruned[@]}" "${agents_pruned[@]}")
-all_skipped_user=("${skills_skipped_user[@]}" "${agents_skipped_user[@]}")
-all_skipped_external=("${skills_skipped_external[@]}" "${agents_skipped_external[@]}")
+all_created=(${skills_created[@]+"${skills_created[@]}"} ${agents_created[@]+"${agents_created[@]}"})
+all_updated=(${skills_updated[@]+"${skills_updated[@]}"} ${agents_updated[@]+"${agents_updated[@]}"})
+all_pruned=(${skills_pruned[@]+"${skills_pruned[@]}"} ${agents_pruned[@]+"${agents_pruned[@]}"})
+all_skipped_user=(${skills_skipped_user[@]+"${skills_skipped_user[@]}"} ${agents_skipped_user[@]+"${agents_skipped_user[@]}"})
+all_skipped_external=(${skills_skipped_external[@]+"${skills_skipped_external[@]}"} ${agents_skipped_external[@]+"${agents_skipped_external[@]}"})
 all_unchanged=$(( skills_unchanged + agents_unchanged ))
 
 print_section "Created"                 "${all_created[@]+"${all_created[@]}"}"
