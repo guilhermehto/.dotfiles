@@ -1,6 +1,6 @@
 ---
 name: magos-iterator
-description: Deep plan-and-track workflow for multi-step engineering tasks. Load when the user wants a persisted, reviewed .scriptorum/ plan with explicit progress tracking, autopilot step execution, and a closing diff review — invoked via $magos-iterator. Encodes the Understand → Plan → Track → autopilot → Close loop, entry modes (Fresh / Track / List), the enginseer dispatch template with the [DISPATCH: magos-iterator] sentinel, the sequential/bounded autopilot subsection, and the magos-reductor Close phase.
+description: "Deep plan-and-track workflow for multi-step engineering tasks. Load when the user wants a persisted, reviewed .scriptorum/ plan with explicit progress tracking, autopilot step execution, and a closing diff review — invoked via $magos-iterator. Encodes the Understand → Plan → Track → autopilot → Close loop, entry modes (Fresh / Track / List), the enginseer dispatch template with the [DISPATCH: magos-iterator] sentinel, the sequential/bounded autopilot subsection, and the magos-reductor Close phase."
 ---
 
 # magos-iterator
