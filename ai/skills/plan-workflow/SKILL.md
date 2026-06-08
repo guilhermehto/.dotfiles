@@ -1,11 +1,11 @@
 ---
 name: plan-workflow
-description: Local implementation-plan workspace at .scriptorum/YYYY-MM-DD--<slug>.md. Load when handling /plan, /plan-list, /work, or whenever the user mentions writing, listing, updating, or reviewing a local plan. Encodes the scriptorum root resolution, slug rules, frontmatter schema, plan body template (with checkbox tasks), citation format, overwrite policy, status semantics, and the magos-artisan delegation contract (write-plan, update-status, tick-task, append-note, supersede). Required for any read or write under .scriptorum/.
+description: Local implementation-plan workspace at .scriptorum/YYYY-MM-DD--<slug>.md. Load when handling /plan, /plan-list, or whenever the user mentions writing, listing, updating, or reviewing a local plan. Encodes the scriptorum root resolution, slug rules, frontmatter schema, plan body template (with checkbox tasks), citation format, overwrite policy, status semantics, and the magos-artisan delegation contract (write-plan, update-status, tick-task, append-note, supersede). Required for any read or write under .scriptorum/.
 ---
 
 # plan-workflow
 
-Conventions for the local implementation-plan workspace at `<repo-root>/.scriptorum/`. The `/plan`, `/plan-list`, `/work` commands, the `magos-iterator` (planner-only) and `fabricator` (light end-to-end) primary agents, and the `magos-artisan` subagent must follow these rules.
+Conventions for the local implementation-plan workspace at `<repo-root>/.scriptorum/`. The `/plan` and `/plan-list` commands, the main agent (via the `magos-iterator` skill), and the `magos-artisan` subagent must follow these rules.
 
 This skill is the local-task counterpart to a future KB workflow. It captures the structured, trackable plan for a single in-the-moment task next to the code it touches.
 
@@ -110,7 +110,7 @@ Rules:
 Plans written before the format upgrade lack `updated`, `status`, and `supersedes`. When reading a legacy plan:
 
 - Missing `updated` → fall back to `created` for display/sort.
-- Missing `status` → display as `unknown`. Consumers (`/plan-list`, `/work`) treat `unknown` as eligible for resume and may prompt to set a real status on first contact.
+   - Missing `status` → display as `unknown`. Consumers (`/plan-list`) treat `unknown` as eligible for resume and may prompt to set a real status on first contact.
 - Missing `supersedes` → treat as `[]`.
 
 Do **not** silently upgrade legacy frontmatter on read. Only an explicit `write-plan` or `update-status` action upgrades a legacy file in place (preserving the original `created`).
@@ -264,7 +264,7 @@ A bare `path` (no line) is allowed when referring to a whole new file to create.
 
 ## Slug-to-file resolution
 
-`magos-artisan` and any reader (`/plan-list`, `/work`) resolve a slug to a file as follows:
+`magos-artisan` and any reader (`/plan-list`) resolve a slug to a file as follows:
 
 1. Glob `<scriptorum-root>/.scriptorum/*--<slug>.md`.
 2. If exactly one match → that's the file.
@@ -299,7 +299,7 @@ If the user aborts mid-interview (`stop`, `cancel`, `never mind`, or equivalent)
 
 If `$ARGUMENTS` is empty, the catechism still runs — synthesis is driven by the recap, not the args.
 
-`magos-iterator` follows the same rule for the heavy work flow, but may **skip** the catechism when the incoming task description already contains an explicit goal, scope, and constraints (see `magos-iterator`'s own prompt for the skip heuristic).
+The `magos-iterator` skill follows the same rule for the heavy work flow, but may **skip** the catechism when the incoming task description already contains an explicit goal, scope, and constraints (see the skill for the skip heuristic).
 
 ## magos-artisan delegation contract
 
@@ -459,16 +459,6 @@ Other actions (`update-status`, `tick-task`, `append-note`, `supersede`) do **no
    - `[?]` unknown (legacy)
    Pad the status name to 11 chars (longest is `not-started`) for column alignment; do not pad `slug` or `updated`.
 8. If the filter matched nothing, print `No plans match '<filter>'.`
-
-## /work contract
-
-`/work` is the entry point for the orchestration agents (`fabricator` for light end-to-end tasks, `magos-iterator` for deep planner-only tasks). It is a thin **router**; it does not do the work itself. See `commands/work.md` for the full behaviour. The relevant facts here:
-
-- `/work` (no args) → resume mode: list `.scriptorum/*--*.md` plans with `status ∈ {not-started, in-progress, unknown}`, sorted newest first, and recommend switching into `magos-iterator` with the chosen slug.
-- `/work <task>` → recommend switching into `fabricator` with `<task>`.
-- `/work --deep <task>` or `/work -d <task>` → recommend switching into `magos-iterator` with `<task>`.
-
-Because opencode commands run inside the current agent and cannot directly switch primary agents, `/work` prints the recommended `@fabricator <args>` / `@magos-iterator <args>` invocation and stops. The user runs it.
 
 ## Templates
 

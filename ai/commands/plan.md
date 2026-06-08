@@ -55,9 +55,8 @@ Steps:
     ```
 
 14. **Report.** Surface the artisan's return:
-    - On success: `Wrote plan to <abs-path> (status: not-started).` If any `citation_warnings` were returned, list them: `Warning: <path>:<N> — <reason>`. Then suggest both:
+    - On success: `Wrote plan to <abs-path> (status: not-started).` If any `citation_warnings` were returned, list them: `Warning: <path>:<N> — <reason>`. Then suggest:
       - `Run @logis <abs-path> to review it.`
-      - `Run /work --resume <slug> to start executing.` (only if the slug is unique, otherwise show the dated form: `/work --resume <TODAY>--<slug>`.)
     - On `error: "exists"` (shouldn't happen after step 9, but defensive): print the artisan's error and stop.
     - On `error: "malformed-body"`: print the missing/out-of-order sections and stop. Do not retry silently.
 
