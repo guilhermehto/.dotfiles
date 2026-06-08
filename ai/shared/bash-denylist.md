@@ -82,7 +82,7 @@ Prevents pushing, history rewriting, and irreversible worktree mutations.
 
 ---
 
-## Read-only contract (agents: archmagos, explorator, explore, logis, magos-iterator, magos-reductor)
+## Read-only contract (agents: archmagos, explore, logis, magos-reductor)
 
 These agents carry an additional block that prevents any worktree or commit mutations:
 

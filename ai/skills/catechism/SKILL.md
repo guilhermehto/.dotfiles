@@ -23,7 +23,7 @@ Invoke this skill in any of these situations:
 - **Multi-interpretable scope**: a request that has two or more reasonable readings (e.g., "add auth" — to which surface? what kind?).
 - **Design tradeoffs**: requests where the answer depends on values you don't have (latency vs cost, simplicity vs flexibility, batch vs stream).
 - **Broad blast radius**: work likely to touch many files, change public APIs, or introduce a new dependency/pattern.
-- **Pre-exploration / pre-plan**: before kicking off a `/kb-explore`, `/kb-plan`, or a multi-step implementation, when the brief is short.
+- **Pre-exploration / pre-plan**: before kicking off `$magos-iterator` or a multi-step implementation, when the brief is short.
 
 ### When to skip
 

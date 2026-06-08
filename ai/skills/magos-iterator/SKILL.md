@@ -37,7 +37,7 @@ If the input is ambiguous between Fresh and Track (looks like both a slug and a 
 
 Ground every claim in the plan in real code. Skip in Track mode — the original plan already did this work.
 
-1. Dispatch `explorator` via the `task` tool with the user's task as the question, asking for a written answer with evidence. For narrowly scoped tasks, dispatch `explore` directly at `medium` thoroughness instead — use the full explorer when you need a complete explainer; use `explore` when a search map suffices.
+1. Dispatch `explore` via the `task` tool with the user's task as the question, asking for a written answer with evidence. Use `medium` thoroughness for narrowly scoped tasks; increase to `high` when you need a complete explainer across many files.
 2. Read the agent's output. Open and verify the most load-bearing files yourself (via `read`) before using them in the plan. Treat the subagent's `path:line` references as a map, not final evidence — verify before citing.
 3. If the explorer returned significant unknown unknowns or open questions, surface them to the user before planning. Decide together whether they need answering now or can be deferred into the plan as `> note:` lines.
 
@@ -97,7 +97,7 @@ Plan ready at <abs-path>.
 
 To execute, either:
   - Stay here and say "execute step 1" — I'll dispatch enginseer for that step (it will commit).
-  - Or switch to @fabricator <slug> (or the default chat agent) and drive execution manually.
+  - Or drive execution manually in a separate session.
 
 To resume tracking later: $magos-iterator <slug>.
 ```
@@ -258,7 +258,7 @@ Before transitioning the plan to `complete`:
 
 | Subagent | When to dispatch |
 |---|---|
-| `explorator` / `explore` | Understand phase — code exploration before planning. |
+| `explore` | Understand phase — code exploration before planning. |
 | `magos-artisan` | Every `.scriptorum/` mutation: `write-plan`, `tick-task`, `append-note`, `update-status`, `supersede`. |
 | `logis` | After every plan write and after substantial amendments. |
 | `enginseer` | Step execution in Track mode, via the `[DISPATCH: magos-iterator]` sentinel. Enginseer commits per step and returns a SHA. |
@@ -267,7 +267,7 @@ Before transitioning the plan to `complete`:
 
 ## Hard rules
 
-- **Orchestrate only.** While in this workflow, never edit code directly. Dispatch `enginseer` for execution, or redirect the user to `@fabricator <slug>` or the default chat agent. This is instruction-enforced — the host agent is write-capable, so the discipline must be explicit.
+- **Orchestrate only.** While in this workflow, never edit code directly. Dispatch `enginseer` for execution, or redirect the user to a separate session. This is instruction-enforced — the host agent is write-capable, so the discipline must be explicit.
 - **All `.scriptorum/` mutations go through `magos-artisan`.** The invariant "only artisan writes the scriptorum" must hold.
 - **Do not implement code.** Not the steps, not "small helper" edits, not config tweaks.
 - **Do not auto-set `status: complete`.** Completion is an explicit `update-status complete` dispatch at the end of Close, after step coverage and diff review.
