@@ -102,7 +102,7 @@ one place.
 | Layer | Contents |
 |---|---|
 | Main agent | `archmagos` — handles read, explore, and in-chat build directly; delegates only for value |
-| Workflow skills | `magos-iterator` (deep plan/track loop), `catechism`, `plan-workflow`, `to-html` — stowed to `~/.agents/skills` via the `agents/` package |
+| Workflow skills | `magos-iterator` (deep plan/track loop), `catechism`, `plan-workflow`, `to-html`, `personal-writing-style` — stowed to `~/.agents/skills` via the `agents/` package |
 | Subagents | `explore`, `enginseer`, `magos-artisan`, `logis`, `magos-reductor`, `servitor` |
 
 ### `ai/` layout
@@ -128,8 +128,8 @@ carries intentional enforcement copies kept in parity with it.
 
 ### Shared skills (`agents/` package)
 
-The 4 workflow skills (`catechism`, `magos-iterator`, `plan-workflow`,
-`to-html`) live in the `agents/` stow package:
+The 5 workflow skills (`catechism`, `magos-iterator`, `plan-workflow`,
+`to-html`, `personal-writing-style`) live in the `agents/` stow package:
 
 ```
 agents/.agents/skills/<name>/SKILL.md   →   ~/.agents/skills/<name>/SKILL.md
@@ -162,7 +162,7 @@ to paste into `~/.codex/config.toml`.
 `ai/codex/bin/codex-sync-ai` is the idempotent reconciler:
 
 - Links the 4 Codex action-skills into `~/.agents/skills/<name>` (Codex
-  USER-scope skills directory). The 4 shared workflow skills now reach the same
+  USER-scope skills directory). The 5 shared workflow skills now reach the same
   directory via `stow agents`, not this script.
 - Links the 6 subagent TOMLs into `~/.codex/agents/`.
 - Composes `~/.codex/AGENTS.md` = `ai/AGENTS.md` + `ai/agents/archmagos.md`
