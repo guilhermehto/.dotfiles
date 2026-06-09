@@ -63,7 +63,7 @@ git clone git@github.com:<you>/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Pick the packages you want for the current machine, e.g. on macOS:
-stow nvim tmux tmuxinator zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders
+stow nvim tmux tmuxinator zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders agents
 
 # On Linux:
 stow nvim tmux zsh alacritty hypr waybar rofi
@@ -102,7 +102,7 @@ one place.
 | Layer | Contents |
 |---|---|
 | Main agent | `archmagos` — handles read, explore, and in-chat build directly; delegates only for value |
-| Workflow skills | `magos-iterator` (deep plan/track loop), `catechism`, `plan-workflow`, `to-html` |
+| Workflow skills | `magos-iterator` (deep plan/track loop), `catechism`, `plan-workflow`, `to-html` — stowed to `~/.agents/skills` via the `agents/` package |
 | Subagents | `explore`, `enginseer`, `magos-artisan`, `logis`, `magos-reductor`, `servitor` |
 
 ### `ai/` layout
@@ -112,7 +112,6 @@ ai/
 ├── AGENTS.md                  # engineering-standards prose — single source, cross-tool
 ├── shared/bash-denylist.md    # canonical bash-denylist reference artifact
 ├── agents/                    # archmagos + 6 subagent definitions
-├── skills/                    # 4 shared skills (catechism, magos-iterator, plan-workflow, to-html)
 ├── commands/                  # 5 opencode slash-commands (catechism, plan, plan-list, commit, to-html)
 └── codex/
     ├── agents/                # 6 subagent TOMLs for Codex
@@ -127,15 +126,31 @@ quality, tests, working style). `ai/shared/bash-denylist.md` is the canonical
 reference for the bash command denylist; opencode's per-agent frontmatter
 carries intentional enforcement copies kept in parity with it.
 
+### Shared skills (`agents/` package)
+
+The 4 workflow skills (`catechism`, `magos-iterator`, `plan-workflow`,
+`to-html`) live in the `agents/` stow package:
+
+```
+agents/.agents/skills/<name>/SKILL.md   →   ~/.agents/skills/<name>/SKILL.md
+```
+
+`stow agents` links them into `~/.agents/skills`, which both opencode (≥1.16,
+"global agent-compatible" discovery) and Codex (USER-scope skills) read
+natively — no sync script required. The package tree-folds into the existing
+real `~/.agents/skills` dir, so it coexists with hand-placed skills (e.g.
+firecrawl) and the Codex action-skills linked there by `codex-sync-ai`.
+
 ### Per-tool wiring
 
 **opencode**
 
 `opencode/.config/opencode/bin/opencode-sync-ai` reconciles
-`~/.config/opencode/{AGENTS.md,agents,commands,skills}` by symlinking from
-`ai/`. Run it (or invoke the `/update-config` command inside opencode) after
-any change to `ai/`. The script prunes only symlinks it owns; hand-placed
-files are never touched.
+`~/.config/opencode/{AGENTS.md,agents,commands}` by symlinking from `ai/`. Run
+it (or invoke the `/update-config` command inside opencode) after any change to
+`ai/`. The script prunes only symlinks it owns; hand-placed files are never
+touched. (Skills are no longer synced here — they are stowed to
+`~/.agents/skills` via the `agents/` package and read natively.)
 
 **Codex**
 
@@ -146,8 +161,9 @@ to paste into `~/.codex/config.toml`.
 
 `ai/codex/bin/codex-sync-ai` is the idempotent reconciler:
 
-- Links the 4 shared skills and the 4 Codex action-skills into
-  `~/.agents/skills/<name>` (Codex USER-scope skills directory).
+- Links the 4 Codex action-skills into `~/.agents/skills/<name>` (Codex
+  USER-scope skills directory). The 4 shared workflow skills now reach the same
+  directory via `stow agents`, not this script.
 - Links the 6 subagent TOMLs into `~/.codex/agents/`.
 - Composes `~/.codex/AGENTS.md` = `ai/AGENTS.md` + `ai/agents/archmagos.md`
   (marker-delimited, regenerated idempotently). A single symlink cannot carry
@@ -209,7 +225,7 @@ Not yet implemented. Mapping when it is:
 |---|---|
 | `CLAUDE.md` | `archmagos` persona (`ai/agents/archmagos.md`) |
 | Agents | Subagents (`ai/agents/`) |
-| Commands | Skills (`ai/skills/`, `ai/commands/`) |
+| Commands | Skills (`agents/.agents/skills/`, `ai/commands/`) |
 
 ## TODO
 
