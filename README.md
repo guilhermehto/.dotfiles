@@ -63,7 +63,7 @@ git clone git@github.com:<you>/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Pick the packages you want for the current machine, e.g. on macOS:
-stow nvim tmux tmuxinator zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders agents
+stow nvim tmux tmuxinator zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders agents claude
 
 # On Linux:
 stow nvim tmux zsh alacritty hypr waybar rofi
@@ -140,6 +140,26 @@ agents/.agents/skills/<name>/SKILL.md   →   ~/.agents/skills/<name>/SKILL.md
 natively — no sync script required. The package tree-folds into the existing
 real `~/.agents/skills` dir, so it coexists with hand-placed skills (e.g.
 firecrawl) and the Codex action-skills linked there by `codex-sync-ai`.
+
+Claude Code doesn't read `~/.agents` (and org managed settings block the
+plugin loader that could), but its native skill discovery follows symlinks,
+so the `claude/` stow package bridges it: `claude/.claude/skills/<name>` are
+repo-relative symlinks into `agents/.agents/skills/<name>`, and `stow claude`
+links them into `~/.claude/skills/`. Adding a skill means creating it in
+`agents/.agents/skills/`, adding the sibling symlink in
+`claude/.claude/skills/`, and restowing. The package also links
+`claude/.claude/CLAUDE.md → ai/AGENTS.md`, so `ai/AGENTS.md` doubles as the
+global Claude Code memory file.
+
+Subagents can't be symlinked from `ai/agents/` — those use opencode's
+frontmatter (`mode`, `temperature`, `permission` maps), which Claude Code
+doesn't understand. `claude/.claude/agents/` holds converted copies of the 6
+subagents (`explore`, `enginseer`, `logis`, `magos-artisan`,
+`magos-reductor`, `servitor`) with translated frontmatter (`name`,
+`description`, `tools` allowlist, `model` alias); bodies are copied verbatim.
+`archmagos` is `mode: primary` and has no Claude Code equivalent (that role
+is the main thread + CLAUDE.md). When editing an agent in `ai/agents/`,
+mirror the body change in `claude/.claude/agents/`.
 
 ### Per-tool wiring
 
