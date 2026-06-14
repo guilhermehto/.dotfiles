@@ -35,6 +35,7 @@ So `stow nvim` from inside this repo creates `~/.config/nvim` as a symlink.
 | Ghostty    | `ghostty/`                 | Catppuccin Macchiato, 0xProto Nerd Font  |
 | Rofi       | `rofi/`                    |                                          |
 | pi         | `pi/`                      | [pi-coding-agent](https://github.com/mariozechner/pi-coding-agent) global settings |
+| bat        | `bat/`                     | Ayu Dark `.tmTheme`, shared by bat + delta (run `bat cache --build` after stow) |
 
 ### macOS
 | Tool          | Path              | Notes                                  |
@@ -44,6 +45,7 @@ So `stow nvim` from inside this repo creates `~/.config/nvim` as a symlink.
 | AeroSpace     | `aerospace/`      | Alternative tiling WM                  |
 | SketchyBar    | `sketchybar/`     | Status bar + plugin scripts            |
 | janky-borders | `janky-borders/`  | Active window borders                  |
+| lazygit       | `lazygit/`        | delta pager for syntax-highlighted diffs (macOS config path: `~/Library/Application Support/lazygit/`) |
 
 ### Linux
 | Tool       | Path        | Notes                |
@@ -63,10 +65,10 @@ git clone git@github.com:<you>/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Pick the packages you want for the current machine, e.g. on macOS:
-stow nvim tmux tmuxinator zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders agents claude
+stow nvim tmux tmuxinator zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders lazygit bat agents claude
 
 # On Linux:
-stow nvim tmux zsh alacritty hypr waybar rofi
+stow nvim tmux zsh alacritty hypr waybar rofi bat
 ```
 
 ## Dependencies

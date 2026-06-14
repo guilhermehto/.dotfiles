@@ -135,6 +135,7 @@ I’ll try <next step> and report back. If that doesn’t work I’ll reach out 
 - Do not hide uncertainty. If the evidence is incomplete, say that plainly.
 - Do not invent certainty, root causes, owners, links, or timelines.
 - Do not add a formal title unless the user asks for one.
+- Do not use em dashes. Ever.
 
 ## Output contract
 
