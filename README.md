@@ -95,16 +95,16 @@ Most of these are optional, but the configs assume they exist:
 ## AI assistant
 
 The `ai/` directory is the single source of truth for an AI coding-assistant
-setup that runs on both **opencode** and **OpenAI Codex**. The same agent
-definitions, skills, and engineering standards are wired into each tool from
-one place.
+setup that runs on **opencode**, **OpenAI Codex**, and **Claude Code**. The
+same agent definitions, skills, commands, and engineering standards are wired
+into each tool from one place.
 
 ### Model
 
 | Layer | Contents |
 |---|---|
 | Main agent | `archmagos` — handles read, explore, and in-chat build directly; delegates only for value |
-| Plan workflow | `/plan` (ground + align + write a phased plan) and `/execute-plan` (run it phase-by-phase, parallel phases concurrently) — opencode commands over the `plan-workflow` skill |
+| Plan workflow | `/plan` (ground + align + write a phased plan) and `/execute-plan` (run it phase-by-phase, parallel phases concurrently) — opencode commands / Claude skills over the `plan-workflow` skill |
 | Workflow skills | `catechism`, `plan-workflow`, `to-html`, `personal-writing-style` — stowed to `~/.agents/skills` via the `agents/` package |
 | Subagents | `explore`, `enginseer`, `logis`, `magos-reductor`, `servitor` |
 
@@ -156,13 +156,26 @@ global Claude Code memory file.
 
 Subagents can't be symlinked from `ai/agents/` — those use opencode's
 frontmatter (`mode`, `temperature`, `permission` maps), which Claude Code
-doesn't understand. `claude/.claude/agents/` holds converted copies of the 6
+doesn't understand. `claude/.claude/agents/` holds converted copies of the 5
 subagents (`explore`, `enginseer`, `logis`, `magos-reductor`,
 `servitor`) with translated frontmatter (`name`,
 `description`, `tools` allowlist, `model` alias); bodies are copied verbatim.
 `archmagos` is `mode: primary` and has no Claude Code equivalent (that role
 is the main thread + CLAUDE.md). When editing an agent in `ai/agents/`,
 mirror the body change in `claude/.claude/agents/`.
+
+The plan-workflow entry points reach Claude as skills, not commands: Claude
+Code merges `.claude/commands/` into the skills system, so a skill at
+`.claude/skills/<name>/SKILL.md` is invocable as `/<name>`.
+`claude/.claude/skills/{plan,execute-plan,plan-list}/SKILL.md` are Claude-local
+copies of `ai/commands/<name>.md` (body verbatim; frontmatter gains
+`name`/`argument-hint`), and `stow claude` links them into `~/.claude/skills/`.
+They stay model-invocable so Claude can reach for them when the conversation
+calls for it. (`plan-list` uses `$ARGUMENTS` for its filter rather than the
+opencode `$1`, since Claude substitutes skill arguments 0-indexed.) `catechism`
+and `to-html` already reach Claude as skills (above); `commit` stays
+opencode/Codex-only for now. When editing one of these entry points in
+`ai/commands/`, mirror the body into `claude/.claude/skills/<name>/SKILL.md`.
 
 ### Per-tool wiring
 
@@ -245,15 +258,16 @@ committing from the main agent.
   persisted-plan workflow is now the `/plan` and `/execute-plan` commands;
   `archmagos` writes `.scriptorum/` directly per the `plan-workflow` skill.
 
-### Claude Code (future)
+### Claude Code
 
-Not yet implemented. Mapping when it is:
+Wired via the `claude/` stow package (skills, agents, and `CLAUDE.md`
+described above). Concept mapping:
 
 | Claude Code concept | This model |
 |---|---|
-| `CLAUDE.md` | `archmagos` persona (`ai/agents/archmagos.md`) |
-| Agents | Subagents (`ai/agents/`) |
-| Commands | Skills (`agents/.agents/skills/`, `ai/commands/`) |
+| `CLAUDE.md` (memory) | `claude/.claude/CLAUDE.md → ai/AGENTS.md`; the `archmagos` persona has no Claude equivalent — that role is the main thread |
+| Subagents (`~/.claude/agents/`) | `claude/.claude/agents/` — converted copies of `ai/agents/` (5 subagents) |
+| Skills (`~/.claude/skills/`) | `claude/.claude/skills/` — cross-platform skills symlinked from `agents/.agents/skills/`, plus Claude-local `plan`/`execute-plan`/`plan-list` entry points copied from `ai/commands/` (each invocable as `/name`) |
 
 ## TODO
 
