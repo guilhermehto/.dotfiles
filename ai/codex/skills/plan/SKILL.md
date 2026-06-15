@@ -13,7 +13,7 @@ Load the `plan-workflow` skill for the full schema, slug rules, frontmatter, and
 
 **No `$ARGUMENTS` injection.** On Codex, skill arguments come from the surrounding prompt, not a `$ARGUMENTS` placeholder. Read the task description from the user's message.
 
-**No magos-artisan gate.** On opencode, plan writes are routed through the `magos-artisan` subagent. On Codex, the default agent writes `.scriptorum/` directly. The same `plan-workflow` conventions apply; the delegation layer is absent. This is a known invariant downgrade slated for the README.
+**No writer subagent.** The agent writes `.scriptorum/` directly on every platform, following the `plan-workflow` direct-write operations. (The former `magos-artisan` writer subagent has been retired.)
 
 ## Workflow
 
@@ -24,6 +24,6 @@ Load the `plan-workflow` skill for the full schema, slug rules, frontmatter, and
 5. Synthesize the plan body (Summary, Scope, Numbered steps, Acceptance criteria, File touchpoints).
 6. Preview the full plan to the user. Ask: `Write plan to <abs-path>? [Y/n]`. Default Y.
 7. On confirmation, write the file directly to `<scriptorum-root>/.scriptorum/<TODAY>--<slug>.md`.
-8. Load the `magos-iterator` skill if the user wants to execute the plan immediately.
+8. NOTE: this Codex skill predates the phased-plan redesign (parallel/sequential phases, rich-context `Context:`/`Read first:` steps, and the `/execute-plan` execution flow). It still produces a valid plan but in the older five-section shape; re-authoring it to the phased schema and adding a Codex `execute-plan` mirror is a pending follow-up.
 
 Follow all hard rules from `plan-workflow`: never write outside `.scriptorum/`, never auto-set `status: complete`, never embed the catechism recap verbatim.

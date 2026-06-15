@@ -104,8 +104,9 @@ one place.
 | Layer | Contents |
 |---|---|
 | Main agent | `archmagos` — handles read, explore, and in-chat build directly; delegates only for value |
-| Workflow skills | `magos-iterator` (deep plan/track loop), `catechism`, `plan-workflow`, `to-html`, `personal-writing-style` — stowed to `~/.agents/skills` via the `agents/` package |
-| Subagents | `explore`, `enginseer`, `magos-artisan`, `logis`, `magos-reductor`, `servitor` |
+| Plan workflow | `/plan` (ground + align + write a phased plan) and `/execute-plan` (run it phase-by-phase, parallel phases concurrently) — opencode commands over the `plan-workflow` skill |
+| Workflow skills | `catechism`, `plan-workflow`, `to-html`, `personal-writing-style` — stowed to `~/.agents/skills` via the `agents/` package |
+| Subagents | `explore`, `enginseer`, `logis`, `magos-reductor`, `servitor` |
 
 ### `ai/` layout
 
@@ -113,10 +114,10 @@ one place.
 ai/
 ├── AGENTS.md                  # engineering-standards prose — single source, cross-tool
 ├── shared/bash-denylist.md    # canonical bash-denylist reference artifact
-├── agents/                    # archmagos + 6 subagent definitions
-├── commands/                  # 5 opencode slash-commands (catechism, plan, plan-list, commit, to-html)
+├── agents/                    # archmagos + 5 subagent definitions
+├── commands/                  # 6 opencode slash-commands (catechism, plan, execute-plan, plan-list, commit, to-html)
 └── codex/
-    ├── agents/                # 6 subagent TOMLs for Codex
+    ├── agents/                # 5 subagent TOMLs for Codex
     ├── skills/                # 4 Codex action-skills (plan, plan-list, commit, update-config)
     ├── bin/codex-sync-ai      # idempotent reconciler
     ├── install.sh             # one-time bootstrap
@@ -130,8 +131,8 @@ carries intentional enforcement copies kept in parity with it.
 
 ### Shared skills (`agents/` package)
 
-The 5 workflow skills (`catechism`, `magos-iterator`, `plan-workflow`,
-`to-html`, `personal-writing-style`) live in the `agents/` stow package:
+The 4 workflow skills (`catechism`, `plan-workflow`, `to-html`,
+`personal-writing-style`) live in the `agents/` stow package:
 
 ```
 agents/.agents/skills/<name>/SKILL.md   →   ~/.agents/skills/<name>/SKILL.md
@@ -156,8 +157,8 @@ global Claude Code memory file.
 Subagents can't be symlinked from `ai/agents/` — those use opencode's
 frontmatter (`mode`, `temperature`, `permission` maps), which Claude Code
 doesn't understand. `claude/.claude/agents/` holds converted copies of the 6
-subagents (`explore`, `enginseer`, `logis`, `magos-artisan`,
-`magos-reductor`, `servitor`) with translated frontmatter (`name`,
+subagents (`explore`, `enginseer`, `logis`, `magos-reductor`,
+`servitor`) with translated frontmatter (`name`,
 `description`, `tools` allowlist, `model` alias); bodies are copied verbatim.
 `archmagos` is `mode: primary` and has no Claude Code equivalent (that role
 is the main thread + CLAUDE.md). When editing an agent in `ai/agents/`,
@@ -208,11 +209,12 @@ created/updated/pruned/skipped.
 Two invariants that were permission-enforced in the old multi-primary model
 are now instruction-enforced only:
 
-**Planner-only invariant (both tools)**
-`archmagos` is now write-capable, so the guarantee that the main agent never
-edits code is no longer enforced by permissions. The `magos-iterator` skill
-strongly instructs the host agent to orchestrate only while the plan/track
-loop is active — but this is a soft guard, not a hard one.
+**Plan writes (both tools)**
+`archmagos` is write-capable and writes `.scriptorum/` directly via `/plan`
+and `/execute-plan` — there is no separate writer subagent. The old
+planner-only invariant (and the `magos-artisan` writer it relied on) is gone;
+the `plan-workflow` skill defines the direct-write operations and path-safety
+rules the main agent follows instead.
 
 **Git-write denylist (Codex)**
 opencode enforces the bash denylist via per-agent `permission.bash`
@@ -221,10 +223,11 @@ frontmatter, so the git-write prohibitions are carried as instructional guards
 in each subagent TOML's `developer_instructions`. The canonical reference
 remains `ai/shared/bash-denylist.md`.
 
-**Codex `/plan` skill**
-On opencode, plan writes go through the `magos-artisan` subagent (gated).
-On Codex, the `plan` action-skill writes `.scriptorum` via the default agent
-directly — no magos-artisan gate.
+**Codex `plan` skill**
+Plan writes go directly to `.scriptorum/` on both tools now (the `magos-artisan`
+writer was retired). The Codex `plan` skill still predates the phased-plan
+redesign (parallel/sequential phases, rich-context steps, `/execute-plan`); it
+writes a valid plan in the older five-section shape until its mirror is updated.
 
 **Codex `commit` skill**
 Routes through the `servitor` subagent (mirroring opencode), rather than
@@ -237,7 +240,10 @@ committing from the main agent.
 - **`/work` command** — removed.
 - **Dropped primaries** — `explorator`, `fabricator`, and the old
   `magos-iterator` primary agent are gone; their capabilities are folded into
-  `archmagos` and the `magos-iterator` workflow skill.
+  `archmagos` and the `/plan` + `/execute-plan` commands.
+- **`magos-artisan` subagent and `magos-iterator` skill** — retired. The
+  persisted-plan workflow is now the `/plan` and `/execute-plan` commands;
+  `archmagos` writes `.scriptorum/` directly per the `plan-workflow` skill.
 
 ### Claude Code (future)
 

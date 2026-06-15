@@ -110,6 +110,7 @@ Focus dimensions, in roughly this order of importance:
 - **Architecture fit**: does the plan place code in the right layer, package, and module? Does it align with existing patterns or invent a parallel one? Are abstraction boundaries respected? Does it split work into appropriate units (component vs sub-components, module vs sub-modules) or stuff too much into one place? Is there cross-layer leakage?
 - **Catechism alignment fit** *(local plans only; check when frontmatter has `goal:`)*: does the plan's Summary, Scope, and steps deliver against the `goal` line? Are the listed File touchpoints real (file exists, line number plausible)? Does the plan stay inside the implied scope of the goal, or does it drift into unrelated work? Are there obvious sub-goals implied by the `goal` line that the plan silently drops? Skip this dimension entirely for plans without a `goal:` frontmatter field — it does not apply to KB plans or ad-hoc inline plans.
 - **Outcome verifiability** *(heavy plans only; check when frontmatter has `weight: heavy`)*: each heavy step must include an `Outcome:` (user-visible result, not implementation jargon) and an `Independent Test:` (concrete command or manual repro proving the outcome). Each `Done when:` bullet must describe observable behavior of the system (verifiable from outside the codebase), not the implementation. Flag steps where `Done when:` bullets paraphrase the implementation paragraph instead of describing behavior. Accept `Independent Test: n/a — pure refactor; covered by <test>` as a valid value for refactor-only steps; flag bare `n/a` without justification.
+- **Phase parallelism** *(phased plans only; check when `## Steps` has `### Phase … · parallel` subheadings)*: this is safety-critical because the executor dispatches a parallel phase's steps concurrently. Within every `parallel` phase, no two steps may share a `Touchpoints:` file — concurrent writes would race. List the offending steps and the shared file. Also flag any step that depends on the output of a sibling in the same `parallel` phase (it belongs in a later phase, since phases drain in order). Sequential phases and single-step phases are exempt. Confirm step numbering is global and contiguous across phases.
 
 Other things worth flagging when you spot them, but don't go hunting for them: sequencing/dependency mistakes, obvious reusability misses, and effort/complexity calibration (over- or under-engineered for the stated goal).
 
@@ -138,6 +139,9 @@ Use this exact structure (keep section headers verbatim):
 ## Outcome verifiability
 - <heavy step number/title> — <issue: implementation echo in Done when / missing Outcome / unverifiable Independent Test> — <suggested rewrite>
 
+## Phase parallelism
+- <parallel phase> — <issue: two steps share a touchpoint / a step depends on a sibling in the same parallel phase> — <the shared file or dependency> — <suggested re-phasing>
+
 ## Architecture & fit
 - <misplacement / pattern mismatch / boundary issue> — <existing pattern or better location> — <evidence: `file:line`>
 
@@ -151,7 +155,7 @@ Use this exact structure (keep section headers verbatim):
 - <brief notes on what's solid, if anything>
 ```
 
-If a section has nothing, write `_(none)_` rather than omitting it. For `## Catechism alignment fit`, also write `_(none)_` when the plan has no `goal:` frontmatter (the dimension does not apply). For `## Outcome verifiability`, also write `_(none)_` when the plan's frontmatter `weight` is `light` or `standard` (the dimension does not apply). Verdict guidance:
+If a section has nothing, write `_(none)_` rather than omitting it. For `## Catechism alignment fit`, also write `_(none)_` when the plan has no `goal:` frontmatter (the dimension does not apply). For `## Outcome verifiability`, also write `_(none)_` when the plan's frontmatter `weight` is `light` or `standard` (the dimension does not apply). For `## Phase parallelism`, also write `_(none)_` when the plan has no `parallel` phases (the dimension does not apply). Verdict guidance:
 
 - **approve** — minor or no changes; supervisor can proceed.
 - **revise** — concrete fixes needed but the plan's shape is right.

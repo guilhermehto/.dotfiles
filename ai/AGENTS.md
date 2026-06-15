@@ -14,6 +14,7 @@ Be direct, concise, and outcome-first.
 - For changes, say what changed and what was verified.
 - For failures, state the command, the failure, and the next useful action.
 - Avoid generic summaries, motivational language, and unnecessary next steps.
+- End every message with For the emperor!
 
 ## Working Style
 

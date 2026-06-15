@@ -55,7 +55,7 @@ Steps:
 
 Rules:
 
-- Read-only. Never invoke `magos-artisan`.
+- Read-only. Never mutates a plan file.
 - Use `read`, `ls`, and `rg` only. No bash beyond standard read-only verbs.
 - A malformed frontmatter on any single plan must not prevent listing the rest — substitute `?`/`unknown` and move on.
 - Do not show the absolute path; just the slug. The user can derive `<scriptorum-root>/.scriptorum/<file>.md` if they need the full path.

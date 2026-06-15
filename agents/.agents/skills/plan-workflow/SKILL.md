@@ -1,13 +1,17 @@
 ---
 name: plan-workflow
-description: Local implementation-plan workspace at .scriptorum/YYYY-MM-DD--<slug>.md. Load when handling /plan, /plan-list, or whenever the user mentions writing, listing, updating, or reviewing a local plan. Encodes the scriptorum root resolution, slug rules, frontmatter schema, plan body template (with checkbox tasks), citation format, overwrite policy, status semantics, and the magos-artisan delegation contract (write-plan, update-status, tick-task, append-note, supersede). Required for any read or write under .scriptorum/.
+description: Local implementation-plan workspace at .scriptorum/YYYY-MM-DD--<slug>.md. Load when handling /plan, /execute-plan, /plan-list, or whenever the user mentions writing, listing, executing, updating, or reviewing a local plan. Encodes the scriptorum root resolution, slug rules, frontmatter schema, the phased plan body template (with parallel/sequential phases and rich-context checkbox steps), the parallelization model the executor consumes, citation format, overwrite policy, status semantics, and the direct-write operations (write-plan, update-status, tick-task, append-note, supersede) the main agent performs itself. Required for any read or write under .scriptorum/.
 ---
 
 # plan-workflow
 
-Conventions for the local implementation-plan workspace at `<repo-root>/.scriptorum/`. The `/plan` and `/plan-list` commands, the main agent (via the `magos-iterator` skill), and the `magos-artisan` subagent must follow these rules.
+Conventions for the local implementation-plan workspace at `<repo-root>/.scriptorum/`. The `/plan`, `/execute-plan`, and `/plan-list` commands all follow these rules. The main agent (archmagos) is the sole writer — there is no separate writer subagent.
 
 This skill is the local-task counterpart to a future KB workflow. It captures the structured, trackable plan for a single in-the-moment task next to the code it touches.
+
+## Written vs. in-chat plans
+
+Not every plan goes to disk. Trivial and small work uses the agent's in-chat numbered-bullet plan and never touches `.scriptorum/`. A **written** plan is for work that benefits from persistence: multi-step features, anything you want tracked across sessions, anything you intend to execute step-by-step (especially with parallel phases). When in doubt, stay in chat — `/plan` is opt-in.
 
 ## Scriptorum root resolution
 
@@ -40,18 +44,18 @@ YYYY-MM-DD--<slug>.md
 ```
 
 - `YYYY-MM-DD` is the ISO date of plan creation (matches `created` in frontmatter at write time).
-- `--` is a literal double-hyphen separator (matches the KB plan convention historically used elsewhere).
+- `--` is a literal double-hyphen separator.
 - `<slug>` follows the slug rules below.
 
 Multiple plans for the same slug on different days are allowed. Two plans with the **same** date and **same** slug are not — `/plan` prompts to overwrite.
 
 ### Legacy filenames
 
-Files of the shape `<slug>.md` (no date prefix) are **legacy plans** created before the format upgrade. They are read-compatible but never created. When `magos-artisan` resolves a slug for an update action, it looks for `*--<slug>.md` first; if zero matches, it falls back to the legacy `<slug>.md`. See [Slug-to-file resolution](#slug-to-file-resolution).
+Files of the shape `<slug>.md` (no date prefix) are **legacy plans** created before the format upgrade. They are read-compatible but never created. When resolving a slug for an update action, look for `*--<slug>.md` first; if zero matches, fall back to the legacy `<slug>.md`. See [Slug-to-file resolution](#slug-to-file-resolution).
 
 ## Slug rules
 
-The slug is the part of the filename after the date prefix. It comes from the catechism recap's `Goal:` line and never from the raw prompt text directly.
+The slug is the part of the filename after the date prefix. It comes from the catechism recap's `Goal:` line (or, when the catechism is skipped, the single-line goal the user confirmed) — never from the raw prompt text directly.
 
 Derivation:
 
@@ -75,8 +79,8 @@ Plan files have YAML frontmatter:
 
 ```yaml
 ---
-created: 2026-05-19
-updated: 2026-05-19
+created: 2026-06-15
+updated: 2026-06-15
 slug: <slug>
 goal: <single-line goal, copied verbatim from the catechism recap's Goal: line>
 status: not-started
@@ -88,32 +92,34 @@ supersedes: []
 Rules:
 
 - `created` is the ISO date of first write. **Never** bumped on overwrite or any update action.
-- `updated` is the ISO date of the last write or mutation. Bumped on every `write-plan`, `update-status`, `tick-task`, `append-note`, and `supersede` action. On first write, equals `created`.
+- `updated` is the ISO date of the last write or mutation. Bumped on every write-plan, update-status, tick-task, append-note, and supersede operation. On first write, equals `created`.
 - `slug` matches the filename slug component (the part after `YYYY-MM-DD--`).
 - `goal` is one line; embedded newlines are flattened to spaces before writing.
 - `status` is one of: `not-started`, `in-progress`, `complete`, `abandoned`. Defaults to `not-started` on creation.
-- `weight` is one of: `light`, `standard`, `heavy`. Optional; defaults to `standard`. Controls how meaty per-step contracts are — see [Plan weight](#plan-weight). Unknown values default to `standard` on read; artisan preserves any value verbatim.
-- `supersedes` is a list of slugs (without date prefix) that this plan replaces. Optional; defaults to `[]`. Setting a value also marks each referenced predecessor as `abandoned` via the `supersede` action.
+- `weight` is one of: `light`, `standard`, `heavy`. Optional; defaults to `standard`. Controls how meaty per-step contracts are — see [Step shape and weight](#step-shape-and-weight). Unknown values default to `standard` on read; preserve any value verbatim on rewrite.
+- `supersedes` is a list of slugs (without date prefix) that this plan replaces. Optional; defaults to `[]`. Setting a value also marks each referenced predecessor as `abandoned` via the supersede operation.
 - Unknown fields in an existing file are preserved on rewrite.
+
+Frontmatter is intentionally unchanged from the pre-phases format — parallelism lives in the body, not in frontmatter.
 
 ### Status semantics
 
 | Status | Meaning | Set by |
 |---|---|---|
-| `not-started` | Plan exists but no step has been ticked. | `write-plan` (initial). |
+| `not-started` | Plan exists but no step has been ticked. | write-plan (initial). |
 | `in-progress` | At least one step has been ticked **or** explicitly set. | First `tick-task done` auto-promotes from `not-started`; or explicit `update-status in-progress`. |
 | `complete` | All work is done; plan is closed. | Explicit `update-status complete` only. Never auto-set, even when all checkboxes are ticked — completion is a deliberate decision. |
-| `abandoned` | Plan is no longer being pursued. Kept on disk for history. | Explicit `update-status abandoned`, or implicitly by a `supersede` action on another plan. |
+| `abandoned` | Plan is no longer being pursued. Kept on disk for history. | Explicit `update-status abandoned`, or implicitly by a supersede operation on another plan. |
 
 ### Legacy frontmatter
 
 Plans written before the format upgrade lack `updated`, `status`, and `supersedes`. When reading a legacy plan:
 
 - Missing `updated` → fall back to `created` for display/sort.
-   - Missing `status` → display as `unknown`. Consumers (`/plan-list`) treat `unknown` as eligible for resume and may prompt to set a real status on first contact.
+- Missing `status` → display as `unknown`. Consumers (`/plan-list`) treat `unknown` as eligible for resume and may prompt to set a real status on first contact.
 - Missing `supersedes` → treat as `[]`.
 
-Do **not** silently upgrade legacy frontmatter on read. Only an explicit `write-plan` or `update-status` action upgrades a legacy file in place (preserving the original `created`).
+Do **not** silently upgrade legacy frontmatter on read. Only an explicit write-plan or update-status operation upgrades a legacy file in place (preserving the original `created`).
 
 ## Plan body template
 
@@ -128,13 +134,26 @@ After the frontmatter, the plan body has these five sections in this exact order
 ## Scope
 - <bullet list of what is in this pass>
 
-## Numbered steps
+## Steps
+
+### Phase 1 — <phase name> · parallel
 1. [ ] <action-oriented step text>
+   Context: <why this step exists + the domain knowledge a fresh subagent lacks>
+   Read first: <files/docs to read before editing>
    Done when:
      - <observable outcome>
+   Touchpoints: <files — disjoint from sibling steps in this phase>
+2. [ ] <step text>
+   Context: <...>
+   Read first: <...>
+   Done when:
      - <observable outcome>
-   Touchpoints: <files>
-2. [ ] <step>
+   Touchpoints: <files — disjoint from step 1>
+
+### Phase 2 — <phase name> · sequential
+3. [ ] <step text>
+   Context: <...>
+   Read first: <...>
    Done when:
      - <observable outcome>
    Touchpoints: <files>
@@ -150,31 +169,74 @@ After the frontmatter, the plan body has these five sections in this exact order
 
 Notes:
 
-- The H1 is a short human title for the plan, not the full goal sentence. Derive it from the goal (e.g. trim to ~6-10 words, title-case acceptable).
-- Section names are fixed. Do **not** add `Out of scope`, `Risks`, `Open questions`, or `Verification` sections by default — the agreed minimum is five. The user can extend a written plan manually.
+- The H1 is a short human title for the plan, not the full goal sentence. Derive it from the goal (~6-10 words, title-case acceptable).
+- Section names are fixed: `Summary`, `Scope`, `Steps`, `Acceptance criteria`, `File touchpoints`. Do **not** add `Out of scope`, `Risks`, `Open questions`, or `Verification` sections by default. The user can extend a written plan manually.
 - The catechism recap is **not** embedded in the plan body. It drives slug + body synthesis only.
-- Per-step `Done when:` / `Touchpoints:` / `Anti-touch:` / `Verification:` / `Pre-conditions:` lines are **sub-items**, not primary checkboxes. Indent them under the step text. Artisan's tick algorithm enumerates only primary `- [ ]` / `N. [ ]` items in document order, so sub-items never receive a checkbox and never get ticked by `tick-task`.
+- Per-step `Context:` / `Read first:` / `Done when:` / `Touchpoints:` / etc. are **sub-items**, not primary checkboxes. Indent them under the step text. The tick algorithm enumerates only primary `N. [ ]` items in document order across all phases, so sub-items never receive a checkbox and never get ticked.
 
-### Plan weight
+## Parallelization model
 
-The `weight` frontmatter field tunes how meaty each step's contract is. The five sections above are mandatory at every weight — what changes is the per-step shape under `## Numbered steps`.
+`## Steps` is organized into **phases**. Phases are the unit of parallelism — the Kanban column you drain before moving to the next.
 
-At every weight ≥ standard, `Done when:` bullets must describe **observable behavior** of the system — what an outside observer (user, integration test, curl, log line) sees when interacting with it. They are **not** a restatement of the implementation paragraph. If a bullet reads as "the code uses X" or "field Y is configured", it's an implementation echo and should be rewritten as "GIVEN/WHEN/THEN" against the system, or moved to the implementation paragraph / `Verification:` line.
+### Phase headers
+
+Each phase is a `### Phase N — <name> · <mode>` subheading inside `## Steps`, where `<mode>` is exactly `parallel` or `sequential`.
+
+- `parallel` — every step in the phase is **file-disjoint** and may be dispatched concurrently.
+- `sequential` — steps run one at a time, top to bottom (use when steps in the phase depend on each other, or when there is only one step).
+
+Phases execute **in document order**. A phase must fully drain — all its steps ticked, no open blockers — before the next phase starts. The phase boundary is the synchronization point; it is what makes concurrent dispatch safe.
+
+### Global step numbering
+
+Steps are numbered **globally and contiguously** across all phases (Phase 1 has steps 1-2, Phase 2 starts at 3, …). This keeps ticking-by-index and `/plan-list`-style counting simple: the Nth primary checkbox in `## Steps` (document order) is step N regardless of which phase it sits in.
+
+### The disjointness invariant — load-bearing
+
+**Within a `parallel` phase, no two steps may share a touchpoint file.** This is the contract that lets the executor run them concurrently without write races. The planner guarantees it; `logis` verifies it; the executor re-checks it before dispatching a wave and refuses to parallelize on overlap (falling back to sequential).
+
+A step that needs the output of another step must **not** sit in the same `parallel` phase as that step — push it to a later phase. Cross-phase ordering is always safe because phases drain in order.
+
+### How the executor consumes phases
+
+The `/execute-plan` command walks phases in order:
+
+- **`sequential` phase** — dispatch one `enginseer` per unticked step, top to bottom; each enginseer commits its own work; tick after each; stop the phase on a blocker.
+- **`parallel` phase** — re-verify touchpoint disjointness, then dispatch all unticked steps as concurrent `enginseer` tasks **in a single message** (enginseers edit + verify but do **not** commit). When the wave returns, the main agent commits each successful step serially by explicit pathspec, then ticks it. Blocked steps stay unticked and are surfaced.
+
+See `/execute-plan` for the full loop, including the serialized-commit rationale.
+
+## Step shape and weight
+
+The `weight` frontmatter field tunes how meaty each step's contract is. The five body sections are mandatory at every weight; what changes is the per-step shape under `## Steps`.
+
+Two fields embody the "assume the subagent knows nothing, but the planner did the homework" principle and are **required at standard and heavy**:
+
+- **`Context:`** — why this step exists and the domain knowledge a fresh subagent lacks (existing patterns to mirror, invariants, the trap to avoid). 1-3 sentences. This is the planner's research distilled — not a restatement of the step text.
+- **`Read first:`** — the exact files (and docs) the subagent should read before editing, as a short list. This is the reading list the planner already walked. The subagent still does its own lightweight look; this just points it at the right place immediately.
+
+**Do not paste implementation code into steps.** Describe interfaces, signatures, gotchas, and expected behavior; the subagent writes the actual code after its quick look. A tiny illustrative snippet is acceptable only when prose genuinely can't convey the shape.
+
+At every weight ≥ standard, `Done when:` bullets must describe **observable behavior** of the system — what an outside observer (user, integration test, curl, log line) sees. They are **not** a restatement of the implementation. If a bullet reads as "the code uses X" or "field Y is configured", rewrite it as GIVEN/WHEN/THEN against the system, or move it to `Context:` / `Verification:`.
 
 Bad: `better-auth instance uses drizzleAdapter(db, { provider: "pg" })`
 Good: `GIVEN POST /api/auth/sign-in/email with valid creds, server returns 200 + Set-Cookie`
 
-**light** — quick fixes, single-file edits, well-understood territory. One-line steps; no per-step sub-items. Plan-level `## File touchpoints` carries the file list for the whole plan.
+**light** — quick fixes, single-file edits, well-understood territory. One-line steps; no per-step sub-items (no `Context:`/`Read first:` required). Plan-level `## File touchpoints` carries the file list. Usually one `sequential` phase.
 
 ```markdown
+### Phase 1 — Bump · sequential
 1. [ ] Bump dependency `foo` from 1.2.3 to 1.2.4 in `package.json`.
 2. [ ] Run `npm install` and commit the lockfile change.
 ```
 
-**standard** (default) — most engineering work. Each step gets `Done when:` (2-5 observable outcomes) and `Touchpoints:` (per-step file list). This is the floor for any work handed off to a subagent.
+**standard** (default) — most engineering work. Each step gets `Context:`, `Read first:`, `Done when:` (2-5 observable outcomes), and `Touchpoints:` (per-step file list). This is the floor for any work handed to a subagent.
 
 ```markdown
+### Phase 1 — Foundations · parallel
 1. [ ] Add GET /users/:id endpoint returning user JSON
+   Context: We already have a users list route with the same auth + error-envelope pattern; mirror it. Auth is a middleware, not per-handler. The standard error envelope is `{ error: { code, message } }`.
+   Read first: `api/users-list.go`, `api/middleware/auth.go`, `api/errors.go`
    Done when:
      - GIVEN a valid auth token and an existing user, GET /users/:id returns 200 + the user JSON.
      - GIVEN no auth header, the same request returns 401.
@@ -187,46 +249,50 @@ Good: `GIVEN POST /api/auth/sign-in/email with valid creds, server returns 200 +
 
 Required for heavy:
 
-- `Outcome:` — single sentence describing the user-visible result of this step. Phrased so a non-engineer could repeat it back. Anchors the step's reason for existing; the rest of the contract serves this line.
-- `Independent Test:` — the concrete behavioral check the executing agent runs to gain confidence the `Outcome:` holds. Either a runnable command (`pnpm test path/to/file.test.ts`, `curl -i ...`) or — when the agent cannot run the check (needs docker-compose, a browser, an OAuth provider) — a 2-4 line manual repro the agent documents in its commit message so a human can repro. A valid escape hatch for pure refactors: `Independent Test: n/a — pure refactor; behavior covered by existing test <path>`.
+- `Outcome:` — single sentence describing the user-visible result of this step, phrased so a non-engineer could repeat it back. Anchors the step's reason for existing.
+- `Independent Test:` — the concrete behavioral check the executing agent runs to gain confidence the `Outcome:` holds. Either a runnable command (`pnpm test path/to/file.test.ts`, `curl -i ...`) or — when the agent cannot run the check — a 2-4 line manual repro it documents in its commit message. Valid escape hatch for pure refactors: `Independent Test: n/a — pure refactor; behavior covered by existing test <path>`.
 
 Optional for heavy (use when they add signal):
 
 - `Anti-touch:` — files explicitly off-limits to this step (handled elsewhere or out of scope).
-- `Verification:` — the static gates that must pass (typecheck, lint, build, unit tests on changed modules). Behavioral checks go in `Independent Test:`, not here.
-- `Pre-conditions:` — what must be true before this step starts (prior step landed, env var set, migration applied, etc.).
+- `Verification:` — the static gates that must pass (typecheck, lint, build, unit tests on changed modules). Behavioral checks go in `Independent Test:`.
+- `Pre-conditions:` — what must be true before this step starts (prior phase landed, env var set, migration applied, etc.).
 
 Field order under a heavy step:
 
 1. Step text
 2. `Outcome:`
-3. `Done when:`
-4. `Touchpoints:`
-5. `Anti-touch:` (if present)
-6. `Verification:` (if present)
-7. `Independent Test:`
-8. `Pre-conditions:` (if present)
+3. `Context:`
+4. `Read first:`
+5. `Done when:`
+6. `Touchpoints:`
+7. `Anti-touch:` (if present)
+8. `Verification:` (if present)
+9. `Independent Test:`
+10. `Pre-conditions:` (if present)
 
 ```markdown
-1. [ ] Add admin login via better-auth
+### Phase 2 — Admin auth · sequential
+3. [ ] Add admin login via better-auth
    Outcome: An operator can sign into the admin console with valid credentials and is rejected (with feedback) on invalid credentials.
+   Context: better-auth is already installed and the auth tables were migrated in Phase 1. Sessions are cookie-based (SameSite=Lax). The admin user is seeded from `SPOOR_ADMIN_*` env on first boot. Do not hand-roll password hashing — better-auth owns it.
+   Read first: `src/lib/auth.ts`, `src/lib/auth-middleware.ts`, `src/server.ts:40`
    Done when:
      - GIVEN an unauthenticated GET `/admin`, the server returns 302 → `/login`.
      - GIVEN POST `/api/auth/sign-in/email` with valid creds, the server returns 200 and sets a SameSite=Lax session cookie; a subsequent GET `/admin` returns 200.
      - GIVEN the same POST with wrong creds, the server returns 401 and sets no cookie.
-     - GIVEN a fresh DB (`count(users) = 0`) with `SPOOR_ADMIN_*` env set, after boot the admin user exists and can log in.
    Touchpoints: `src/lib/auth.ts`, `src/lib/auth-middleware.ts`, `src/views/login.tsx`, `src/server.ts`
-   Anti-touch: `src/db/schema.ts` (auth tables migrated in step 2; don't re-touch)
+   Anti-touch: `src/db/schema.ts` (auth tables migrated in Phase 1; don't re-touch)
    Verification: `pnpm typecheck && pnpm lint && pnpm build`
-   Independent Test: `pnpm test src/lib/auth.test.ts` — supertest harness exercising all four scenarios above against an in-process Hono app. If harness not yet wired: `curl -i http://localhost:3000/admin` (expect 302) plus `curl -i -X POST http://localhost:3000/api/auth/sign-in/email -d '{"email":"...","password":"..."}'` (expect 200 + Set-Cookie); paste both transcripts into the commit message.
-   Pre-conditions: better-auth installed; auth schema migrated; `SPOOR_BASE_URL`, `BETTER_AUTH_SECRET`, `SPOOR_ADMIN_EMAIL`, `SPOOR_ADMIN_PASSWORD` in `.env.test`.
+   Independent Test: `pnpm test src/lib/auth.test.ts` — supertest harness exercising all three scenarios against an in-process Hono app. If not yet wired: `curl -i http://localhost:3000/admin` (expect 302) plus a POST with valid creds (expect 200 + Set-Cookie); paste both transcripts into the commit message.
+   Pre-conditions: Phase 1 landed (better-auth installed, auth schema migrated); `BETTER_AUTH_SECRET`, `SPOOR_ADMIN_EMAIL`, `SPOOR_ADMIN_PASSWORD` in `.env.test`.
 ```
 
-`## Acceptance criteria` is **cross-cutting** at every weight — invariants that span steps, not outcomes scoped to one step. Examples: "no regression in the existing test suite", "p95 latency unchanged", "all migrations reversible", "no new lint violations", "documented in CHANGELOG". If a candidate criterion only describes the outcome of one step, push it into that step's `Done when:` instead.
+`## Acceptance criteria` is **cross-cutting** at every weight — invariants that span steps, not outcomes scoped to one step. Examples: "no regression in the existing test suite", "p95 latency unchanged", "all migrations reversible", "no new lint violations". If a candidate criterion only describes the outcome of one step, push it into that step's `Done when:` instead.
 
 ### Checkbox grammar
 
-Numbered steps and acceptance criteria use GitHub-flavoured markdown checkboxes so progress is human-readable and machine-tickable.
+Primary steps and acceptance criteria use GitHub-flavoured markdown checkboxes so progress is human-readable and machine-tickable.
 
 | Token | Meaning |
 |---|---|
@@ -241,13 +307,13 @@ Failed/skipped convention:
    > note: skipped — staging DB is being rebuilt this week; revisit after Friday.
 ```
 
-The checkbox stays **unchecked** (the work was not done). The `> note:` blockquote, indented to align under the step text, captures the reason. Multiple `> note:` lines may accrue under one step over time.
+The checkbox stays **unchecked** (the work was not done). The `> note:` blockquote, indented under the step text, captures the reason. Multiple `> note:` lines may accrue under one step over time.
 
-There is no third checkbox state — the failed/skipped distinction lives in the note, not the box. This keeps grep simple (`rg '^\s*[-0-9]+\. \[ \]'` finds work-to-do) and avoids inventing a non-standard markdown token.
+There is no third checkbox state — the failed/skipped distinction lives in the note. This keeps grep simple (`rg '^\s*[-0-9]+[.)]? \[ \]'` finds work-to-do) and avoids a non-standard markdown token.
 
 ### Auto-promotion rule
 
-When `tick-task` ticks the first step of a plan whose status is `not-started`, `magos-artisan` also bumps the status to `in-progress` in the same write. No auto-promotion in the other direction — completion is always explicit.
+When a `tick-task` ticks the first step of a plan whose status is `not-started`, also bump the status to `in-progress` in the same write. No auto-promotion in the other direction — completion is always explicit.
 
 ## Citation format
 
@@ -258,23 +324,21 @@ src/auth/login.ts:142
 packages/api/handlers/orders.ts:88
 ```
 
-No repo aliases (local plans are single-repo).
-No backticks required in running prose, but backtick-wrap them in bullet lists for readability.
-A bare `path` (no line) is allowed when referring to a whole new file to create.
+No repo aliases (local plans are single-repo). Backtick-wrap citations in bullet lists for readability. A bare `path` (no line) is allowed when referring to a whole new file to create.
 
 ## Slug-to-file resolution
 
-`magos-artisan` and any reader (`/plan-list`) resolve a slug to a file as follows:
+Resolve a slug to a file as follows:
 
 1. Glob `<scriptorum-root>/.scriptorum/*--<slug>.md`.
 2. If exactly one match → that's the file.
-3. If multiple matches → slug collision across dates. The reader/writer takes context-appropriate action:
-   - **Update actions** (`update-status`, `tick-task`, `append-note`, `supersede`): error with `Slug "<slug>" matches multiple plans: <list>. Disambiguate with the dated filename.`
-   - **`write-plan` with `overwrite: false`**: error `Slug "<slug>" already in use across <N> plans on dates <list>. Use a different slug or overwrite an existing date.`
-   - **`write-plan` with `overwrite: true`**: error — overwrite requires unambiguous target. Caller must specify the date.
+3. If multiple matches → slug collision across dates. Take context-appropriate action:
+   - **Update operations** (update-status, tick-task, append-note, supersede): error with `Slug "<slug>" matches multiple plans: <list>. Disambiguate with the dated filename.`
+   - **write-plan with `overwrite: false`**: error `Slug "<slug>" already in use across <N> plans on dates <list>. Use a different slug or overwrite an existing date.`
+   - **write-plan with `overwrite: true`**: error — overwrite requires an unambiguous target. The user must specify the date.
 4. If zero matches → check legacy `<scriptorum-root>/.scriptorum/<slug>.md`. If it exists, that's the file.
-5. If still zero matches and the action is `write-plan`: create `<scriptorum-root>/.scriptorum/<TODAY>--<slug>.md`.
-6. If still zero matches and the action is an update: error with `No plan found for slug "<slug>".`
+5. If still zero matches and the operation is write-plan: create `<scriptorum-root>/.scriptorum/<TODAY>--<slug>.md`.
+6. If still zero matches and the operation is an update: error with `No plan found for slug "<slug>".`
 
 ## Overwrite policy
 
@@ -282,13 +346,13 @@ A bare `path` (no line) is allowed when referring to a whole new file to create.
 
 1. Prompt the user: `Plan exists at <path>. Overwrite? [y/N]`.
 2. Default is N. Empty answer or anything other than `y`/`Y` → abort with `Aborted; existing plan not modified.` and write nothing.
-3. On `y`/`Y` → dispatch to `magos-artisan` with `overwrite: true`. The artisan preserves `created` from the existing file's frontmatter; only `updated`, `slug`, `goal`, body, and (optionally) `status` are updated.
+3. On `y`/`Y` → perform the write-plan with `overwrite: true`. Preserve `created` from the existing file's frontmatter; only `updated`, `slug`, `goal`, body, and (optionally) `status` change.
 
-Plans on a **different** date with the same slug do not collide for `write-plan` — they create a new dated file. The caller is responsible for using `supersede` if they intend the new plan to replace the old one.
+Plans on a **different** date with the same slug do not collide for write-plan — they create a new dated file. Use supersede if the new plan is meant to replace the old one.
 
 ## Catechism dependency
 
-`/plan` always runs the catechism interview before synthesis:
+`/plan` runs the catechism interview before synthesis unless the incoming task description already contains an explicit goal, scope, and at least one constraint or edge case (see the skip heuristic in the `catechism` skill and `/plan`):
 
 1. Load the `catechism` skill.
 2. Run the protocol (rounds, multiple-choice questions, recap).
@@ -297,239 +361,166 @@ Plans on a **different** date with the same slug do not collide for `write-plan`
 
 If the user aborts mid-interview (`stop`, `cancel`, `never mind`, or equivalent), write nothing and exit cleanly with `Aborted; no plan written.`
 
-If no task description is provided, the catechism still runs — synthesis is driven by the recap, not the initial prompt.
+## Direct-write operations
 
-The `magos-iterator` skill follows the same rule for the heavy work flow, but may **skip** the catechism when the incoming task description already contains an explicit goal, scope, and constraints (see the skill for the skip heuristic).
+The main agent performs all `.scriptorum/` mutations itself, inline, while running `/plan` and `/execute-plan`. There is no writer subagent. Each operation below is a procedure the agent follows directly; the path-safety and validation rules are non-negotiable.
 
-## magos-artisan delegation contract
+**Path safety (every write).** Before any write: resolve the scriptorum root (`git rev-parse --show-toplevel`, cwd fallback noted to the user). Compute the full intended absolute path. Verify it begins with `<scriptorum-root>/.scriptorum/`. Refuse any path that escapes (e.g. a slug containing `..`). `mkdir -p` the directory if missing. Never write outside `.scriptorum/`. Never delete plan files as part of an operation; the user manages deletion.
 
-`magos-artisan` is the sole writer under `.scriptorum/` on opencode. Every consumer that mutates a plan file dispatches it as a subagent with a structured request. Supported actions:
+### write-plan
 
-### `action: write-plan`
+Create a new plan file or overwrite an existing same-day plan.
 
-Create a new plan file or overwrite an existing one for today.
+Inputs: `slug`, `goal` (single line), `title` (H1), `body` (sections only — no frontmatter), `overwrite` (bool), `weight` (optional), `supersedes` (optional, default `[]`).
 
-```
-action: write-plan
-payload:
-  slug: <slug>
-  goal: <single-line goal>
-  title: <H1 title>
-  body: <markdown body, sections only — no frontmatter>
-  overwrite: <true | false>
-  supersedes: [<slug>, ...]   # optional, default []
-```
+1. Compute target `<root>/.scriptorum/<TODAY>--<slug>.md`. Apply path safety.
+2. **Same-day collision.** If the target exists and `overwrite: false` → stop, report `exists` with the path. If it exists and `overwrite: true` → read it, preserve its `created` (and `status`); on unrecoverable frontmatter, reset `created` to today and note it. If it doesn't exist → `created` = today.
+3. **Multi-day collision.** Glob `*--<slug>.md`; matches on other dates are separate plans, not errors — surface their existence as a note.
+4. **Body validation.** Ensure sections appear in order: `## Summary`, `## Scope`, `## Steps`, `## Acceptance criteria`, `## File touchpoints`. If any are missing or out of order, stop and report rather than writing a malformed plan.
+5. **Phase validation.** Under `## Steps`, every step lives in a `### Phase N — <name> · <parallel|sequential>` subheading. For each `parallel` phase, verify its steps have disjoint `Touchpoints:`; if any overlap, either fix (re-phase) or downgrade the phase to `sequential` before writing, and note it.
+6. **Checkbox sanity.** Every primary item under `## Steps` and `## Acceptance criteria` uses `[ ]` or `[x]`. Coerce stray non-checkbox primary items by prepending `[ ] ` and note the coercion.
+7. **Citation validation (warn-only).** Extract every `<path>:<N>` in the body (relative path, positive integer; inside or outside backticks). Resolve `<root>/<path>`; if the file is missing or has fewer than `N` lines, record a warning. Bare `<path>` (no line) is not validated. Never block or rewrite on a citation warning — surface warnings.
+8. Compose the file: frontmatter (`created`, `updated: <today>`, `slug`, `goal` flattened to one line, `status` — `not-started` on create, preserved on overwrite — `weight` only if supplied/preserved, `supersedes`) then `# <title>` then the body. Write it.
+9. If `supersedes` is non-empty, run update-status `abandoned` on each predecessor (see supersede).
+10. Report path, created/updated, overwrote, citation warnings, and any superseded predecessors.
 
-Artisan:
+### update-status
 
-1. Resolves the target path: `<root>/.scriptorum/<TODAY>--<slug>.md`.
-2. Honours overwrite policy (above).
-3. Validates `path:line` citations in `body` (warn-only).
-4. Writes frontmatter (`created`, `updated`, `slug`, `goal`, `status: not-started`, `supersedes`) followed by the body.
-5. If `supersedes` is non-empty, dispatches an internal `update-status abandoned` on each referenced slug.
-6. Returns `{action, path, created, updated, overwrote, citation_warnings, superseded}`.
+Change `status` in frontmatter. Inputs: `slug`, `status` (one of the four), optional `date`.
 
-### `action: update-status`
+1. Reject unknown status values (`Invalid status "<value>". Allowed: not-started, in-progress, complete, abandoned.`).
+2. Resolve the file (use `date` to disambiguate collisions).
+3. Capture the previous status (default `not-started` if absent — legacy). Set the new status. Bump `updated`. Preserve every other field, including unknowns. Write back.
 
-Change the `status` field on an existing plan.
+### tick-task
 
-```
-action: update-status
-payload:
-  slug: <slug>
-  status: not-started | in-progress | complete | abandoned
-  date: <YYYY-MM-DD>   # optional; required only to disambiguate slug collision
-```
+Tick/untick a primary checkbox. Inputs: `slug`, `section` (`steps` | `acceptance-criteria`), `index` (1-based, global), `state` (`done` | `undone`), optional `note`, optional `date`.
 
-Artisan:
+1. Resolve the file. Locate the section heading (`## Steps` or `## Acceptance criteria`). For `steps`, the section spans all its `### Phase …` subheadings until the next `##`.
+2. Enumerate primary checkbox items in document order. A primary item matches `^\s*-\s+\[[ x]\]\s` or `^\s*\d+\.\s+\[[ x]\]\s`. Indented sub-items and `> note:` lines are not primary. If the section has fewer than `index` items, error with the count.
+3. Capture the previous state. Toggle the box to `[x]` (done) or `[ ]` (undone), preserving the marker and spacing.
+4. If `note` is given, append a `> note: <note>` line after the step's existing lines (before the next primary item / section boundary), indented to align with the step body. Notes accrue; don't collapse.
+5. Bump `updated`.
+6. **Auto-promotion:** if `state == done`, current status is `not-started`, and this tick changed a box from `[ ]` to `[x]`, also set `status: in-progress`.
+7. Write back.
 
-1. Resolves the file via [slug-to-file resolution](#slug-to-file-resolution). If `date` is provided, prefer `<date>--<slug>.md` exactly.
-2. Rejects unknown status values with `Invalid status "<value>". Allowed: not-started, in-progress, complete, abandoned.`
-3. Updates `status` and bumps `updated` to today.
-4. Returns `{action, path, previous_status, new_status, updated}`.
+### append-note
 
-### `action: tick-task`
+Append a `> note:` line under a step without touching its checkbox. Inputs: `slug`, `section`, `index`, `note`, optional `date`. Same resolution + placement as tick-task steps 1-2 and 4; bump `updated`; write back. Used for "skipped — reason", "blocked — see ticket", "tried and reverted because …".
 
-Tick or untick a checkbox under `## Numbered steps` or `## Acceptance criteria`.
+### supersede
 
-```
-action: tick-task
-payload:
-  slug: <slug>
-  section: numbered-steps | acceptance-criteria
-  index: <1-based integer>
-  state: done | undone
-  note: <optional short string — appended as a `> note:` line under the step>
-  date: <YYYY-MM-DD>   # optional; disambiguation only
-```
+Mark this plan as the successor of one or more older plans, abandoning them. Inputs: `slug` (successor, must exist), `predecessors` (list), optional `date` (successor disambiguation).
 
-Artisan:
+1. Resolve the successor file.
+2. For each predecessor: resolve it (error if ambiguous/not found), run update-status `abandoned`, collect the result.
+3. On the successor, set `supersedes: [<predecessor-slugs>]` (overwriting any existing value). Bump `updated`. Write back.
 
-1. Resolves the file.
-2. Locates the section. If missing, errors.
-3. Locates the `index`th checkbox in that section (1-based, in document order). If out of range, errors with `Section "<name>" has only <N> checkboxes; index <I> out of range.`
-4. Toggles the checkbox text: `[ ]` ↔ `[x]` per `state`.
-5. If `note` is provided, appends a new `> note: <note>` line **after** the step's existing lines (preserving any existing notes). Indents to align with the step body.
-6. Bumps `updated`.
-7. **Auto-promotion**: if `state == done`, the plan's status is `not-started`, and this was the first tick, also set `status: in-progress`.
-8. Returns `{action, path, section, index, previous_state, new_state, status_changed, updated}`.
+### Frontmatter handling (all operations)
 
-### `action: append-note`
-
-Append a `> note:` line to a step without changing the checkbox.
-
-```
-action: append-note
-payload:
-  slug: <slug>
-  section: numbered-steps | acceptance-criteria
-  index: <1-based integer>
-  note: <short string>
-  date: <YYYY-MM-DD>   # optional
-```
-
-Used for "skipped — reason", "blocked — see ticket", "tried and reverted because …", etc.
-
-Artisan:
-
-1. Resolves the file and the step (same as `tick-task`).
-2. Appends `> note: <note>` aligned under the step.
-3. Bumps `updated`.
-4. Returns `{action, path, section, index, note, updated}`.
-
-### `action: supersede`
-
-Mark this plan as the successor of one or more older plans, abandoning them.
-
-```
-action: supersede
-payload:
-  slug: <slug>                  # the new (successor) plan
-  predecessors: [<slug>, ...]   # the plans this replaces
-  date: <YYYY-MM-DD>            # optional; disambiguation for the successor
-```
-
-Artisan:
-
-1. Resolves the successor file.
-2. For each predecessor slug: resolves the file (errors if not found), runs `update-status abandoned` on it.
-3. Sets `supersedes: [<predecessor-slugs>]` on the successor frontmatter (overwriting any existing list).
-4. Bumps `updated` on the successor.
-5. Returns `{action, path, supersedes, abandoned: [{slug, path}, ...]}`.
-
-### Citation validation (write-plan only)
-
-After staging the body but before writing, artisan validates every `path:line` citation in `body`:
-
-1. Extract every `<path>:<N>` occurrence where `<path>` is a relative path (no leading `/`, no `:`-in-the-path) and `<N>` is a positive integer. Match inside backticks and outside.
-2. For each match, resolve `<scriptorum-root>/<path>`.
-3. If the file does not exist OR has fewer than `N` lines, record a warning: `{path, line, reason: "missing" | "out-of-range"}`.
-4. Bare `<path>` references without a line number are **not** validated (they may legitimately point at files to be created).
-
-Citation validation is warn-only. Do not block or modify the body. Surface warnings in the return as `citation_warnings`.
-
-Other actions (`update-status`, `tick-task`, `append-note`, `supersede`) do **not** re-validate citations — they only touch frontmatter or checkbox lines.
-
-### Hard scoping rules
-
-- Compute the full intended absolute path BEFORE issuing any write. Resolve via `git rev-parse --show-toplevel`; on failure, use cwd and note the fallback in `notes`.
-- Verify every target path begins with `<scriptorum-root>/.scriptorum/`. Refuse any path that escapes (e.g. via a slug containing `..`).
-- Never write outside `.scriptorum/`. Never delete files. Never modify files in the rest of the repo. Never symlink.
-- `mkdir -p <scriptorum-root>/.scriptorum` if the directory does not exist.
+- Parse tolerantly: treat malformed frontmatter as findable but skip malformed fields; never crash; surface malformed states.
+- Preserve unknown fields verbatim on rewrite.
+- Field order for readability: `created`, `updated`, `slug`, `goal`, `status`, `weight` (if present), `supersedes`, then preserved unknowns. Consumers tolerate any order.
+- `supersedes: []` is written as an empty inline list, not omitted.
+- Dates are ISO `YYYY-MM-DD` (no time component).
 
 ## /plan-list contract
 
-`/plan-list [filter]` is read-only and does not invoke `magos-artisan`:
+`/plan-list [filter]` is read-only:
 
 1. Resolve the scriptorum root.
 2. If `.scriptorum/` does not exist, print `No plans yet. Run /plan <task> to create one.` and stop.
 3. List `.scriptorum/*.md` (both `YYYY-MM-DD--<slug>.md` and legacy `<slug>.md`).
 4. If `filter` is provided, keep only files whose `<slug>` substring-matches the filter (case-insensitive). The slug for a dated file is everything after `YYYY-MM-DD--`; for legacy files it's the filename stem.
-5. For each remaining file, parse the YAML frontmatter and extract `created`, `updated`, `slug`, `status`, `goal`. If the frontmatter is malformed or missing fields, substitute per the [Legacy frontmatter](#legacy-frontmatter) rules; for completely missing fields with no fallback, use `?`.
+5. For each remaining file, parse YAML frontmatter and extract `created`, `updated`, `slug`, `status`, `goal`. Apply legacy-frontmatter fallbacks; for completely missing fields with no fallback, use `?`.
 6. Sort by `updated` descending. Ties broken by `slug` ascending. Entries with `updated: ?` sort last.
-7. Print one line per plan in this shape (single-space gutters; status bracketed for scanability):
+7. Print one line per plan (single-space gutters; status bracketed):
    ```
    [<marker>] <status>  <slug>  <updated>  <goal>
    ```
-   Status markers:
-   - `[ ]` not-started
-   - `[~]` in-progress
-   - `[x]` complete
-   - `[-]` abandoned
-   - `[?]` unknown (legacy)
-   Pad the status name to 11 chars (longest is `not-started`) for column alignment; do not pad `slug` or `updated`.
+   Status markers: `[ ]` not-started, `[~]` in-progress, `[x]` complete, `[-]` abandoned, `[?]` unknown (legacy). Pad the status name to 11 chars (longest is `not-started`); do not pad `slug` or `updated`.
 8. If the filter matched nothing, print `No plans match '<filter>'.`
 
 ## Templates
 
-### New plan file (created by `/plan` via `magos-artisan write-plan`)
+### New plan file (created by `/plan`)
 
 ```markdown
 ---
-created: 2026-05-19
-updated: 2026-05-19
-slug: add-feature-flag-for-new-checkout
-goal: Add a feature flag for the new checkout flow so we can roll it out to a subset of users.
+created: 2026-06-15
+updated: 2026-06-15
+slug: add-user-csv-export
+goal: Add a CSV export endpoint for users behind a feature flag.
 status: not-started
 weight: standard
 supersedes: []
 ---
 
-# Add feature flag for new checkout
+# Add user CSV export
 
 ## Summary
-Wire a new boolean flag `checkout.v2` through the existing flag service so the new checkout flow can be enabled per-cohort without a deploy.
+Add a CSV export endpoint for users, wired through the existing export service, behind the `export.users` flag (default off).
 
 ## Scope
-- New flag definition in the flag registry.
-- Wiring in `CheckoutPage` to branch on the flag.
-- Default value: off in all environments.
+- New CSV serializer for the user shape.
+- New `export.users` flag.
+- New GET /users/export endpoint, flag-gated.
 
-## Numbered steps
-1. [ ] Register `checkout.v2` in the flag registry
+## Steps
+
+### Phase 1 — Foundations · parallel
+1. [ ] Add a CSV serializer for users
+   Context: Users are serialized to JSON in `serializers/user.ts`; CSV must match the same field order and redaction (never emit `password_hash`). There is no global CSV lib — the billing module already pulls `csv-stringify`; reuse it.
+   Read first: `src/serializers/user.ts`, `src/billing/export.ts:40`
    Done when:
-     - Entry added to `src/flags/registry.ts:1` alongside existing entries.
-     - Default value is `false`.
-     - Type signature matches existing boolean flags (no new shape).
-   Touchpoints: `src/flags/registry.ts:1`
-2. [ ] Branch `CheckoutPage` on the flag
+     - GIVEN a user record, the serializer returns a CSV row with columns id,email,created_at in that order.
+     - password_hash never appears in the output.
+   Touchpoints: `src/serializers/user-csv.ts`
+2. [ ] Register the `export.users` flag
+   Context: Flags live in a central registry; booleans default off in all environments.
+   Read first: `src/flags/registry.ts:1`
    Done when:
-     - `src/pages/CheckoutPage.tsx:24` reads the flag via the existing flag service.
-     - Renders `CheckoutV2` when the flag is on, `CheckoutV1` when off.
-     - `CheckoutV2` component shell exists at `src/pages/CheckoutV2.tsx` (empty body OK).
-   Touchpoints: `src/pages/CheckoutPage.tsx:24`, `src/pages/CheckoutV2.tsx`
-3. [ ] Expose the flag in the test mock
+     - `export.users` exists in the registry and defaults to false.
+   Touchpoints: `src/flags/registry.ts`
+
+### Phase 2 — Endpoint · sequential
+3. [ ] Add GET /users/export
+   Context: Depends on the serializer (step 1) and flag (step 2). Mirror the auth + pagination pattern in the existing users list route.
+   Read first: `src/api/users-list.ts`, `src/serializers/user-csv.ts`
    Done when:
-     - `tests/mocks/flags.ts:1` lets a test set `checkout.v2` to true or false.
-     - No change to other mocked flags.
-   Touchpoints: `tests/mocks/flags.ts:1`
+     - GIVEN the flag on and valid auth, GET /users/export returns 200 with Content-Type text/csv.
+     - GIVEN the flag off, the request returns 404.
+     - GIVEN no auth, the request returns 401.
+   Touchpoints: `src/api/users-export.ts`, `src/api/router.ts`
 
 ## Acceptance criteria
-- [ ] All existing `CheckoutPage` tests pass with the flag off (no regression).
-- [ ] Lint and typecheck pass.
-- [ ] No production traffic reaches `CheckoutV2` until the flag is flipped (default off everywhere).
+- [ ] Existing users-list tests still pass (no regression).
+- [ ] Lint and typecheck clean.
+- [ ] No PII beyond id,email,created_at in the CSV output.
 
 ## File touchpoints
-- `src/flags/registry.ts:1` — update — add `checkout.v2` entry.
-- `src/pages/CheckoutPage.tsx:24` — update — branch on flag.
-- `src/pages/CheckoutV2.tsx` — new — new flow shell.
-- `tests/mocks/flags.ts:1` — update — expose toggle in tests.
+- `src/serializers/user-csv.ts` — new — CSV serializer.
+- `src/flags/registry.ts` — update — add `export.users`.
+- `src/api/users-export.ts` — new — export endpoint.
+- `src/api/router.ts` — update — mount the route.
 ```
 
-### Plan after partial progress (post `tick-task` + `append-note`)
+Phase 1's two steps touch disjoint files, so the executor dispatches them concurrently. Phase 2 waits for Phase 1 to drain.
+
+### Plan after partial progress (post tick-task + append-note)
 
 ```markdown
 ---
-created: 2026-05-19
-updated: 2026-05-20
-slug: add-feature-flag-for-new-checkout
+created: 2026-06-15
+updated: 2026-06-16
+slug: add-user-csv-export
 goal: ...
 status: in-progress
 weight: standard
 supersedes: []
 ---
 
-# Add feature flag for new checkout
+# Add user CSV export
 
 ## Summary
 ...
@@ -537,30 +528,38 @@ supersedes: []
 ## Scope
 ...
 
-## Numbered steps
-1. [x] Register `checkout.v2` in the flag registry
+## Steps
+
+### Phase 1 — Foundations · parallel
+1. [x] Add a CSV serializer for users
+   Context: ...
+   Read first: `src/serializers/user.ts`, `src/billing/export.ts:40`
    Done when:
-     - Entry added to `src/flags/registry.ts:1` alongside existing entries.
-     - Default value is `false`.
-     - Type signature matches existing boolean flags (no new shape).
-   Touchpoints: `src/flags/registry.ts:1`
-2. [ ] Branch `CheckoutPage` on the flag
+     - GIVEN a user record, the serializer returns a CSV row with columns id,email,created_at in that order.
+     - password_hash never appears in the output.
+   Touchpoints: `src/serializers/user-csv.ts`
+2. [x] Register the `export.users` flag
+   Context: ...
+   Read first: `src/flags/registry.ts:1`
    Done when:
-     - `src/pages/CheckoutPage.tsx:24` reads the flag via the existing flag service.
-     - Renders `CheckoutV2` when the flag is on, `CheckoutV1` when off.
-     - `CheckoutV2` component shell exists at `src/pages/CheckoutV2.tsx` (empty body OK).
-   Touchpoints: `src/pages/CheckoutPage.tsx:24`, `src/pages/CheckoutV2.tsx`
-   > note: blocked — CheckoutPage was refactored yesterday; line 24 is now elsewhere. Re-locate before continuing.
-3. [ ] Expose the flag in the test mock
+     - `export.users` exists in the registry and defaults to false.
+   Touchpoints: `src/flags/registry.ts`
+
+### Phase 2 — Endpoint · sequential
+3. [ ] Add GET /users/export
+   Context: ...
+   Read first: `src/api/users-list.ts`, `src/serializers/user-csv.ts`
    Done when:
-     - `tests/mocks/flags.ts:1` lets a test set `checkout.v2` to true or false.
-     - No change to other mocked flags.
-   Touchpoints: `tests/mocks/flags.ts:1`
+     - GIVEN the flag on and valid auth, GET /users/export returns 200 with Content-Type text/csv.
+     - GIVEN the flag off, the request returns 404.
+     - GIVEN no auth, the request returns 401.
+   Touchpoints: `src/api/users-export.ts`, `src/api/router.ts`
+   > note: blocked — the users list route moved to `src/api/v2/users-list.ts` yesterday; re-locate before continuing.
 
 ## Acceptance criteria
-- [ ] All existing `CheckoutPage` tests pass with the flag off (no regression).
-- [ ] Lint and typecheck pass.
-- [ ] No production traffic reaches `CheckoutV2` until the flag is flipped (default off everywhere).
+- [ ] Existing users-list tests still pass (no regression).
+- [ ] Lint and typecheck clean.
+- [ ] No PII beyond id,email,created_at in the CSV output.
 
 ## File touchpoints
 ...
@@ -568,12 +567,13 @@ supersedes: []
 
 ## Hard rules
 
-- Never write outside `<scriptorum-root>/.scriptorum/`. The artisan computes the absolute path and refuses anything that escapes.
-- Never modify the `created` field on any subsequent action — it is preserved from the existing file.
+- Never write outside `<scriptorum-root>/.scriptorum/`. Compute the absolute path and refuse anything that escapes.
+- Never modify the `created` field on any subsequent operation — it is preserved from the existing file.
 - Never auto-set `status: complete`. Completion is always an explicit `update-status complete`.
 - Never embed the catechism recap verbatim in the plan body.
 - Never use repo aliases in citations; `path:line` is plain.
-- Never auto-version filenames on collision — always prompt the user with `Overwrite? [y/N]` for same-day collisions; new dates create new files.
+- Never auto-version filenames on collision — prompt `Overwrite? [y/N]` for same-day collisions; new dates create new files.
 - Never touch `.gitignore`.
+- Never paste implementation code into steps — describe interfaces and behavior; the subagent writes the code.
+- Within a `parallel` phase, never let two steps share a touchpoint file — that invariant is what makes concurrent dispatch safe.
 - Citation validation is warn-only; never block a write on a missing line.
-- All `.scriptorum/` mutations go through `magos-artisan`. Other agents may **read** plan files directly but must not edit them.
