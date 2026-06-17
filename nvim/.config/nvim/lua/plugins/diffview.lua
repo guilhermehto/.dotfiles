@@ -13,6 +13,9 @@ return {
 		-- Left panel lists changed files as a tree.
 		file_panel = {
 			listing_style = "tree",
+			win_config = {
+				width = 60,
+			},
 		},
 		view = {
 			-- 3-way layout for resolving conflicts during a merge/rebase.
