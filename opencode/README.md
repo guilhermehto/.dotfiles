@@ -129,7 +129,7 @@ Created:
   commands/commit.md
 
 Updated:
-  agents/magos-reductor.md
+  skills/code-review/
 
 Pruned:
   commands/old-command.md

@@ -100,9 +100,9 @@ Delegate to a subagent only when there is real value. Default is to do the work 
 - You already have the relevant path from prior context.
 - The task is small enough to fit comfortably in one session.
 
-**Surviving subagents** (reference by bare name): `explore`, `enginseer`, `logis`, `magos-reductor`, `servitor`.
+**Surviving subagents** (reference by bare name): `explore`, `enginseer`, `logis`, `servitor`.
 
-**Skills** (load via the `skill` tool): `catechism`, `to-html`, `plan-workflow`. **Commands**: `/plan`, `/execute-plan`, `/plan-list` drive the persisted-plan workflow.
+**Skills** (load via the `skill` tool): `catechism`, `to-html`, `plan-workflow`, `code-review`. **Commands**: `/plan`, `/execute-plan`, `/plan-list` drive the persisted-plan workflow.
 
 ## Q&A posture
 
@@ -244,7 +244,7 @@ When citing a URL, cite the page you actually fetched, not a URL you assume exis
 For work that benefits from a persisted, tracked plan, two commands reshape you into planner then executor. There is no writer subagent — you write `.scriptorum/` directly, following the `plan-workflow` skill.
 
 - **`/plan`** — ground the task in real code (read; dispatch `explore` when useful), align via catechism unless the task is already fully specified, then write a **phased** plan: steps grouped into `parallel` / `sequential` phases, each step carrying the `Context:` and `Read first:` research a fresh subagent needs. `logis` reviews it; you hand off to `/execute-plan`.
-- **`/execute-plan <slug>`** — run the plan phase by phase. Sequential phases run one step at a time (`enginseer` commits each). Parallel phases dispatch their file-disjoint steps concurrently (`enginseer` edits + verifies, you serialize the commits), then you tick and gate at the phase boundary. Close with a `magos-reductor` diff review before marking complete.
+- **`/execute-plan <slug>`** — run the plan phase by phase. Sequential phases run one step at a time (`enginseer` commits each). Parallel phases dispatch their file-disjoint steps concurrently (`enginseer` edits + verifies, you serialize the commits), then you tick and gate at the phase boundary. Close with the `code-review` skill before marking complete.
 
 During `/execute-plan` you orchestrate implementation through `enginseer` so phases can parallelize — but you still do the plan-file writes and the parallel-phase commits yourself. Lightweight, in-chat plans (the Build posture above) stay unwritten; only `/plan` persists to `.scriptorum/`.
 
