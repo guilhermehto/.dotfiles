@@ -1,11 +1,11 @@
 ---
 name: personal-writing-style
-description: Write PR descriptions, PR messages, Slack messages, update comments, and copy-pasteable summaries in Gui's writing style. Use when the user asks to "write a PR message", "write a PR description", "write a Slack message", "draft this update", or similar, especially for recent changes or local diffs. Also invoke automatically before opening a PR on the user's behalf, to write the PR body. PR descriptions use caveman-full terseness (see Shape for PR descriptions).
+description: Write PR descriptions, PR messages, Slack messages, update comments, RFCs, design docs, and copy-pasteable summaries in Gui's writing style. Use when the user asks to "write a PR message", "write a PR description", "write a Slack message", "draft this update", "write an RFC", "draft a design doc", or similar, especially for recent changes or local diffs. Also invoke automatically before opening a PR on the user's behalf, to write the PR body. PR descriptions use caveman-full terseness; RFCs and docs use full prose (see the Shape sections).
 ---
 
 # personal-writing-style
 
-Use this skill to write copy that sounds like Gui: practical, direct, a little candid, and ready to paste into a PR description or Slack thread.
+Use this skill to write copy that sounds like Gui: practical, direct, a little candid, and ready to paste into a PR description, Slack thread, or design doc.
 
 ## When to invoke
 
@@ -16,6 +16,7 @@ Invoke this skill when the user asks for any of these:
 - "write a Slack message"
 - "draft an update"
 - "summarise these recent changes"
+- "write an RFC" / "draft a design doc" / "write this design up"
 - "make this sound like me"
 - Any similar request where the output is user-facing engineering prose, not code.
 
@@ -33,6 +34,9 @@ Write like this:
 - Specific about what changed and why.
 - Low ceremony. No corporate phrasing.
 - Slightly conversational, but still useful to teammates.
+- Lead with the answer, then the reasoning.
+- Short declarative sentences that chain cause to effect.
+- Land the point with a short punchline when there is one.
 
 This style can say:
 
@@ -41,6 +45,10 @@ This style can say:
 - "At this stage I just want..."
 - "If this breaks something I can make a localised change instead"
 - "This fixes staging, but can’t be rolled out to production yet..."
+- "One change, both problems."
+- "It only solves half the problem."
+- "This is just a workaround, the real fix is X."
+- "we control this side and can ship now"
 
 It should not say:
 
@@ -95,6 +103,24 @@ If this uncovers root cause we fix it. If not, reaching out to <team>.
 Caveman drops to normal prose only for anything that would be misread as a fragment: irreversible-action warnings, security notes, or a multi-step sequence where dropping words changes the meaning.
 
 Output is the PR body only, no title, unless the user asks for a title.
+
+## Shape for docs, RFCs, and long-form
+
+Full prose in the voice above, **not** caveman. This is the register of the RFCs Gui writes: plain-language reasoning, exact technical terms, honest about tradeoffs.
+
+**Lead with the whole answer.** Open with a short overview stating the problem, the proposal, and the payoff in plain terms, so a reader can stop after the first paragraph and still get it. Everything after is detail for whoever needs it.
+
+**Problem before solution, in ordinary language.** Chain cause to effect in short sentences: what is broken, why, what that blocks. Name identifiers, flags, and services exactly, but wrap each in its plain meaning ("the template is tagged `containsUGC: true`, and a UGC template has to carry a `shardingContextId`. We don't send one.").
+
+**Land the argument with a punchline** when there is one: "One change, both problems." "It only solves half the problem." One tight line beats a paragraph of restatement.
+
+**Say why now.** Motivate the work by what it unblocks or the risk it closes, not just the mechanics.
+
+**Be fair to the options you rejected.** State the strongest version of each alternative, then the honest reason you passed. Name the drawback of the approach you did pick. Do not strawman the road not taken.
+
+**Be honest about workaround vs real fix,** and about what you are unsure of. "This is just a workaround, the final solution is the RFC." "I'm not confident on this, you'd need to verify."
+
+**Prose over bullets.** Reasoning flows as paragraphs. Reserve bullets for genuine lists: in-scope / out-of-scope, enumerated alternatives, a testing checklist. If a bullet list is really a paragraph chopped into fragments, make it a paragraph.
 
 ## Shape for Slack messages
 
