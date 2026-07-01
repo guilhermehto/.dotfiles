@@ -1,6 +1,6 @@
 ---
 name: personal-writing-style
-description: Write PR descriptions, PR messages, Slack messages, update comments, and copy-pasteable summaries in Gui's writing style. Use when the user asks to "write a PR message", "write a PR description", "write a Slack message", "draft this update", or similar, especially for recent changes or local diffs.
+description: Write PR descriptions, PR messages, Slack messages, update comments, and copy-pasteable summaries in Gui's writing style. Use when the user asks to "write a PR message", "write a PR description", "write a Slack message", "draft this update", or similar, especially for recent changes or local diffs. Also invoke automatically before opening a PR on the user's behalf, to write the PR body. PR descriptions use caveman-full terseness (see Shape for PR descriptions).
 ---
 
 # personal-writing-style
@@ -18,6 +18,8 @@ Invoke this skill when the user asks for any of these:
 - "summarise these recent changes"
 - "make this sound like me"
 - Any similar request where the output is user-facing engineering prose, not code.
+
+Also invoke this automatically whenever you are about to open or raise a PR on Gui's behalf: write the PR body with this skill before creating the PR, do not hand-roll it.
 
 If the user says "recent changes", inspect the local diff and recent commits if available. Do not invent context that is not in the diff, prompt, ticket, or linked discussion.
 
@@ -51,43 +53,48 @@ It should not say:
 
 ## Shape for PR descriptions
 
-Prefer this flow:
+PR descriptions get **caveman-full** on top of the voice above: drop articles, filler, pleasantries, and hedging; fragments are fine; short words over long ones. Keep every name, symbol, event, error string, and identifier exact. Keep the candor: still say what is unknown, risky, or unfinished, just say it tersely ("not sure why it broke now" over "I'm not really sure why this only started breaking now but here we are").
 
-1. Start with the situation or problem.
-2. Mention the relevant uncertainty or constraint if there is one.
-3. Say what the PR changes.
-4. Mention the risk, limitation, or follow-up when useful.
-5. Add links or test evidence only if provided.
+Structure:
 
-Common shapes:
+1. **Context** (usually present, occasionally skip). One or two lines on *why*, in plain non-technical terms: what was wrong, that this fixes it. Do not narrate the call chain, class names, or method paths.
+2. **Change bullets.** One change per line, verb first, terse.
+3. Risk, limitation, or follow-up, only when useful.
+4. Links or test evidence, only if provided.
 
-```md
-Something changed in <system>, which <good thing>, but broke <thing>.
-This fixes <environment/case>, but can’t be rolled out to <other environment/case> yet because <reason>.
-I left a comment about it in the code so it’s easier to identify and fix once <condition>.
-```
+Context, say this:
 
-```md
-There are <checks/tests/users> failing in <environment> that we can’t reproduce locally. After <step>, <symptom>.
+> Missed a path, weren't triggering the `OrderPlaced` message. This PR fixes.
 
-<Affected thing 1>
-<Affected thing 2>
+not this:
 
-This PR:
-Adds <diagnostic/change>
-Retries <operation> once if <failure condition>
-Removes <old workaround> so <normal path remains true>
+> SQS event `OrderPlaced` wasn't triggered on class `OrderService` due to a missed code path, which in turn prevented `NotificationDispatcher` from being called by `handleAdminUpdate`.
 
-I’ve also tried <manual repro / verification>, no luck: it works.
-```
+Full example:
 
 ```md
-Follow up from <previous PR/link>, which, opposed to what I said, did not fix the issue.
+Missed a path, weren't firing the `OrderPlaced` message from admin. This PR fixes.
 
-I still can’t reproduce this locally and one of the hypothesis is that <hypothesis>. I couldn’t find a way to replicate <environment-specific thing> locally.
-
-If this uncovers the root cause we can look for a fix, if not I’ll reach out to <team/person> and see what we can do.
+- Added message triggering from admin path
+- Created new SQS event `ORDER_PLACED`
+- Fixed stale cache read while I was there
 ```
+
+Drop the context line when the change is obvious or a pure follow-up, and lead with the bullets.
+
+When it is a follow-up or the cause is still unknown, keep the caveman terseness but do not fake certainty:
+
+```md
+Follow up from <link>. Opposed to what I said, did not fix it.
+
+Still can't repro locally. Hypothesis: <hypothesis>. Couldn't replicate <env-specific thing> locally.
+
+If this uncovers root cause we fix it. If not, reaching out to <team>.
+```
+
+Caveman drops to normal prose only for anything that would be misread as a fragment: irreversible-action warnings, security notes, or a multi-step sequence where dropping words changes the meaning.
+
+Output is the PR body only, no title, unless the user asks for a title.
 
 ## Shape for Slack messages
 
