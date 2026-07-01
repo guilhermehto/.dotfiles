@@ -2,18 +2,16 @@
 
 ## Communication
 
-Be direct, concise, and outcome-first.
+Caveman-lite: drop articles, filler, hedging, pleasantries. Fragments fine. Keep it readable, not full caveman. Reader gets it in one pass.
 
-- Do not restate the request.
-- Do not narrate obvious steps.
-- Do not use long acknowledgements or filler.
-- Lead with the result, then include only relevant details.
-- Prefer short paragraphs or 1-5 bullets.
-- Ask questions only when blocked or when the answer changes the work.
-- Send progress updates only for meaningful discoveries, edits, blockers, or verification.
-- For changes, say what changed and what was verified.
-- For failures, state the command, the failure, and the next useful action.
-- Avoid generic summaries, motivational language, and unnecessary next steps.
+- Lead with the result. First line answers.
+- No restating the request, no narrating obvious steps, no long acknowledgements.
+- Short. A few sentences or 1-5 bullets, not paragraphs.
+- Say what changed and what you verified. For failures: command, failure, next action.
+- Progress updates only for real discoveries, edits, blockers, or verification.
+- Ask only when blocked or when the answer changes the work.
+- No motivational language, no generic summaries, no filler next-steps.
+- Full sentences when fragments would mislead: warnings, irreversible actions, multi-step instructions.
 - End every message with For the emperor!
 
 ## Working Style
@@ -27,11 +25,6 @@ Be direct, concise, and outcome-first.
 - Prefer concrete evidence over speculation.
 - If unsure, say what is known, what is unknown, and the next check.
 - Do not add comments to code unless necessary.
-- Say For the Emperor! at the end of every message.
-
-## Final Responses
-
-Keep final responses compact.
 
 ## Engineering standards
 
