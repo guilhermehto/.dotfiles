@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>live-html</title>
+<style>
+  :root {
+    --bg:#fff; --fg:#1a1a1a; --muted:#5a5a5a; --accent:#0b66e4; --border:#e1e1e6;
+    --surface:#f5f5f7; --code:#f0f0f3; --mark:#fff3b0; --mark-active:#ffd84d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0f1115; --fg:#e8e8ec; --muted:#9aa0aa; --accent:#6aa8ff; --border:#2a2e38;
+      --surface:#1a1d24; --code:#161922; --mark:#5a4d12; --mark-active:#8a7415;
+    }
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    line-height:1.55; display:grid; grid-template-columns:1fr 340px; min-height:100vh;
+  }
+  #doc { padding:2.5rem 2rem 6rem; max-width:820px; }
+  #doc h1{font-size:1.9rem;margin:0 0 .6rem} #doc h2{font-size:1.4rem;margin:2rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem}
+  #doc h3{font-size:1.15rem;margin:1.4rem 0 .4rem} #doc h4{margin:1.2rem 0 .3rem}
+  #doc code{background:var(--code);padding:.1em .35em;border-radius:4px;font-family:ui-monospace,Menlo,monospace;font-size:.9em}
+  #doc pre{background:var(--code);padding:1rem;border-radius:8px;overflow-x:auto} #doc pre code{background:none;padding:0}
+  #doc blockquote{margin:1rem 0;padding:.2rem 1rem;border-left:3px solid var(--border);color:var(--muted)}
+  #doc a{color:var(--accent)} #doc hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
+  mark.anno{background:var(--mark);border-radius:2px;cursor:pointer}
+  mark.anno.active{background:var(--mark-active)}
+  #side{border-left:1px solid var(--border);background:var(--surface);padding:1rem;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:.6rem}
+  #side h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:.2rem 0}
+  .cmt{border:1px solid var(--border);border-radius:8px;padding:.5rem .6rem;background:var(--bg)}
+  .cmt.active{border-color:var(--accent)}
+  .cmt.confirmed{border-color:#3fa34d;background:rgba(63,163,77,.07)}
+  .cmt .hint{font-size:.72rem;color:var(--muted)}
+  .cmt.confirmed .hint{color:#3fa34d}
+  .cmt .quote{font-size:.75rem;color:var(--muted);border-left:2px solid var(--mark-active);padding-left:.5rem;margin-bottom:.4rem;max-height:3.2em;overflow:hidden}
+  .cmt textarea{width:100%;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--fg);padding:.4rem;font:inherit;font-size:.85rem;resize:vertical;min-height:2.4em}
+  .cmt .row{display:flex;align-items:center;justify-content:space-between;margin-top:.4rem;font-size:.8rem}
+  .cmt .row label{display:flex;align-items:center;gap:.3rem;cursor:pointer;color:var(--muted)}
+  .cmt .del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1}
+  .empty{color:var(--muted);font-size:.85rem}
+  #send{margin-top:auto;position:sticky;bottom:0}
+  #send button{width:100%;padding:.6rem;border:none;border-radius:8px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+  #send button:disabled{opacity:.4;cursor:default}
+  #status{font-size:.8rem;color:var(--muted);margin-top:.4rem;min-height:1.2em}
+  #addbtn{position:absolute;z-index:10;display:none;padding:.3rem .6rem;border:none;border-radius:6px;background:var(--accent);color:#fff;font:inherit;font-size:.8rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+  <main id="doc"></main>
+  <aside id="side">
+    <h2>Comments</h2>
+    <div id="list"><p class="empty">Select text in the doc to comment.</p></div>
+    <div id="send">
+      <button id="sendbtn" disabled>Send ►</button>
+      <div id="status"></div>
+    </div>
+  </aside>
+  <button id="addbtn">＋ Comment</button>
+
+<script>
+"use strict";
+const docEl = document.getElementById('doc');
+const listEl = document.getElementById('list');
+const sendBtn = document.getElementById('sendbtn');
+const statusEl = document.getElementById('status');
+const addBtn = document.getElementById('addbtn');
+let comments = [];
+let cidSeq = 0;
+let pendingRange = null;
+
+// ---- markdown -> html (compact subset) ----
+// ponytail: headings, lists, code, quotes, hr, inline emphasis/links only.
+// No tables, nested lists, or reference links. Swap in `marked` if we ever
+// allow a runtime dep and richer docs need it.
+const S0 = "%%C", S1 = "%%"; // code-span placeholder sentinels (survive esc, no prose collision)
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inline(t){
+  const codes=[];
+  t = t.replace(/`([^`]+)`/g,(_,c)=>{ codes.push('<code>'+esc(c)+'</code>'); return S0+(codes.length-1)+S1; });
+  t = esc(t);
+  t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img alt="$1" src="$2">');
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t = t.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  t = t.replace(/_([^_]+)_/g,'<em>$1</em>');
+  t = t.replace(/~~([^~]+)~~/g,'<del>$1</del>');
+  t = t.replace(new RegExp(S0+'(\\d+)'+S1,'g'),(_,i)=>codes[+i]);
+  return t;
+}
+const BLOCK = /^(#{1,6}\s|>|```|\s*[-*+]\s|\s*\d+\.\s|-{3,}\s*$|\*{3,}\s*$|_{3,}\s*$)/;
+function mdToHtml(src){
+  const lines = src.replace(/\r\n?/g,'\n').split('\n');
+  let html='', i=0;
+  while(i<lines.length){
+    const line=lines[i];
+    if(/^```/.test(line)){ const code=[]; i++; while(i<lines.length && !/^```/.test(lines[i])){ code.push(lines[i]); i++; } i++; html+='<pre><code>'+esc(code.join('\n'))+'</code></pre>'; continue; }
+    const h=line.match(/^(#{1,6})\s+(.*)$/);
+    if(h){ const l=h[1].length; html+='<h'+l+'>'+inline(h[2])+'</h'+l+'>'; i++; continue; }
+    if(/^(-{3,}|\*{3,}|_{3,})\s*$/.test(line)){ html+='<hr>'; i++; continue; }
+    if(/^>\s?/.test(line)){ const buf=[]; while(i<lines.length && /^>\s?/.test(lines[i])){ buf.push(lines[i].replace(/^>\s?/,'')); i++; } html+='<blockquote>'+mdToHtml(buf.join('\n'))+'</blockquote>'; continue; }
+    if(/^\s*[-*+]\s+/.test(line)){ const buf=[]; while(i<lines.length && /^\s*[-*+]\s+/.test(lines[i])){ buf.push('<li>'+inline(lines[i].replace(/^\s*[-*+]\s+/,''))+'</li>'); i++; } html+='<ul>'+buf.join('')+'</ul>'; continue; }
+    if(/^\s*\d+\.\s+/.test(line)){ const buf=[]; while(i<lines.length && /^\s*\d+\.\s+/.test(lines[i])){ buf.push('<li>'+inline(lines[i].replace(/^\s*\d+\.\s+/,''))+'</li>'); i++; } html+='<ol>'+buf.join('')+'</ol>'; continue; }
+    if(/^\s*$/.test(line)){ i++; continue; }
+    const buf=[];
+    while(i<lines.length && !/^\s*$/.test(lines[i]) && !BLOCK.test(lines[i])){ buf.push(lines[i]); i++; }
+    html+='<p>'+inline(buf.join(' '))+'</p>';
+  }
+  return html;
+}
+
+// ---- doc load + live reload ----
+async function loadDoc(){
+  const md = await (await fetch('/doc',{cache:'no-store'})).text();
+  docEl.innerHTML = mdToHtml(md);
+}
+new EventSource('/events').onmessage = (e)=>{ if(e.data==='reload') location.reload(); };
+
+// ---- selection -> floating add button ----
+docEl.addEventListener('mouseup', ()=>{
+  const sel = window.getSelection();
+  if(!sel.rangeCount || sel.isCollapsed){ return hideAdd(); }
+  const range = sel.getRangeAt(0);
+  if(!docEl.contains(range.commonAncestorContainer) || !sel.toString().trim()){ return hideAdd(); }
+  pendingRange = range.cloneRange();
+  const r = range.getBoundingClientRect();
+  addBtn.style.left = (window.scrollX + r.left) + 'px';
+  addBtn.style.top  = (window.scrollY + r.bottom + 6) + 'px';
+  addBtn.style.display = 'block';
+});
+function hideAdd(){ addBtn.style.display='none'; pendingRange=null; }
+addBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); if(pendingRange) addComment(pendingRange); hideAdd(); });
+
+function topBlock(node){
+  let el = node.nodeType===1 ? node : node.parentElement;
+  while(el && el.parentElement !== docEl) el = el.parentElement;
+  return el;
+}
+function nearestHeading(top){
+  let el = top;
+  while(el){ if(/^H[1-6]$/.test(el.tagName)) return el.textContent.trim(); el = el.previousElementSibling; }
+  return '';
+}
+function addComment(range){
+  const cid = ++cidSeq;
+  const quote = range.toString().trim();
+  const top = topBlock(range.commonAncestorContainer);
+  const context = top ? top.textContent.trim().slice(0,300) : '';
+  const heading = top ? nearestHeading(top) : '';
+  const mark = document.createElement('mark');
+  mark.className='anno'; mark.dataset.cid=cid;
+  try { mark.appendChild(range.extractContents()); range.insertNode(mark); }
+  catch(e){ /* multi-node edge: skip visual highlight, keep the comment */ }
+  mark.addEventListener('click', ()=>focusCmt(cid));
+  comments.push({ cid, quote, comment:'', confirmed:false, heading, context });
+  window.getSelection().removeAllRanges();
+  renderList();
+  const ta = document.querySelector('.cmt[data-cid="'+cid+'"] textarea');
+  if(ta) ta.focus();
+}
+
+// ---- sidebar ----
+function renderList(){
+  if(!comments.length){ listEl.innerHTML='<p class="empty">Select text in the doc to comment.</p>'; refreshSend(); return; }
+  listEl.innerHTML='';
+  for(const c of comments){
+    const div=document.createElement('div');
+    div.className='cmt'; div.dataset.cid=c.cid;
+    div.innerHTML =
+      '<div class="quote"></div>'+
+      '<textarea placeholder="What should the agent do here? (⏎ confirm · ⇧⏎ newline)"></textarea>'+
+      '<div class="row"><span class="hint"></span><button class="del" title="delete">×</button></div>';
+    div.querySelector('.quote').textContent = c.quote;
+    const ta=div.querySelector('textarea'); ta.value=c.comment;
+    const hint=div.querySelector('.hint');
+    const paint=()=>{ const ready=!!c.comment.trim(); div.classList.toggle('confirmed', c.confirmed && ready); hint.textContent = (c.confirmed && ready) ? '✓ confirmed' : (ready ? '⏎ to confirm' : ''); };
+    ta.addEventListener('input', ()=>{ c.comment=ta.value; c.confirmed=false; paint(); refreshSend(); });
+    ta.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); if(ta.value.trim()){ c.confirmed=true; paint(); ta.blur(); refreshSend(); } } });
+    div.querySelector('.del').addEventListener('click', ()=>removeCmt(c.cid));
+    div.addEventListener('click', (e)=>{ if(e.target.tagName!=='TEXTAREA') focusCmt(c.cid); });
+    paint();
+    listEl.appendChild(div);
+  }
+  refreshSend();
+}
+function removeCmt(cid){
+  comments = comments.filter(c=>c.cid!==cid);
+  const m=docEl.querySelector('mark.anno[data-cid="'+cid+'"]');
+  if(m){ const p=m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild,m); p.removeChild(m); p.normalize(); }
+  renderList();
+}
+function focusCmt(cid){
+  document.querySelectorAll('.cmt.active, mark.anno.active').forEach(el=>el.classList.remove('active'));
+  const card=document.querySelector('.cmt[data-cid="'+cid+'"]');
+  const mark=docEl.querySelector('mark.anno[data-cid="'+cid+'"]');
+  if(card){ card.classList.add('active'); card.scrollIntoView({block:'nearest'}); }
+  if(mark){ mark.classList.add('active'); mark.scrollIntoView({block:'center',behavior:'smooth'}); }
+}
+function refreshSend(){
+  const n = comments.filter(c=>c.comment.trim()).length;
+  sendBtn.disabled = n===0;
+  sendBtn.textContent = n ? 'Send '+n+' ►' : 'Send ►';
+}
+sendBtn.addEventListener('click', async ()=>{
+  const ready = comments.filter(c=>c.comment.trim())
+    .map(({quote,comment,heading,context})=>({quote,comment,heading,context}));
+  if(!ready.length) return;
+  sendBtn.disabled=true;
+  try {
+    const r = await fetch('/annotations',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({comments:ready})});
+    const j = await r.json();
+    statusEl.textContent = 'Sent '+j.count+' — the agent will apply them.';
+  } catch(e){ statusEl.textContent='Send failed: '+e; refreshSend(); }
+});
+
+loadDoc();
+</script>
+</body>
+</html>
