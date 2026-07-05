@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>live-review</title>
+<style>
+  :root {
+    --bg:#fff; --fg:#1a1a1a; --muted:#5a5a5a; --accent:#0b66e4; --border:#e1e1e6;
+    --surface:#f5f5f7; --code:#f0f0f3; --mark:#fff3b0; --mark-active:#ffd84d;
+    --add:rgba(63,163,77,.14); --del:rgba(214,69,69,.14); --green:#3fa34d; --red:#d64545; --amber:#b08a2e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0f1115; --fg:#e8e8ec; --muted:#9aa0aa; --accent:#6aa8ff; --border:#2a2e38;
+      --surface:#1a1d24; --code:#161922; --mark:#5a4d12; --mark-active:#8a7415;
+      --add:rgba(63,163,77,.18); --del:rgba(214,69,69,.18); --green:#5dbb6a; --red:#e06c6c; --amber:#d0a848;
+    }
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    line-height:1.55; display:grid; grid-template-columns:1fr 360px; min-height:100vh;
+  }
+  #doc { padding:2.5rem 2rem 6rem; max-width:980px; min-width:0; }
+  #doc h1{font-size:1.7rem;margin:0 0 .2rem}
+  #doc .meta{color:var(--muted);font-size:.85rem;margin:0 0 1.2rem}
+  #doc h2{font-size:1.3rem;margin:2rem 0 .6rem;border-bottom:1px solid var(--border);padding-bottom:.3rem}
+  #doc h3{font-size:1.1rem;margin:1.3rem 0 .4rem} #doc h4{margin:1.1rem 0 .3rem}
+  #doc code{background:var(--code);padding:.1em .35em;border-radius:4px;font-family:ui-monospace,Menlo,monospace;font-size:.9em}
+  #doc pre{background:var(--code);padding:1rem;border-radius:8px;overflow-x:auto} #doc pre code{background:none;padding:0}
+  #doc blockquote{margin:1rem 0;padding:.2rem 1rem;border-left:3px solid var(--border);color:var(--muted)}
+  #doc a{color:var(--accent)} #doc hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
+  mark.anno{background:var(--mark);border-radius:2px;cursor:pointer}
+  mark.anno.active{background:var(--mark-active)}
+
+  .callout{border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;margin:.6rem 0;background:var(--surface)}
+  .callout .kind{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700}
+  .callout h3{margin:.15rem 0 .3rem}
+  .mermaid-box{margin:.8rem 0;overflow-x:auto}
+  .mermaid-box svg{max-width:100%}
+
+  .file{border:1px solid var(--border);border-radius:8px;margin:.7rem 0;overflow:hidden}
+  .file summary{cursor:pointer;padding:.5rem .7rem;background:var(--surface);display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;list-style:none}
+  .file summary::-webkit-details-marker{display:none}
+  .file summary::before{content:'▸';color:var(--muted);font-size:.8rem}
+  .file details[open] summary::before{content:'▾'}
+  .file .path{background:none;font-size:.85rem;padding:0}
+  .file .stat{margin-left:auto;font-size:.78rem;color:var(--muted);font-family:ui-monospace,Menlo,monospace}
+  .file .stat .plus{color:var(--green)} .file .stat .minus{color:var(--red)}
+  .status{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:.1rem .4rem;border-radius:4px;border:1px solid}
+  .status.modified{color:var(--accent);border-color:var(--accent)}
+  .status.added{color:var(--green);border-color:var(--green)}
+  .status.removed{color:var(--red);border-color:var(--red)}
+  .status.renamed{color:var(--amber);border-color:var(--amber)}
+  .nodiff{color:var(--muted);font-size:.85rem;padding:.6rem .8rem}
+
+  table.diff{border-collapse:collapse;width:100%;font-family:ui-monospace,Menlo,monospace;font-size:.78rem;line-height:1.45}
+  table.diff td{padding:0 .5rem;vertical-align:top}
+  table.diff td.ln{text-align:right;color:var(--muted);user-select:none;width:1%;min-width:2.6em;border-right:1px solid var(--border)}
+  table.diff td.code{white-space:pre-wrap;word-break:break-word;width:100%}
+  table.diff tr.add td.code, table.diff tr.add td.ln{background:var(--add)}
+  table.diff tr.del td.code, table.diff tr.del td.ln{background:var(--del)}
+  table.diff tr.hunk td{background:var(--code);color:var(--muted);padding:.15rem .5rem;font-size:.72rem}
+  table.diff tr.meta td{color:var(--muted);font-size:.72rem}
+  table.diff tr.note td{padding:0}
+  .note-box{margin:.15rem .5rem .35rem 3rem;border:1px solid var(--accent);border-left-width:3px;border-radius:6px;padding:.35rem .6rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:.82rem;background:var(--surface)}
+  .note-box::before{content:'✎ ';color:var(--accent)}
+
+  #side{border-left:1px solid var(--border);background:var(--surface);padding:1rem;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:.6rem}
+  #side h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:.2rem 0}
+  .cmt{border:1px solid var(--border);border-radius:8px;padding:.5rem .6rem;background:var(--bg)}
+  .cmt.active{border-color:var(--accent)}
+  .cmt.confirmed{border-color:var(--green);background:rgba(63,163,77,.07)}
+  .cmt .hint{font-size:.72rem;color:var(--muted)}
+  .cmt.confirmed .hint{color:var(--green)}
+  .cmt .quote, .qa .quote{font-size:.75rem;color:var(--muted);border-left:2px solid var(--mark-active);padding-left:.5rem;margin-bottom:.4rem;max-height:3.2em;overflow:hidden}
+  .cmt textarea{width:100%;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--fg);padding:.4rem;font:inherit;font-size:.85rem;resize:vertical;min-height:2.4em}
+  .cmt .row{display:flex;align-items:center;justify-content:space-between;margin-top:.4rem;font-size:.8rem}
+  .cmt .del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1}
+  .empty{color:var(--muted);font-size:.85rem}
+  #send button{width:100%;padding:.6rem;border:none;border-radius:8px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+  #send button:disabled{opacity:.4;cursor:default}
+  #status{font-size:.8rem;color:var(--muted);margin-top:.4rem;min-height:1.2em}
+  #qalist{display:flex;flex-direction:column;gap:.6rem}
+  .qa{border:1px solid var(--border);border-radius:8px;padding:.5rem .6rem;background:var(--bg)}
+  .qa .q{font-size:.85rem;font-weight:600;margin-bottom:.3rem}
+  .qa .a{font-size:.82rem} .qa .a p{margin:.3rem 0}
+  .qa .a code{background:var(--code);padding:.05em .3em;border-radius:4px;font-family:ui-monospace,Menlo,monospace;font-size:.9em}
+  .qa .a pre{background:var(--code);padding:.5rem;border-radius:6px;overflow-x:auto;font-size:.78rem}
+  .qa.pending{border-style:dashed}
+  .qa .waiting{color:var(--muted);font-style:italic}
+  #addbtn{position:absolute;z-index:10;display:none;padding:.3rem .6rem;border:none;border-radius:6px;background:var(--accent);color:#fff;font:inherit;font-size:.8rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+  <main id="doc"></main>
+  <aside id="side">
+    <h2>New questions</h2>
+    <div id="list"><p class="empty">Select text in the review to ask about it.</p></div>
+    <div id="send">
+      <button id="sendbtn" disabled>Send ►</button>
+      <div id="status"></div>
+    </div>
+    <h2>Q&amp;A</h2>
+    <div id="qalist"><p class="empty">No questions sent yet.</p></div>
+  </aside>
+  <button id="addbtn">＋ Ask</button>
+
+<script>
+"use strict";
+const docEl = document.getElementById('doc');
+const listEl = document.getElementById('list');
+const qaListEl = document.getElementById('qalist');
+const sendBtn = document.getElementById('sendbtn');
+const statusEl = document.getElementById('status');
+const addBtn = document.getElementById('addbtn');
+let review = null;
+let qa = { entries: [] };
+let drafts = [];
+let cidSeq = 0;
+let pendingRange = null;
+
+// ---- markdown -> html (compact subset, same as live-html) ----
+// ponytail: headings, lists, code, quotes, hr, inline emphasis/links only.
+const S0 = "%%C", S1 = "%%";
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inline(t){
+  const codes=[];
+  t = t.replace(/`([^`]+)`/g,(_,c)=>{ codes.push('<code>'+esc(c)+'</code>'); return S0+(codes.length-1)+S1; });
+  t = esc(t);
+  t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img alt="$1" src="$2">');
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t = t.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  t = t.replace(/_([^_]+)_/g,'<em>$1</em>');
+  t = t.replace(/~~([^~]+)~~/g,'<del>$1</del>');
+  t = t.replace(new RegExp(S0+'(\\d+)'+S1,'g'),(_,i)=>codes[+i]);
+  return t;
+}
+const BLOCK = /^(#{1,6}\s|>|```|\s*[-*+]\s|\s*\d+\.\s|-{3,}\s*$|\*{3,}\s*$|_{3,}\s*$)/;
+function mdToHtml(src){
+  const lines = String(src).replace(/\r\n?/g,'\n').split('\n');
+  let html='', i=0;
+  while(i<lines.length){
+    const line=lines[i];
+    if(/^```/.test(line)){ const code=[]; i++; while(i<lines.length && !/^```/.test(lines[i])){ code.push(lines[i]); i++; } i++; html+='<pre><code>'+esc(code.join('\n'))+'</code></pre>'; continue; }
+    const h=line.match(/^(#{1,6})\s+(.*)$/);
+    if(h){ const l=h[1].length; html+='<h'+l+'>'+inline(h[2])+'</h'+l+'>'; i++; continue; }
+    if(/^(-{3,}|\*{3,}|_{3,})\s*$/.test(line)){ html+='<hr>'; i++; continue; }
+    if(/^>\s?/.test(line)){ const buf=[]; while(i<lines.length && /^>\s?/.test(lines[i])){ buf.push(lines[i].replace(/^>\s?/,'')); i++; } html+='<blockquote>'+mdToHtml(buf.join('\n'))+'</blockquote>'; continue; }
+    if(/^\s*[-*+]\s+/.test(line)){ const buf=[]; while(i<lines.length && /^\s*[-*+]\s+/.test(lines[i])){ buf.push('<li>'+inline(lines[i].replace(/^\s*[-*+]\s+/,''))+'</li>'); i++; } html+='<ul>'+buf.join('')+'</ul>'; continue; }
+    if(/^\s*\d+\.\s+/.test(line)){ const buf=[]; while(i<lines.length && /^\s*\d+\.\s+/.test(lines[i])){ buf.push('<li>'+inline(lines[i].replace(/^\s*\d+\.\s+/,''))+'</li>'); i++; } html+='<ol>'+buf.join('')+'</ol>'; continue; }
+    if(/^\s*$/.test(line)){ i++; continue; }
+    const buf=[];
+    while(i<lines.length && !/^\s*$/.test(lines[i]) && !BLOCK.test(lines[i])){ buf.push(lines[i]); i++; }
+    html+='<p>'+inline(buf.join(' '))+'</p>';
+  }
+  return html;
+}
+
+// ---- mermaid (CDN, loaded only when the document carries a diagram) ----
+let mermaidReady = null;
+let mmSeq = 0;
+function ensureMermaid(){
+  if(!mermaidReady){
+    mermaidReady = new Promise((ok, err)=>{
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+      s.onload = ()=>{ window.mermaid.initialize({ startOnLoad:false, securityLevel:'strict',
+        theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default' }); ok(window.mermaid); };
+      s.onerror = err;
+      document.head.appendChild(s);
+    });
+  }
+  return mermaidReady;
+}
+async function renderMermaid(box, src){
+  try {
+    const m = await ensureMermaid();
+    const { svg } = await m.render('mmd' + (++mmSeq), src);
+    box.innerHTML = svg;
+  } catch(e){ /* offline CDN or bad source — the <pre> fallback stays */ }
+}
+
+// ---- document rendering ----
+function el(tag, cls){ const e = document.createElement(tag); if(cls) e.className = cls; return e; }
+function addSection(name, html){
+  const s = el('section'); s.dataset.sec = name;
+  s.innerHTML = '<h2>' + esc(name) + '</h2>' + (html || '');
+  docEl.appendChild(s);
+  return s;
+}
+
+// unified diff -> table. Lines before the first @@ hunk render as meta.
+function diffTable(text, annos){
+  const t = el('table','diff');
+  const byNew = new Map(), byOld = new Map();
+  for(const a of annos || []){ (a.side === 'old' ? byOld : byNew).set(a.line, a); }
+  let oldLn = 0, newLn = 0, inHunk = false;
+  const row = (cls, o, n, content)=>{
+    const tr = el('tr', cls);
+    tr.innerHTML = '<td class="ln"></td><td class="ln"></td><td class="code"></td>';
+    tr.children[0].textContent = o ? String(o) : '';
+    tr.children[1].textContent = n ? String(n) : '';
+    tr.children[2].textContent = content;
+    t.appendChild(tr);
+    return tr;
+  };
+  const noteRow = (a)=>{
+    const tr = el('tr','note');
+    const td = el('td'); td.colSpan = 3;
+    const box = el('div','note-box');
+    box.innerHTML = inline(String(a.note || ''));
+    td.appendChild(box); tr.appendChild(td); t.appendChild(tr);
+  };
+  for(const raw of String(text).replace(/\r\n?/g,'\n').split('\n')){
+    if(raw === '') continue;
+    if(raw.startsWith('@@')){
+      const m = raw.match(/^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+      if(m){ oldLn = +m[1]; newLn = +m[2]; inHunk = true; }
+      row('hunk', '', '', raw);
+      continue;
+    }
+    if(!inHunk){ row('meta', '', '', raw); continue; }
+    if(raw[0] === '+'){ const n = newLn++; row('add', '', n, raw.slice(1)); const a = byNew.get(n); if(a) noteRow(a); }
+    else if(raw[0] === '-'){ const o = oldLn++; row('del', o, '', raw.slice(1)); const a = byOld.get(o); if(a) noteRow(a); }
+    else if(raw[0] === '\\'){ row('meta', '', '', raw); }
+    else { const o = oldLn++, n = newLn++; row('ctx', o, n, raw.slice(1)); const a = byNew.get(n); if(a) noteRow(a); }
+  }
+  return t;
+}
+
+function fileCard(f){
+  const det = el('details','file');
+  det.dataset.sec = f.path;
+  if(f.key) det.open = true;
+  const sum = el('summary');
+  const status = ['added','removed','renamed','modified'].includes(f.status) ? f.status : 'modified';
+  sum.innerHTML = '<span class="status ' + status + '">' + status + '</span>' +
+    '<code class="path"></code>' +
+    '<span class="stat"><span class="plus">+' + (f.additions|0) + '</span> <span class="minus">−' + (f.deletions|0) + '</span></span>';
+  sum.querySelector('.path').textContent = f.path + (f.renamedFrom ? '  ←  ' + f.renamedFrom : '');
+  det.appendChild(sum);
+  const body = el('div');
+  det.appendChild(body);
+  // ponytail: non-key diffs render lazily on first expand — keeps a 40-file
+  // page cheap to open. Upgrade to virtualized rows if single files get huge.
+  const renderBody = ()=>{
+    if(body.dataset.done) return;
+    body.dataset.done = '1';
+    if(f.diff && f.diff.trim()) body.appendChild(diffTable(f.diff, f.annotations));
+    else { const p = el('p','nodiff'); p.textContent = '(diff omitted)'; body.appendChild(p); }
+  };
+  if(det.open) renderBody(); else det.addEventListener('toggle', renderBody, { once:true });
+  return det;
+}
+
+function renderDoc(){
+  document.title = (review.title || 'live-review') + ' — live-review';
+  docEl.innerHTML = '';
+  const hdr = el('header');
+  hdr.dataset.sec = 'Header';
+  hdr.innerHTML = '<h1></h1><p class="meta"></p>';
+  hdr.querySelector('h1').textContent = review.title || 'Review';
+  hdr.querySelector('.meta').textContent =
+    (review.target || '') + (review.generatedAt ? ' · generated ' + review.generatedAt : '');
+  docEl.appendChild(hdr);
+
+  if(review.summary) addSection('Summary', mdToHtml(review.summary));
+
+  if(Array.isArray(review.callouts) && review.callouts.length){
+    const s = addSection('Contract changes', '');
+    for(const c of review.callouts){
+      const card = el('div','callout');
+      card.innerHTML = '<div class="kind"></div><h3></h3><div class="body"></div>';
+      card.querySelector('.kind').textContent = c.kind || 'change';
+      card.querySelector('h3').textContent = c.title || '';
+      card.querySelector('.body').innerHTML = mdToHtml(c.body || '');
+      s.appendChild(card);
+    }
+  }
+
+  if(review.diagram){
+    const s = addSection('Architecture', '');
+    const box = el('div','mermaid-box');
+    const pre = el('pre'); pre.textContent = review.diagram;
+    box.appendChild(pre);
+    s.appendChild(box);
+    renderMermaid(box, review.diagram);
+  }
+
+  if(Array.isArray(review.files) && review.files.length){
+    const adds = review.files.reduce((a,f)=>a+(f.additions|0),0);
+    const dels = review.files.reduce((a,f)=>a+(f.deletions|0),0);
+    const s = addSection('Files', '');
+    s.querySelector('h2').textContent = 'Files (' + review.files.length + ' · +' + adds + ' −' + dels + ')';
+    for(const f of review.files) s.appendChild(fileCard(f));
+  }
+
+  if(review.review) addSection('Review', mdToHtml(review.review));
+}
+
+// ---- data load + live refresh ----
+// Soft refresh (no location.reload) so unsent drafts survive agent answers.
+async function refresh(){
+  const [r, q] = await Promise.all([
+    fetch('/review', { cache:'no-store' }).then(x=>x.json()),
+    fetch('/qa', { cache:'no-store' }).then(x=>x.json()),
+  ]);
+  review = r; qa = q;
+  renderDoc();
+  renderDrafts();
+  renderQa();
+}
+new EventSource('/events').onmessage = (e)=>{ if(e.data === 'reload') refresh(); };
+
+// ---- selection -> floating ask button ----
+docEl.addEventListener('mouseup', ()=>{
+  const sel = window.getSelection();
+  if(!sel.rangeCount || sel.isCollapsed){ return hideAdd(); }
+  const range = sel.getRangeAt(0);
+  if(!docEl.contains(range.commonAncestorContainer) || !sel.toString().trim()){ return hideAdd(); }
+  pendingRange = range.cloneRange();
+  const r = range.getBoundingClientRect();
+  addBtn.style.left = (window.scrollX + r.left) + 'px';
+  addBtn.style.top  = (window.scrollY + r.bottom + 6) + 'px';
+  addBtn.style.display = 'block';
+});
+function hideAdd(){ addBtn.style.display = 'none'; pendingRange = null; }
+addBtn.addEventListener('mousedown', (e)=>{ e.preventDefault(); if(pendingRange) addDraft(pendingRange); hideAdd(); });
+
+function addDraft(range){
+  const cid = ++cidSeq;
+  const quote = range.toString().trim();
+  let node = range.commonAncestorContainer;
+  if(node.nodeType !== 1) node = node.parentElement;
+  const secEl = node.closest('[data-sec]');
+  const section = secEl ? secEl.dataset.sec : '';
+  const blockEl = node.closest('tr, p, li, pre, blockquote, h1, h2, h3, h4, .callout');
+  const context = blockEl ? blockEl.textContent.trim().slice(0, 300) : '';
+  const mark = document.createElement('mark');
+  mark.className = 'anno'; mark.dataset.cid = cid;
+  try { mark.appendChild(range.extractContents()); range.insertNode(mark); }
+  catch(e){ /* multi-node edge (e.g. across diff cells): skip visual highlight, keep the question */ }
+  mark.addEventListener('click', ()=>focusDraft(cid));
+  drafts.push({ cid, quote, question:'', confirmed:false, section, context });
+  window.getSelection().removeAllRanges();
+  renderDrafts();
+  const ta = document.querySelector('.cmt[data-cid="' + cid + '"] textarea');
+  if(ta) ta.focus();
+}
+
+// ---- sidebar: drafts ----
+function renderDrafts(){
+  if(!drafts.length){ listEl.innerHTML = '<p class="empty">Select text in the review to ask about it.</p>'; refreshSend(); return; }
+  listEl.innerHTML = '';
+  for(const c of drafts){
+    const div = el('div','cmt');
+    div.dataset.cid = c.cid;
+    div.innerHTML =
+      '<div class="quote"></div>' +
+      '<textarea placeholder="Ask the agent about this… (⏎ confirm · ⇧⏎ newline)"></textarea>' +
+      '<div class="row"><span class="hint"></span><button class="del" title="delete">×</button></div>';
+    div.querySelector('.quote').textContent = (c.section ? '[' + c.section + '] ' : '') + c.quote;
+    const ta = div.querySelector('textarea'); ta.value = c.question;
+    const hint = div.querySelector('.hint');
+    const paint = ()=>{ const ready = !!c.question.trim(); div.classList.toggle('confirmed', c.confirmed && ready); hint.textContent = (c.confirmed && ready) ? '✓ confirmed' : (ready ? '⏎ to confirm' : ''); };
+    ta.addEventListener('input', ()=>{ c.question = ta.value; c.confirmed = false; paint(); refreshSend(); });
+    ta.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); if(ta.value.trim()){ c.confirmed = true; paint(); ta.blur(); refreshSend(); } } });
+    div.querySelector('.del').addEventListener('click', ()=>removeDraft(c.cid));
+    div.addEventListener('click', (e)=>{ if(e.target.tagName !== 'TEXTAREA') focusDraft(c.cid); });
+    paint();
+    listEl.appendChild(div);
+  }
+  refreshSend();
+}
+function unmark(cid){
+  const m = docEl.querySelector('mark.anno[data-cid="' + cid + '"]');
+  if(m){ const p = m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild, m); p.removeChild(m); p.normalize(); }
+}
+function removeDraft(cid){
+  drafts = drafts.filter(c=>c.cid !== cid);
+  unmark(cid);
+  renderDrafts();
+}
+function focusDraft(cid){
+  document.querySelectorAll('.cmt.active, mark.anno.active').forEach(el=>el.classList.remove('active'));
+  const card = document.querySelector('.cmt[data-cid="' + cid + '"]');
+  const mark = docEl.querySelector('mark.anno[data-cid="' + cid + '"]');
+  if(card){ card.classList.add('active'); card.scrollIntoView({ block:'nearest' }); }
+  if(mark){ mark.classList.add('active'); mark.scrollIntoView({ block:'center', behavior:'smooth' }); }
+}
+function refreshSend(){
+  const n = drafts.filter(c=>c.question.trim()).length;
+  sendBtn.disabled = n === 0;
+  sendBtn.textContent = n ? 'Send ' + n + ' ►' : 'Send ►';
+}
+sendBtn.addEventListener('click', async ()=>{
+  const ready = drafts.filter(c=>c.question.trim());
+  if(!ready.length) return;
+  sendBtn.disabled = true;
+  try {
+    const r = await fetch('/qa', { method:'POST', headers:{ 'content-type':'application/json' },
+      body: JSON.stringify({ questions: ready.map(({quote,question,section,context})=>({quote,question,section,context})) }) });
+    const j = await r.json();
+    for(const c of ready) unmark(c.cid);
+    drafts = drafts.filter(c=>!ready.includes(c));
+    statusEl.textContent = 'Sent ' + j.added + ' — the agent will answer in the Q&A panel.';
+    renderDrafts();
+  } catch(e){ statusEl.textContent = 'Send failed: ' + e; refreshSend(); }
+});
+
+// ---- sidebar: Q&A log ----
+// ponytail: answers live in the panel, keyed by quote — no inline re-anchoring
+// into the doc. Add quote-based re-highlighting if the panel proves too far
+// from the code.
+function renderQa(){
+  const entries = (qa.entries || []).slice().sort((a,b)=>(b.id|0)-(a.id|0));
+  if(!entries.length){ qaListEl.innerHTML = '<p class="empty">No questions sent yet.</p>'; return; }
+  qaListEl.innerHTML = '';
+  for(const e of entries){
+    const d = el('div','qa' + (e.status === 'pending' ? ' pending' : ''));
+    d.innerHTML = '<div class="quote"></div><div class="q"></div><div class="a"></div>';
+    d.querySelector('.quote').textContent = (e.section ? '[' + e.section + '] ' : '') + (e.quote || '');
+    d.querySelector('.q').textContent = e.question || '';
+    const a = d.querySelector('.a');
+    if(e.status === 'answered'){ a.innerHTML = mdToHtml(e.answer || ''); }
+    else { a.classList.add('waiting'); a.textContent = '… waiting for the agent'; }
+    qaListEl.appendChild(d);
+  }
+}
+
+refresh();
+</script>
+</body>
+</html>
