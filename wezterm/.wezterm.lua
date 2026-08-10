@@ -12,12 +12,29 @@ config.color_scheme = "ayu"
 -- Font config
 --
 -- config.font = wezterm.font("0xProto Nerd Font", { weight = "Bold", style = "Italic" })
+-- Listing kern/liga/clig/calt keeps wezterm's defaults, which naming any
+-- feature would otherwise drop. ss01 = 0xProto's script variant.
+local font_features = { "kern", "liga", "clig", "calt", "ss01" }
+
 config.font = wezterm.font({
 	family = "0xProto Nerd Font",
 	weight = "Bold",
-	harfbuzz_features = { "ss01=1" },
+	harfbuzz_features = font_features,
 })
--- config.harfbuzz_features = { "ss01" }
+
+-- ss01 exists only in the Italic face, which ships at weight 400 with no
+-- Bold Italic, so italic is matched by style rather than inheriting Bold.
+config.font_rules = {
+	{
+		italic = true,
+		font = wezterm.font({
+			family = "0xProto Nerd Font",
+			style = "Italic",
+			harfbuzz_features = font_features,
+		}),
+	},
+}
+
 config.font_size = 20
 config.freetype_load_flags = "NO_HINTING"
 
