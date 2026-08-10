@@ -51,7 +51,7 @@ return {
 		},
 		files = {
 			file_icons = "mini",
-			hidden = true,
+			cmd = [[fd --color=never --type f --type l --hidden --exclude .git --exclude .jj; fd --color=never --hidden --no-ignore --type f --exclude node_modules --exclude .git --exclude .jj '^\.env']],
 		},
 		grep = {
 			hidden = true,
