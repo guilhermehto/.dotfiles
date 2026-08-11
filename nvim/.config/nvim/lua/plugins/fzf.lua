@@ -44,6 +44,9 @@ return {
 	---@type fzf-lua.Config|{}
 	---@diagnostics disable: missing-fields
 	opts = {
+		-- fzf's own theme uses fixed xterm palette indices (bg+ 236, separator 59)
+		-- which the terminal colorscheme doesn't touch; derive them from nvim instead
+		fzf_colors = true,
 		winopts = {
 			preview = {
 				layout = "vertical",
