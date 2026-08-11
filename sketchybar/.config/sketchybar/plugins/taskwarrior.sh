@@ -24,11 +24,11 @@ if [ "$TASK_COUNT" -gt 0 ] 2>/dev/null; then
   fi
 
   ICON="󰄬"
-  ICON_COLOR="0xffaad94c"
+  ICON_COLOR="0xff9ece6a"
 else
   LABEL="No active tasks"
   ICON="󰒲"
-  ICON_COLOR="0xff928374"
+  ICON_COLOR="0xff565f89"
 fi
 
 sketchybar --set $NAME label="$LABEL" icon="$ICON" icon.color="$ICON_COLOR"
