@@ -21,13 +21,13 @@ Q&A accumulates for the life of the session. Regenerating the overview (new sess
 
 **First, read the sibling code-review skill:** `../code-review/SKILL.md` relative to this skill's directory. Its **Review protocol** section governs three things here — do not restate or approximate them from memory, read them fresh each run so edits to that skill propagate:
 
-- **Target identification**: its table maps user intent (staged, unstaged, branch ranges, commits, PR URLs/numbers) to the exact git/provider commands.
-- **How to review**: its review steps and checklist produce the findings.
-- **Output format**: its exact markdown structure fills the `review` field below.
+- **Target identification**: its table maps user intent (staged, unstaged, branch ranges, commits, PR URLs/numbers) to diff sources and base-resolution rules.
+- **How to review**: its intent, coverage, finding-quality, confidence, and conditional-lens guidance produces the findings.
+- **Output format**: its canonical markdown structure, including per-finding confidence temperatures, fills the `review` field below.
 
-Its **Hard rules** apply verbatim: read-only, allowed git verbs only, no speculation beyond the diff. This skill never mutates the repo — comments are questions, not change requests.
+Its **Hard rules** apply verbatim: read-only, allowed git verbs only, evidence-based attribution to the change, and neutral language. This skill never mutates the repo — comments are questions, not change requests.
 
-**Writing register — caveman-full.** Every prose field you author — `summary`, callout `body`, annotation `note`s, the sentences inside `review`, Q&A answers — is ultra-terse: drop articles, filler, and hedging; fragments OK; short synonyms (fix, not "implement a solution for"); each fact stated once. Technical terms, code, API names, paths, and error strings stay exact; never invent abbreviations (cfg/impl/fn). The code-review output *structure* stays verbatim — compression applies to sentences inside it, never to its headers, `file:line` citations, or code. Drop to plain clear sentences only where compression breeds ambiguity (step ordering, destructive-action warnings), then resume.
+**Writing register — caveman-full.** Every prose field you author — `summary`, callout `body`, annotation `note`s, the sentences inside `review`, Q&A answers — is ultra-terse: drop articles, filler, and hedging; fragments OK; short synonyms (fix, not "implement a solution for"); each fact stated once. Technical terms, code, API names, paths, and error strings stay exact; never invent abbreviations (cfg/impl/fn). The code-review output *structure and confidence annotations* stay verbatim — compression applies to sentences inside it, never to its headers, `file:line` citations, confidence temperatures, or code. Drop to plain clear sentences only where compression breeds ambiguity (step ordering, destructive-action warnings), then resume.
 
 - Not: "This change refactors the session handling logic in order to improve the reliability of token refreshes."
 - Yes: "Session refresh hardened. TTL 60s to 300s, jitter added. Risk: clients pinned to 60s."
@@ -41,7 +41,7 @@ Then assemble the document:
 5. Run the review per the protocol and put its markdown output in `review`.
 6. Write it all to `<session>/review.json`, where `<session>` is a fresh temp dir: `mktemp -d -t live-review`.
 
-For a large local diff you may delegate producing the `review` markdown to a subagent (code-review's own routing); document assembly stays with you.
+For every local target, delegate production of the `review` markdown to a subagent as required by code-review's routing; document assembly stays with you.
 
 ### review.json schema
 
@@ -68,7 +68,7 @@ For a large local diff you may delegate producing the `review` markdown to a sub
       ]
     }
   ],
-  "review": "## Summary\n… (exact code-review output format)"
+  "review": "## Findings\n… (canonical code-review output format, including confidence temperatures)"
 }
 ```
 
