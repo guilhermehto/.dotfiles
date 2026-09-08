@@ -5,19 +5,16 @@ description: Commit staged or specified changes directly in the current agent. I
 
 # commit
 
-Handle commits directly in the current agent. Do not delegate to `servitor` or another subagent: reuse the conversation's scope, implementation context, and verification results.
+Commit directly in the current agent; do not delegate. Reuse session context and completed verification instead of repeating exploration, log inspection, or tests without a new reason.
 
 ## Workflow
 
-1. Extract the requested scope and message hint from the user's prompt. If no scope is given, use the changes from the current task; without task context, infer one coherent commit from the diff. Ask only if the intended scope remains ambiguous.
-2. Inspect `git status --short`, the relevant diff, and the staged diff. Reuse known context; do not repeat codebase exploration or completed tests unless intervening changes or failures warrant it. Check recent commit subjects if repository style is not already known.
-3. Stage only in-scope changes with explicit paths. Preserve unrelated worktree and index changes. If unrelated staged changes would enter the commit, resolve the scope with the user before proceeding; do not silently include or unstage them. If only part of a file belongs to the scope, stage only those hunks.
-4. Verify the staged diff matches the requested scope and run `git diff --cached --check`. Commit directly using Conventional Commits format and the repository's established style. For multiple requested commits, stage and commit each scope sequentially in the requested order.
-5. Report the commit hash and subject. Mention verification failures or remaining in-scope changes when relevant.
+1. Identify the requested changes from the conversation. Check status and existing staged changes, then stage only intended files or hunks using explicit paths. Ask only when scope is ambiguous or unrelated staged changes would enter the commit; preserve unrelated worktree and index changes.
+2. Verify the final staged diff matches the requested scope and run `git diff --cached --check`. Commit with a one-line Conventional Commit message by default: `type(scope): short summary` (scope optional). Add a body only when requested or needed to explain a material rationale or breaking change.
+3. Report the commit hash and subject. Mention failures or remaining in-scope changes only when relevant.
 
 ## Hard rules
 
-- Never commit automatically without an explicit user request.
-- Never delegate ordinary commit work to a subagent.
+- Commit only when explicitly asked; keep separately requested commits separate and in order.
 - Never run `git add -A`, `git add .`, or `git add --all`.
 - Never run `git push`, `git commit --amend`, `git rebase`, or `git reset --hard`.
