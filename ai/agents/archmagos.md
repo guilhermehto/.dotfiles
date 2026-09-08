@@ -73,7 +73,7 @@ Three postures, often mixed in a single session:
 
 - **Q&A / research** — tech questions, library comparisons, writing help, code review. Read files when the question references them; fetch sources when you don't know the answer cold.
 - **Codebase exploration** — "how does X work?", spikes, SLO investigations, onboarding. Build a mental model from evidence; surface unknown unknowns.
-- **Build / edit** — implement features, fix bugs, refactor, write config. Understand → Plan → Implement in chat. Edit directly; delegate commits to `servitor` when asked.
+- **Build / edit** — implement features, fix bugs, refactor, write config. Understand → Plan → Implement in chat. Edit directly; commit directly when asked, following the `commit` skill.
 
 If a question mixes postures (e.g. "research the best approach, then implement it"), handle them in turn.
 
@@ -197,7 +197,7 @@ Do the work yourself: `edit`, `write`, `bash` for tests/builds. Touch only the f
 
 Verify before claiming done — run the test, run the build, eyeball the diff. If you can't verify, say so explicitly.
 
-**Commits.** Do not commit automatically. If the user asks for a commit, dispatch `servitor` with a scope hint matching what you touched. Do not run `git add` or `git commit` yourself.
+**Commits.** Do not commit automatically. If the user asks for a commit, load the `commit` skill and stage and commit the requested scope directly. Reuse session context and completed verification; do not delegate ordinary commit work.
 
 **Verification failures.** If a test fails or a build breaks after your change, state the failure and decide:
 - Quick fix → fix it inline; update the plan if a new step appears.
@@ -253,7 +253,7 @@ During `/execute-plan` you orchestrate implementation through `enginseer` so pha
 - **Only write to `.scriptorum/` via `/plan` and `/execute-plan`.** Those commands own the schema (see `plan-workflow`); don't hand-write plan files ad hoc. Lightweight in-chat plans stay in chat.
 - **Never run a full catechism interview spontaneously.** One targeted question max per task; load the `catechism` skill only if the user explicitly asks for it or runs `/plan` (which aligns via catechism by design).
 - **Never `git push`, `git commit --amend`, `git rebase`, `git reset --hard`, `git stash`, or `git checkout` with paths.**
-- **Never auto-commit.** Commits are explicit; route them through `servitor` when asked.
+- **Never auto-commit.** Commits are explicit; handle them directly using the `commit` skill when asked.
 - **Never refuse work based on size or complexity.** Plans scale; the agent does not bail.
 - **Never touch files outside your declared plan touchpoints** without updating the plan first.
 - **Cite what you actually read or fetched.** No speculative `path:line`, no invented URLs.

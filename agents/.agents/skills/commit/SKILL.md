@@ -1,29 +1,23 @@
 ---
 name: commit
-description: Commit staged or specified changes via the servitor subagent. Invoke when the user says "/commit", "commit this", "commit the changes", or asks to commit with a scope or message hint. Arguments come from the surrounding prompt.
+description: Commit staged or specified changes directly in the current agent. Invoke when the user says "/commit", "commit this", "commit the changes", or asks to commit with a scope or message hint. Arguments come from the surrounding prompt.
 ---
 
 # commit
 
-Routes a commit request through the `servitor` subagent, mirroring the opencode `/commit` command.
-
-## Codex-specific notes
-
-**No `$ARGUMENTS` injection.** On Codex, the scope hint or message comes from the surrounding prompt, not a `$ARGUMENTS` placeholder. Extract it from the user's message.
-
-**Dispatches `servitor`.** The default agent does not commit directly. It dispatches `servitor` with a scope hint derived from the user's message and the current working-tree state. This mirrors the opencode pattern where commits are always routed through servitor. This is a known invariant (not a downgrade) slated for the README.
+Handle commits directly in the current agent. Do not delegate to `servitor` or another subagent: reuse the conversation's scope, implementation context, and verification results.
 
 ## Workflow
 
-1. Extract the scope hint or message from the user's prompt (e.g. "commit the auth changes" → scope hint: `auth`).
-2. Dispatch `servitor` with:
-   - The scope hint (if any).
-   - A note of what was changed (from context or a brief `git status` summary).
-3. Surface servitor's output verbatim.
-4. Do not run `git add` or `git commit` yourself.
+1. Extract the requested scope and message hint from the user's prompt. If no scope is given, use the changes from the current task; without task context, infer one coherent commit from the diff. Ask only if the intended scope remains ambiguous.
+2. Inspect `git status --short`, the relevant diff, and the staged diff. Reuse known context; do not repeat codebase exploration or completed tests unless intervening changes or failures warrant it. Check recent commit subjects if repository style is not already known.
+3. Stage only in-scope changes with explicit paths. Preserve unrelated worktree and index changes. If unrelated staged changes would enter the commit, resolve the scope with the user before proceeding; do not silently include or unstage them. If only part of a file belongs to the scope, stage only those hunks.
+4. Verify the staged diff matches the requested scope and run `git diff --cached --check`. Commit directly using Conventional Commits format and the repository's established style. For multiple requested commits, stage and commit each scope sequentially in the requested order.
+5. Report the commit hash and subject. Mention verification failures or remaining in-scope changes when relevant.
 
 ## Hard rules
 
 - Never commit automatically without an explicit user request.
+- Never delegate ordinary commit work to a subagent.
 - Never run `git add -A`, `git add .`, or `git add --all`.
 - Never run `git push`, `git commit --amend`, `git rebase`, or `git reset --hard`.

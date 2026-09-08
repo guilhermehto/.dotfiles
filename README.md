@@ -246,8 +246,9 @@ redesign (parallel/sequential phases, rich-context steps, `/execute-plan`); it
 writes a valid plan in the older five-section shape until its mirror is updated.
 
 **Codex `commit` skill**
-Routes through the `servitor` subagent (mirroring opencode), rather than
-committing from the main agent.
+The main agent stages and commits the requested scope directly, reusing
+session context and completed verification. The opencode `/commit` command
+uses the same skill. Unrelated worktree and staged changes are preserved.
 
 ### What was removed
 
