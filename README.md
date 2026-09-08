@@ -118,7 +118,6 @@ ai/
 ├── commands/                  # 6 opencode slash-commands (catechism, plan, execute-plan, plan-list, commit, to-html)
 └── codex/
     ├── agents/                # 4 subagent TOMLs for Codex
-    ├── skills/                # 4 Codex action-skills (plan, plan-list, commit, update-config)
     ├── bin/codex-sync-ai      # idempotent reconciler
     ├── install.sh             # one-time bootstrap
     └── config.snippet.toml   # [agents] depth/threads + writable_roots
@@ -131,18 +130,21 @@ carries intentional enforcement copies kept in parity with it.
 
 ### Shared skills (`agents/` package)
 
-The 5 workflow skills (`catechism`, `plan-workflow`, `to-html`,
-`personal-writing-style`, `code-review`) live in the `agents/` stow package:
+All dotfiles-managed skill sources live in the `agents/` stow package.
+Shared skills and Codex entry points use `.agents/skills/`; Claude-specific
+variants use `.agents/claude-skills/` to preserve their separate behavior:
 
 ```
 agents/.agents/skills/<name>/SKILL.md   →   ~/.agents/skills/<name>/SKILL.md
+agents/.agents/claude-skills/<name>/SKILL.md   # Claude-specific variants
 ```
 
 `stow agents` links them into `~/.agents/skills`, which both opencode (≥1.16,
 "global agent-compatible" discovery) and Codex (USER-scope skills) read
 natively — no sync script required. The package tree-folds into the existing
 real `~/.agents/skills` dir, so it coexists with hand-placed skills (e.g.
-firecrawl) and the Codex action-skills linked there by `codex-sync-ai`.
+firecrawl). `codex-sync-ai` reconciles the same centralized sources and
+preserves equivalent Stow links.
 
 Claude Code doesn't read `~/.agents` (and org managed settings block the
 plugin loader that could), but its native skill discovery follows symlinks,
@@ -166,15 +168,16 @@ mirror the body change in `claude/.claude/agents/`.
 The plan-workflow entry points reach Claude as skills, not commands: Claude
 Code merges `.claude/commands/` into the skills system, so a skill at
 `.claude/skills/<name>/SKILL.md` is invocable as `/<name>`.
-`claude/.claude/skills/{plan,execute-plan,plan-list}/SKILL.md` are Claude-local
-copies of `ai/commands/<name>.md` (body verbatim; frontmatter gains
-`name`/`argument-hint`), and `stow claude` links them into `~/.claude/skills/`.
+`claude/.claude/skills/{plan,execute-plan,plan-list}` symlink to
+`agents/.agents/claude-skills/<name>`. These Claude-specific variants mirror
+`ai/commands/<name>.md` (frontmatter gains `name`/`argument-hint`), and
+`stow claude` links them into `~/.claude/skills/`.
 They stay model-invocable so Claude can reach for them when the conversation
 calls for it. (`plan-list` uses `$ARGUMENTS` for its filter rather than the
 opencode `$1`, since Claude substitutes skill arguments 0-indexed.) `catechism`
 and `to-html` already reach Claude as skills (above); `commit` stays
 opencode/Codex-only for now. When editing one of these entry points in
-`ai/commands/`, mirror the body into `claude/.claude/skills/<name>/SKILL.md`.
+`ai/commands/`, mirror the body into `agents/.agents/claude-skills/<name>/SKILL.md`.
 
 ### Per-tool wiring
 
@@ -196,16 +199,17 @@ to paste into `~/.codex/config.toml`.
 
 `ai/codex/bin/codex-sync-ai` is the idempotent reconciler:
 
-- Links the 4 Codex action-skills into `~/.agents/skills/<name>` (Codex
-  USER-scope skills directory). The 5 shared workflow skills now reach the same
-  directory via `stow agents`, not this script.
+- Links skills from `agents/.agents/skills/` into `~/.agents/skills/<name>`,
+  preserving equivalent Stow links and migrating links from the old
+  `ai/skills/` and `ai/codex/skills/` locations.
 - Links the 4 subagent TOMLs into `~/.codex/agents/`.
 - Composes `~/.codex/AGENTS.md` = `ai/AGENTS.md` + `ai/agents/archmagos.md`
   (marker-delimited, regenerated idempotently). A single symlink cannot carry
   both files, and spawned-subagent inheritance of AGENTS.md is unverified, so
   each subagent TOML carries its own engineering-standards copy.
-- Prunes only symlinks resolving into `ai/`; foreign entries (e.g. firecrawl
-  skills already in `~/.agents/skills`) are never touched.
+- Prunes only symlinks into managed dotfiles source roots (central skills,
+  legacy skill roots, and Codex agents); foreign links and real directories
+  already in `~/.agents/skills` are never touched.
 
 The `writable_roots` entry in `config.snippet.toml` covers `~/.agents` and
 `~/.codex` so the `update-config` skill can run `codex-sync-ai` unattended
@@ -269,7 +273,7 @@ described above). Concept mapping:
 |---|---|
 | `CLAUDE.md` (memory) | `claude/.claude/CLAUDE.md → ai/AGENTS.md`; the `archmagos` persona has no Claude equivalent — that role is the main thread |
 | Subagents (`~/.claude/agents/`) | `claude/.claude/agents/` — converted copies of `ai/agents/` (4 subagents) |
-| Skills (`~/.claude/skills/`) | `claude/.claude/skills/` — cross-platform skills symlinked from `agents/.agents/skills/`, plus Claude-local `plan`/`execute-plan`/`plan-list` entry points copied from `ai/commands/` (each invocable as `/name`) |
+| Skills (`~/.claude/skills/`) | `claude/.claude/skills/` — cross-platform skills symlinked from `agents/.agents/skills/`, plus `plan`/`execute-plan`/`plan-list` variants symlinked from `agents/.agents/claude-skills/` (each invocable as `/name`) |
 
 ## TODO
 

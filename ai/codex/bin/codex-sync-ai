@@ -2,12 +2,11 @@
 #
 # codex-sync-ai
 #
-# Reconciles ~/.agents/skills and ~/.codex/agents/ with the ai/ dotfiles source,
+# Reconciles ~/.agents/skills and ~/.codex/agents/ with the centralized dotfiles sources,
 # and composes ~/.codex/AGENTS.md from ai/AGENTS.md + ai/agents/archmagos.md.
 #
 # Skills linked:
-#   - Shared skills:  ai/skills/*          → ~/.agents/skills/<name>
-#   - Codex skills:   ai/codex/skills/*    → ~/.agents/skills/<name>
+#   - agents/.agents/skills/*             → ~/.agents/skills/<name>
 #
 # Subagent TOMLs linked:
 #   - ai/codex/agents/*.toml               → ~/.codex/agents/<name>.toml
@@ -18,7 +17,7 @@
 #   - If a pre-existing real/foreign ~/.codex/AGENTS.md exists, backs it up to
 #     ~/.codex/AGENTS.md.bak ONCE (does not clobber an existing .bak) and warns.
 #
-# Prune policy: only symlinks whose target resolves into a known ai/ source path
+# Prune policy: only symlinks whose target resolves into a known dotfiles source path
 # are eligible for removal. Foreign entries (e.g. firecrawl skills) are never
 # touched. Real files are never touched.
 #
@@ -37,8 +36,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DOTFILES_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 AI_ROOT="$DOTFILES_ROOT/ai"
-SHARED_SKILLS_DIR="$AI_ROOT/skills"
-CODEX_SKILLS_DIR="$AI_ROOT/codex/skills"
+SKILLS_SOURCE="$DOTFILES_ROOT/agents/.agents/skills"
 CODEX_AGENTS_DIR="$AI_ROOT/codex/agents"
 AGENTS_MD_SOURCE="$AI_ROOT/AGENTS.md"
 ARCHMAGOS_SOURCE="$AI_ROOT/agents/archmagos.md"
@@ -47,8 +45,9 @@ SKILLS_DEST="$HOME/.agents/skills"
 CODEX_AGENTS_DEST="$HOME/.codex/agents"
 CODEX_AGENTS_MD="$HOME/.codex/AGENTS.md"
 
-# Known source roots for prune-safety checks.
+# Known source roots for prune-safety checks, including legacy roots for migration.
 KNOWN_SOURCES=(
+  "$SKILLS_SOURCE"
   "$AI_ROOT/skills"
   "$AI_ROOT/codex/skills"
   "$AI_ROOT/codex/agents"
@@ -117,18 +116,9 @@ print_section() {
 
 # ---------- Build desired skill-link map ----------
 
-# Shared skills: ai/skills/*/
-if [[ -d "$SHARED_SKILLS_DIR" ]]; then
-  for d in "$SHARED_SKILLS_DIR"/*/; do
-    d="${d%/}"
-    [[ -f "$d/SKILL.md" ]] || continue
-    add_desired_skill "$(basename "$d")" "$(resolve_path "$d")"
-  done
-fi
-
-# Codex action-skills: ai/codex/skills/*/
-if [[ -d "$CODEX_SKILLS_DIR" ]]; then
-  for d in "$CODEX_SKILLS_DIR"/*/; do
+# Central skills: agents/.agents/skills/*/
+if [[ -d "$SKILLS_SOURCE" ]]; then
+  for d in "$SKILLS_SOURCE"/*/; do
     d="${d%/}"
     [[ -f "$d/SKILL.md" ]] || continue
     add_desired_skill "$(basename "$d")" "$(resolve_path "$d")"
@@ -177,7 +167,7 @@ done
 # ---------- Prune stale skill symlinks ----------
 
 if [[ -d "$SKILLS_DEST" ]]; then
-  for entry in "$SKILLS_DEST"/*/; do
+  for entry in "$SKILLS_DEST"/*; do
     entry="${entry%/}"
     [[ -L "$entry" ]] || continue
     name="$(basename "$entry")"
@@ -187,13 +177,13 @@ if [[ -d "$SKILLS_DEST" ]]; then
 
     literal="$(readlink "$entry")"
     if path_in_known_source "$literal"; then
-      rm -rf "$entry"
+      rm "$entry"
       skills_pruned+=("skills/$name")
       continue
     fi
     if resolved="$(resolve_path "$entry" 2>/dev/null)" \
       && path_in_known_source "$resolved"; then
-      rm -rf "$entry"
+      rm "$entry"
       skills_pruned+=("skills/$name")
     fi
   done

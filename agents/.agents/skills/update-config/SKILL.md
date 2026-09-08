@@ -9,10 +9,11 @@ Runs `codex-sync-ai` to reconcile the live Codex configuration with the dotfiles
 
 ## What the sync does
 
-- Links skill directories from `ai/skills/*` and `ai/codex/skills/*` into `~/.agents/skills/`.
+- Links skill directories from `agents/.agents/skills/*` into `~/.agents/skills/`.
 - Links subagent TOMLs from `ai/codex/agents/*.toml` into `~/.codex/agents/`.
 - Composes `~/.codex/AGENTS.md` from `ai/AGENTS.md` (engineering standards) + `ai/agents/archmagos.md` (persona).
-- Prunes only symlinks that resolve into the `ai/` dotfiles paths — foreign skills (e.g. firecrawl) are never touched.
+- Migrates existing links from `ai/skills/` and `ai/codex/skills/` to the centralized source.
+- Prunes only symlinks into managed dotfiles source paths, including stale legacy links. Foreign links and real directories are never touched.
 - Re-running is a no-op when nothing has changed.
 
 ## How to run it
