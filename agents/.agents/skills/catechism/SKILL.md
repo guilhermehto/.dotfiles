@@ -50,33 +50,42 @@ Goal and scope come first because they cheaply rule out whole branches of work. 
 
 ## Question protocol
 
-**Every question is presented with multiple-choice options.** This is the default and the rule, not a preference. Always include an implicit "none of the above / type your own" escape, so multiple-choice never costs the user expressiveness — it only forces you to enumerate the realistic answer space, which lowers their reply cost and surfaces options they hadn't considered.
+Present questions directly in chat. Never use a question or user-input tool for this interview, including `question`, `mcp_Question`, `request_user_input`, or `request_user_input_async`.
 
-If you catch yourself about to ask a free-form question, stop and enumerate 3-5 plausible answers first. "The user might want something I haven't listed" is not a reason to skip enumeration — that is exactly what the open-ended escape is for. List your best guesses and let the escape handle the long tail.
+Use numbered questions with lettered options so the user can reply `1A 2B 3F`. Keep question numbers unique and increasing throughout the interview, including follow-ups and mid-task asks. Preserve numbers and option letters when referring back to an unanswered question.
 
 ### Presenting multiple-choice questions
 
-Format each question as a numbered or lettered list of options. Include a brief one-line description for each option so the user can distinguish them at a glance. Always end with an implicit or explicit "Other / type your own" option so the user is never boxed in.
+- Put the recommended choice first as `A) ... (Recommended)`, with a brief reason. Never put a recommendation under another letter. If there is no defensible recommendation, leave all choices unmarked rather than inventing one.
+- Give each option a short label and enough explanation to distinguish the trade-off.
+- End each multiple-choice question with a lettered `Other — describe your own` option; accept free-text answers too.
+- State when multiple selections are allowed and accept replies such as `2AC` for that question. Otherwise expect one choice per question.
+- Tell the user once that compact replies such as `1A 2B` are accepted.
 
-Example shape (adapt formatting to your runtime's conventions):
+Example (two independent decisions):
 
+```text
+1. Should this project use version control?
+   A) Yes (Recommended) — Track changes and make rollback easier.
+   B) No — Keep this project unversioned.
+   C) Other — describe your own.
+
+2. Who is the documentation for?
+   A) Maintainers (Recommended) — Focus on setup and ongoing changes.
+   B) End users — Focus on usage.
+   C) Both — Cover both audiences.
+   D) Other — describe your own.
+
+Reply with choices such as 1A 2B, or write your own answers.
 ```
-Question: <Full question text>
 
-  A) <1-5 word choice> — <One-line explanation>
-  B) <Another choice> — <...>
-  C) Other / describe your own
+### Batch only independent questions
 
-(Multiple selections allowed if the question permits it.)
-```
+Before sending a batch, check every question against the others: could any answer change whether another question is needed, its wording, its options, or its recommendation? If yes, ask the prerequisite first and defer the dependent question until the answer is known. Sharing a dimension does not make questions independent.
 
-On opencode, use the `question` tool with structured `options` arrays — it renders the choices natively and appends "type your own" automatically. On other runtimes, render the same structure as prose. The discipline (enumerate options, include an escape) is the invariant; the rendering mechanism is runtime-specific.
+For example, do not ask "Will we use version control?" and "Which version control: Git or Mercurial?" together. Ask whether first; only ask which if the user chooses to use version control and the choice is still unresolved. Unrelated questions may share the prerequisite's batch.
 
-Notes:
-
-- Never add a catch-all "Other" when using the opencode `question` tool — it appends "type your own" automatically.
-- Mark `multiple: true` (or note "multiple selections allowed") only when the user can legitimately pick more than one option.
-- Batch multiple questions into a single prompt when they belong to the same dimension round.
+Re-evaluate deferred questions after each reply. Drop questions made irrelevant or already answered; construct remaining options from the confirmed answers. Do not present conditional branches as extra questions in the same batch.
 
 ### When free-form is allowed
 
@@ -91,10 +100,9 @@ If none of these apply, the question is multiple-choice. No exceptions for "this
 ### Question-crafting rules
 
 - One concept per question. If a question contains "and" between two distinct decisions, split it.
-- Aim for 3-5 options per question. Fewer than 2 is not multiple-choice; more than 6 means the question is too broad and should be split.
-- Every option must be a plausible real answer. No filler. No "Other" — `question` already provides "type your own".
+- Prefer 2-5 substantive options plus the final Other option. Do not pad a binary decision or split a coherent choice merely to meet an option count.
+- Every substantive option must be a plausible real answer. No filler.
 - Make options mutually distinct. If two options blur together, merge or rewrite.
-- Lead with the user's most likely intent when you have a strong prior, and mark it `(Recommended)`. Do not mark a recommendation when you genuinely don't have one.
 - No leading language in the question stem. Recommendations belong on the option, not the question.
 - Surface the assumption inside the question when relevant: "I'm about to assume X — keep, change, or drop?"
 - Never ask what reading a file would answer. Never ask what running `ls`/`rg`/`git log` would answer.
@@ -102,15 +110,16 @@ If none of these apply, the question is multiple-choice. No exceptions for "this
 
 ## Pacing
 
-Batch by dimension. Aim for 3-6 questions per round; never more than 7. Asking 20 at once is the same failure mode as asking none.
+Use the five dimensions as a coverage guide, not a question quota. Ask 1-4 independent questions per round; one is enough when other decisions depend on it. Independent questions may span dimensions. Do not add questions just to fill a batch.
 
 Loop:
 
-1. Pick the next unresolved dimension.
-2. Ask its batch as multiple-choice questions (or open-ended if the rules above call for it).
-3. Read the answers. If new ambiguity appeared, queue follow-ups for the next round.
-4. When the current dimension is settled, move to the next.
-5. After the last dimension, deliver the recap (below) and ask "anything I'm missing?" or "ready for me to go?".
+1. Identify unresolved decisions that materially affect the work, starting with goal and scope.
+2. Select only questions whose prerequisites are already settled and which cannot change one another's options or relevance.
+3. Ask the batch in numbered chat prose, then wait for the user's reply before asking dependent follow-ups.
+4. Read compact selections or free text and briefly summarize the decisions. Preserve answered choices. For partial replies, leave omissions unresolved; never treat silence as option A. Clarify only ambiguous or missing answers that still matter, using their existing numbers where applicable.
+5. Re-evaluate the remaining decisions and dependencies. If an answer changes an earlier decision, surface the conflict and resolve it before relying on either.
+6. Once material uncertainty is resolved, deliver the recap below. Do not force a round for every dimension.
 
 Stop conditions:
 
@@ -130,7 +139,7 @@ Understanding:
 - Out of scope: <bullets>
 - Constraints: <bullets>
 - Edge cases handled: <bullets>
-- Open assumptions: <bullets, each one the user implicitly or explicitly confirmed>
+- Open assumptions: <unresolved assumptions, clearly marked; write "none" if settled>
 
 Next step: <what I'll do first>.
 Reply "go" to proceed, or correct anything above.
@@ -139,7 +148,7 @@ Reply "go" to proceed, or correct anything above.
 Rules:
 
 - Keep it terse. The recap is a contract, not an essay.
-- Do not start the work until the user replies affirmatively. Silence is not consent.
+- Do not start the work until the user replies affirmatively. An earlier explicit "go" or "stop asking" already satisfies this; do not ask again. Silence is not consent.
 - If the user corrects the recap, edit it in place and re-confirm — do not start a fresh interview.
 
 ## Mid-task pause-and-ask
@@ -157,5 +166,7 @@ Format the mid-task ask as a single short question, not a new round. Get the ans
 - Never use free-form prose for a question with 3-5 plausible enumerable answers. Enumerate them as multiple-choice options and let the open-ended escape cover the long tail.
 - Never bury the user's likely intent inside a generic "Other" or "It depends". Split the question instead.
 - Never ask what you can answer by reading the repo.
-- Never proceed past the recap without an affirmative go-ahead.
+- Never use question or user-input tools for the interview.
+- Never batch a prerequisite with a question whose relevance, wording, options, or recommendation depends on its answer.
+- Never proceed past the recap without an affirmative go-ahead, unless the user has already explicitly told you to proceed or stop asking.
 - Never re-ask a question the user already answered in the same session, unless their later answer contradicted it (in which case, surface the contradiction).
