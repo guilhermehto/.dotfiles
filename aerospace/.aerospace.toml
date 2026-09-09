@@ -58,16 +58,19 @@ inner.horizontal = 12
 inner.vertical =   12
 outer.left =       12
 outer.bottom =     12
-outer.top =        52
+# outer.top =        22
+outer.top = [{ monitor.secondary = 52 }, 52]
 outer.right =      12
 
-# Keep primary workspaces on main display and dedicate T to second monitor
+# Keep primary workspaces on main display and dedicate T, G, B to second monitor
 [workspace-to-monitor-force-assignment]
 Q = 'main'
 W = 'main'
 E = 'main'
 R = 'main'
 T = 'secondary'
+G = 'secondary'
+B = 'secondary'
 
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
