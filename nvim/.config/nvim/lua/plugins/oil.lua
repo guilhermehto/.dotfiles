@@ -11,6 +11,8 @@ return {
 		keymaps = {
 			["<C-h>"] = false,
 			["<C-l>"] = false,
+			["<C-p>"] = false,
+			["gp"] = "actions.preview",
 			["gS"] = { "actions.select", opts = { horizontal = true } },
 			["gR"] = "actions.refresh",
 		},
