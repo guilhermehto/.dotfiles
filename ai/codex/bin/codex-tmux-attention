@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -u
+
+state="${1:-}"
+
+case "$state" in
+  waiting|active|clear) ;;
+  *)
+    printf 'codex-tmux-attention: unknown state: %s\n' "$state" >&2
+    exit 1
+    ;;
+esac
+
+if [ -n "${TMUX_PANE:-}" ] && command -v tmux >/dev/null 2>&1; then
+  window_id="$(tmux display-message -p -t "$TMUX_PANE" '#{window_id}' 2>/dev/null || true)"
+
+  if [ -n "$window_id" ]; then
+    case "$state" in
+      waiting)
+        tmux set-option -w -t "$window_id" @codex_attention waiting
+        ;;
+      active|clear)
+        tmux set-option -wu -t "$window_id" @codex_attention 2>/dev/null || true
+        ;;
+    esac
+  fi
+fi
+
+# Stop hooks require JSON on stdout; an empty object is a successful no-op.
+printf '{}\n'

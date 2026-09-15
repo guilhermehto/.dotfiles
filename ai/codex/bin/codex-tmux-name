@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import unicodedata
+
+MAX_NAME_LENGTH = 32
+MAX_PROMPT_LENGTH = 4000
+TICKET_PATTERN = re.compile(r"\b([A-Za-z][A-Za-z0-9]{1,20}-\d+)\b")
+STOP_WORDS = {
+    "a",
+    "an",
+    "and",
+    "can",
+    "could",
+    "help",
+    "i",
+    "issue",
+    "let",
+    "lets",
+    "me",
+    "on",
+    "please",
+    "the",
+    "this",
+    "through",
+    "ticket",
+    "to",
+    "we",
+    "with",
+    "work",
+    "you",
+}
+
+
+def run_tmux(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["tmux", *args],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def fit_slug(words: list[str]) -> str:
+    selected: list[str] = []
+    for word in words:
+        candidate = "-".join([*selected, word])
+        if len(candidate) > MAX_NAME_LENGTH:
+            break
+        selected.append(word)
+    if selected:
+        return "-".join(selected)
+    return words[0][:MAX_NAME_LENGTH] if words else "codex"
+
+
+def normalize_slug(value: str) -> str:
+    lines = [line.strip(" `\t'\"") for line in value.splitlines()]
+    first_line = next((line for line in lines if line), "")
+    ascii_value = unicodedata.normalize("NFKD", first_line).encode("ascii", "ignore").decode()
+    words = [word for word in re.split(r"[^a-z0-9]+", ascii_value.lower()) if word]
+    return fit_slug(words)
+
+
+def fallback_slug(prompt: str) -> str:
+    ascii_prompt = unicodedata.normalize("NFKD", prompt).encode("ascii", "ignore").decode()
+    words = [word for word in re.split(r"[^a-z0-9]+", ascii_prompt.lower()) if word]
+    meaningful = [word for word in words if word not in STOP_WORDS]
+    return fit_slug((meaningful or words)[:5])
+
+
+def model_slug(prompt: str) -> str:
+    codex = shutil.which("codex")
+    if not codex:
+        return ""
+
+    instruction = f"""Create a concise tmux window name from this user request.
+
+Rules:
+- Output only one lowercase kebab-case slug, with no quotes or explanation.
+- Use 2-5 meaningful words and at most {MAX_NAME_LENGTH} characters.
+- Preserve an issue or ticket identifier exactly, lowercased, when present.
+- Do not inspect files or use tools.
+
+User request:
+{prompt[:MAX_PROMPT_LENGTH]}
+"""
+    env = os.environ.copy()
+    env.pop("TMUX", None)
+    env.pop("TMUX_PANE", None)
+    result = subprocess.run(
+        [
+            codex,
+            "exec",
+            "--ephemeral",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--disable",
+            "hooks",
+            "--skip-git-repo-check",
+            "--sandbox",
+            "read-only",
+            "--color",
+            "never",
+            "--model",
+            "gpt-5.6-luna",
+            "-c",
+            'model_reasoning_effort="low"',
+            "-C",
+            tempfile.gettempdir(),
+            "-",
+        ],
+        check=False,
+        capture_output=True,
+        env=env,
+        input=instruction,
+        text=True,
+        timeout=35,
+    )
+    return normalize_slug(result.stdout) if result.returncode == 0 else ""
+
+
+def choose_slug(prompt: str) -> str:
+    ticket = TICKET_PATTERN.search(prompt)
+    if ticket:
+        return ticket.group(1).lower()
+    return model_slug(prompt) or fallback_slug(prompt)
+
+
+def main() -> int:
+    try:
+        payload = json.load(sys.stdin)
+        prompt = payload.get("prompt", "")
+        session_id = payload.get("session_id", "")
+        pane_id = os.environ.get("TMUX_PANE", "")
+        if not prompt or not session_id or not pane_id or not shutil.which("tmux"):
+            return 0
+
+        window = run_tmux("display-message", "-p", "-t", pane_id, "#{window_id}").stdout.strip()
+        if not window:
+            return 0
+
+        named_session = run_tmux(
+            "show-options", "-wqv", "-t", window, "@codex_named_session_id"
+        ).stdout.strip()
+        if named_session == session_id:
+            return 0
+
+        marked = run_tmux(
+            "set-option", "-w", "-t", window, "@codex_named_session_id", session_id
+        )
+        if marked.returncode != 0:
+            return 0
+
+        renamed = run_tmux("rename-window", "-t", window, choose_slug(prompt))
+        if renamed.returncode != 0:
+            run_tmux("set-option", "-wu", "-t", window, "@codex_named_session_id")
+    except (json.JSONDecodeError, OSError, subprocess.SubprocessError, TypeError):
+        pass
+    finally:
+        print("{}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
