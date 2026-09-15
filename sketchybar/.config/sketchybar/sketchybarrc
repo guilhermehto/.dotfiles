@@ -178,6 +178,10 @@ sketchybar --add item taskwarrior left                          \
                              label.color=$TEXT_COLOR              \
                              padding_left=8
 
+if [ -r "$HOME/.config/work/sketchybarrc" ]; then
+  source "$HOME/.config/work/sketchybarrc"
+fi
+
 ### Ram
 #
 
