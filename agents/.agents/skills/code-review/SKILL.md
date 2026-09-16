@@ -20,7 +20,7 @@ Classify the target before reviewing:
 | PR number (`123`, `PR #123`) | Review inline if provider/repo context is known; otherwise ask for the full PR URL. |
 | Staged, unstaged, all working-tree changes, current branch, local commits, branch ranges, local refs, or a specific commit | Spawn a subagent and ask it to run the review. |
 
-For local targets, the main agent identifies the target, spawns the subagent, waits for its review, and performs a lightweight quality gate before relaying it. Confirm that the response reviewed the intended target, covered the changed files, used valid line citations, and supported each finding with a concrete scenario, impact, and confidence. Ask the same subagent to correct material gaps; do not duplicate the full review in the main thread.
+For local targets, the main agent identifies the target, spawns the subagent, waits for its review, and performs a lightweight quality gate before relaying it. Confirm that the response reviewed the intended target, covered the changed files, used valid line citations, and supported each finding with a concrete worked example, impact, and confidence. Ask the same subagent to correct material gaps; do not duplicate the full review in the main thread.
 
 For PR URLs, fetch PR metadata, description, base/head revisions, and diff directly with available provider tools. Do not resolve local PR refs, fetch branches, or compare against the local worktree. For Bitbucket/Atlassian PRs, prefer `twg bitbucket pull-requests get` and `twg bitbucket pull-requests diff`; check live `twg help` only when syntax or output is uncertain. For GitHub PRs, use `gh pr view` and `gh pr diff`, plus read-only provider content/search operations when surrounding code is needed. If provider tooling is unavailable, unauthenticated, or cannot provide enough context, state the limitation and ask for a PR diff/patch, an explicit git range, or a local ref.
 
@@ -83,6 +83,8 @@ Report only risks introduced or materially worsened by the target change. Before
 
 If material evidence is missing, place the concern under `Open questions` or omit it. Do not turn a possibility into a defect merely because it matches a checklist item.
 
+Every finding must include a concrete worked example showing how the problem manifests in realistic use: starting state or sample input, action or event sequence, actual result, and expected result. Use specific illustrative values where helpful; do not merely restate the trigger or impact. Ground the path and results in inspected code or contracts, label assumptions, and distinguish an illustrative scenario from a reproduction actually run. An example does not replace evidence or justify inventing behavior. Keep simple examples to one or two sentences.
+
 Every finding headline must end with a confidence temperature such as `(0.8 confidence)`. This measures confidence that the finding is valid and attributable to the change; it is not severity or the probability that the failure will occur. Use one decimal place:
 
 - `0.9–1.0`: directly demonstrated or compelled by a contract, with no material assumption.
@@ -114,6 +116,15 @@ Run existing targeted validation only when it is available without installing de
 - Put unresolved assumptions under **Open questions**, not under a lower severity.
 - Omit style preferences and nits unless the user explicitly requests them. If an optional suggestion alleges a concrete risk, classify it as a finding and include confidence.
 
+### Sequence diagrams
+
+Use judgment to include an ASCII sequence diagram when event ordering or interactions are important to understanding a finding or the changed behavior: for example, concurrent requests, retries, asynchronous handoffs, or partial failures across components. Omit it when prose already makes the behavior clear; do not add one just to fill a section.
+
+- Use a fenced `text` block with ASCII participants, lifelines, and arrows. Time flows downward; label relevant calls, responses, and state changes. Do not use Mermaid or Unicode drawing characters.
+- Show only participants and steps needed to explain the behavior. Mark the point where actual behavior diverges from expected behavior, when applicable.
+- Ground the sequence in inspected code or contracts and label any assumptions. A diagram is an explanation, not additional evidence.
+- Place a finding-specific diagram next to its example. If several findings share a sequence, show it once and reference it. An important flow without a finding may appear under `## Notable sequence` before the assessment; explain why it matters without implying a defect.
+
 ### Output format
 
 Unless the user requests a different format, use this structure:
@@ -125,12 +136,14 @@ Unless the user requests a different format, use this structure:
 - `file:line` — <concise problem> (0.9 confidence)
   - Trigger: <specific scenario>
   - Impact: <observable consequence>
+  - Example: <concrete setup and action -> actual result; expected result>
   - Fix direction: <required outcome without over-prescribing implementation>
 
 ### Should fix
 - `file:line` — <concise problem> (0.8 confidence)
   - Trigger: <specific scenario>
   - Impact: <observable consequence>
+  - Example: <concrete setup and action -> actual result; expected result>
   - Fix direction: <required outcome without over-prescribing implementation>
 
 ## Open questions
