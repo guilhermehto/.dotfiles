@@ -31,7 +31,6 @@ Optimize for the smallest understandable solution, not the fewest lines.
 
 - Do not add comments unless absolutely necessary. Prefer clear names and straightforward code.
 - Comment only when essential intent, constraints, or non-obvious reasons cannot be expressed clearly in code. Explain why, not what the code does.
-- Keep required legal notices, tooling directives, and documentation required by the project. Preserve useful existing comments; update them when the change makes them inaccurate.
 
 ## Tests
 
@@ -45,3 +44,7 @@ Optimize for the smallest understandable solution, not the fewest lines.
 ## Commits
 
 If the user says 'cayg' it means commit as you go, and you should use one liner conventional commits for the changes you are implementing.
+
+## Documentation
+
+Do not update READMEs and existing documentation files (usually markdown) unless asked. Feel free to suggest the user any updates you think are worth doing though.
