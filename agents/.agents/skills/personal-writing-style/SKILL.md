@@ -1,6 +1,6 @@
 ---
 name: personal-writing-style
-description: Write PR descriptions, PR messages, Slack messages, update comments, RFCs, design docs, and copy-pasteable summaries in Gui's writing style. Use when the user asks to "write a PR message", "write a PR description", "write a Slack message", "draft this update", "write an RFC", "draft a design doc", or similar, especially for recent changes or local diffs. Also invoke automatically before opening a PR on the user's behalf, to write the PR body. PR descriptions use caveman-full terseness; RFCs and docs use full prose (see the Shape sections).
+description: Write PR descriptions, PR messages, inline PR review comments, Slack messages, update comments, RFCs, design docs, and copy-pasteable summaries in Gui's writing style. Use when the user asks to "write a PR message", "write a PR description", "write a PR review comment", "write a Slack message", "draft this update", "write an RFC", "draft a design doc", or similar, especially for recent changes or local diffs. Also invoke automatically before opening a PR on the user's behalf, to write the PR body. PR descriptions use caveman-full terseness; RFCs and docs use full prose (see the Shape sections).
 ---
 
 # personal-writing-style
@@ -13,6 +13,7 @@ Invoke this skill when the user asks for any of these:
 
 - "write a PR message"
 - "write a PR description"
+- "write a PR review comment"
 - "write a Slack message"
 - "draft an update"
 - "summarise these recent changes"
@@ -103,6 +104,32 @@ If this uncovers root cause we fix it. If not, reaching out to <team>.
 Caveman drops to normal prose only for anything that would be misread as a fragment: irreversible-action warnings, security notes, or a multi-step sequence where dropping words changes the meaning.
 
 Output is the PR body only, no title, unless the user asks for a title.
+
+## Shape for inline PR review comments
+
+Write like a teammate asking about the code beside the comment.
+
+- Default to one short question: “Do we also need to…?”, “Should we…?”, “What happens if…?”
+- Use natural sentences and “we”. Don't apply PR-description caveman style.
+- Let the selected lines provide context. Avoid repeating file names, call chains, or the full review finding.
+- Include a small code snippet when it makes the suggested change clearer.
+- Add a brief consequence or example only when the concern would otherwise be unclear.
+- Don't automatically append test requests, severity labels, confidence scores, or a fix checklist.
+- Questions are a conversational preference, not a requirement to disguise certainty. State serious risks directly when needed.
+
+Preferred shape:
+
+Do we also have to invalidate the cache here?
+
+```ts
+await trpcUtils.analysis.getOppSizingBlocks.invalidate({ analysisId });
+```
+
+When reasoning is needed:
+
+Do we also have to refresh the blocks here? Otherwise the next builder save can write the old percentage back.
+
+These rules take precedence over the general declarative voice guidance for inline review comments. They apply only to comments; longer review reports still require supporting evidence and their established finding format.
 
 ## Shape for docs, RFCs, and long-form
 
