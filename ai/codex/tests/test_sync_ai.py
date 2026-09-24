@@ -38,6 +38,21 @@ class SyncSkillsTest(unittest.TestCase):
         self.sync()
         self.assertEqual(link.lstat().st_mtime_ns, before)
 
+    def test_creates_relative_links_that_stow_can_adopt(self):
+        target = self.skill('commit')
+        self.sync()
+        link = self.installed / 'commit'
+        self.assertFalse(link.readlink().is_absolute())
+        self.assertEqual(link.resolve(), target)
+
+    def test_rewrites_absolute_links_to_current_skills_as_relative(self):
+        target = self.skill('commit')
+        link = self.installed / 'commit'
+        link.symlink_to(target)
+        self.sync()
+        self.assertFalse(link.readlink().is_absolute())
+        self.assertEqual(link.resolve(), target)
+
     def test_migrates_dangling_links_from_both_old_roots(self):
         for name, old_root in [('commit', 'ai/codex/skills'), ('shared', 'ai/skills')]:
             self.skill(name)

@@ -5,7 +5,7 @@
 # Reconciles ~/.agents/skills and ~/.codex/agents/ with the centralized dotfiles sources,
 # and composes ~/.codex/AGENTS.md from ai/AGENTS.md + ai/agents/archmagos.md.
 #
-# Skills linked:
+# Skills linked (relative targets, so `stow agents` can adopt them):
 #   - agents/.agents/skills/*             → ~/.agents/skills/<name>
 #
 # Subagent TOMLs linked:
@@ -63,6 +63,10 @@ MARKER_PERSONA_END="<!-- codex-sync-ai: archmagos-persona end -->"
 
 resolve_path() {
   python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$1"
+}
+
+relative_path() {
+  python3 -c 'import os, sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$1" "$2"
 }
 
 # Returns 0 if the given literal path is rooted in any known source.
@@ -133,6 +137,7 @@ fi
 # ---------- Reconcile skills ----------
 
 mkdir -p "$SKILLS_DEST"
+skills_dest_real="$(resolve_path "$SKILLS_DEST")"
 
 skills_created=()
 skills_updated=()
@@ -144,14 +149,15 @@ skills_unchanged=0
 for (( i = 0; i < ${#desired_keys[@]}; i++ )); do
   name="${desired_keys[$i]}"
   abs_target="${desired_targets[$i]}"
+  rel_target="$(relative_path "$abs_target" "$skills_dest_real")"
   dest="$SKILLS_DEST/$name"
 
   if [[ -L "$dest" ]]; then
     current="$(resolve_path "$dest")"
-    if [[ "$current" == "$abs_target" ]]; then
+    if [[ "$current" == "$abs_target" && "$(readlink "$dest")" != /* ]]; then
       skills_unchanged=$((skills_unchanged + 1))
     elif path_in_known_source "$current"; then
-      ln -snf "$abs_target" "$dest"
+      ln -snf "$rel_target" "$dest"
       skills_updated+=("skills/$name")
     else
       skills_skipped_external+=("skills/$name -> $current")
@@ -159,7 +165,7 @@ for (( i = 0; i < ${#desired_keys[@]}; i++ )); do
   elif [[ -e "$dest" ]]; then
     skills_skipped_user+=("skills/$name")
   else
-    ln -s "$abs_target" "$dest"
+    ln -s "$rel_target" "$dest"
     skills_created+=("skills/$name")
   fi
 done

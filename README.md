@@ -174,7 +174,9 @@ Code merges `.claude/commands/` into the skills system, so a skill at
 `stow claude` links them into `~/.claude/skills/`.
 They stay model-invocable so Claude can reach for them when the conversation
 calls for it. (`plan-list` uses `$ARGUMENTS` for its filter rather than the
-opencode `$1`, since Claude substitutes skill arguments 0-indexed.) `catechism`
+opencode `$1`, since Claude substitutes skill arguments 0-indexed, and
+`execute-plan` dispatches via Claude's `Agent` tool rather than opencode's
+`task`.) `catechism`
 and `to-html` already reach Claude as skills (above); `commit` stays
 opencode/Codex-only for now. When editing one of these entry points in
 `ai/commands/`, mirror the body into `agents/.agents/claude-skills/<name>/SKILL.md`.

@@ -61,7 +61,7 @@ After every tick following an enginseer commit, print a one-line confirmation wi
 
 ## Dispatching enginseer
 
-Dispatch `enginseer` via the `task` tool. The prompt **must** start with the sentinel `[DISPATCH: execute-plan]`. Hoist the step's contract from the plan **verbatim** — invent nothing at dispatch time.
+Dispatch `enginseer` via the `Agent` tool. The prompt **must** start with the sentinel `[DISPATCH: execute-plan]`. Hoist the step's contract from the plan **verbatim** — invent nothing at dispatch time.
 
 ```
 [DISPATCH: execute-plan]
@@ -110,7 +110,7 @@ For each unticked step, top to bottom:
 ### Parallel phase
 
 1. **Re-verify disjointness.** Collect the `Touchpoints:` of every unticked step in the phase. If any two share a file, do **not** parallelize: either run the phase sequentially this time and note it, or pause-and-amend. The plan-level invariant should already guarantee disjointness — this is the executor's safety net.
-2. **Dispatch the whole wave concurrently.** Issue one `enginseer` `task` call per unticked step, all in a **single message**, each with `Commit: no`. With `Commit: no`, enginseer edits + verifies, leaves the worktree dirty, and returns its changed paths plus a suggested commit subject — it does **not** commit.
+2. **Dispatch the whole wave concurrently.** Issue one `enginseer` `Agent` call per unticked step, all in a **single message**, each with `Commit: no`. With `Commit: no`, enginseer edits + verifies, leaves the worktree dirty, and returns its changed paths plus a suggested commit subject — it does **not** commit.
 3. **Collect all results.** Then, **serially** (never concurrently — git's index takes a lock), for each step whose result has no blocker and a non-empty changed-files list:
    - Stage only that step's files by explicit pathspec: `git add -- <path> [<path> ...]`. Never `git add -A`/`.`/`--all`. Disjoint touchpoints make this clean even though other steps' files are also dirty.
    - Match repo style (`git log -n 10 --oneline`) and commit with the enginseer's suggested subject in Conventional Commits format: `git commit -m "<type>(<scope>): <subject>"`. Capture the SHA.
@@ -148,7 +148,7 @@ If the user reports the plan itself is wrong (a step is impossible, a touchpoint
 Triggered by "mark complete" / "this is done", or after autopilot drains the last step and the user confirms.
 
 1. **Coverage check.** If any `## Steps` or `## Acceptance criteria` are still `[ ]`, surface them and ask: tick remaining / waive (via `append-note` with a justification) / abort the Close.
-2. **Diff review.** Dispatch `magos-reductor` to review the working-tree diff against `HEAD` (or since the plan started, if a meaningful base ref is known). Surface its output verbatim.
+2. **Diff review.** Load the `code-review` skill to review the working-tree diff against `HEAD` (or since the plan started, if a meaningful base ref is known). This is a local change review, so the skill will spawn a review subagent. Surface its output verbatim.
 3. **Triage.**
    - Blocking issues → surface; ask whether to (a) leave the plan open for fixing, (b) record as a `> note:` on a step, or (c) waive with the user's acknowledgement.
    - Non-blocking → surface; default is defer unless the user wants to act.
@@ -168,7 +168,7 @@ Triggered by "mark complete" / "this is done", or after autopilot drains the las
 - **Parallelism is within a single phase only.** Never run steps from different phases concurrently. Always re-verify touchpoint disjointness before a parallel wave; fall back to sequential on overlap.
 - **Serialize commits.** In a parallel phase, enginseers run with `Commit: no`; you commit each successful step serially by explicit pathspec. Never `git add -A`/`.`/`--all`.
 - **Never auto-set `status: complete`.** Completion is an explicit `update-status complete` at the end of Close, after coverage + diff review.
-- **Never skip the Close diff review.** `magos-reductor` runs before completing. Surface its output even when clean.
+- **Never skip the Close diff review.** The `code-review` skill runs before completing. Surface its output even when clean.
 - **Never commit on a verification failure.** A blocked step's files stay dirty for inspection.
 - **Never `git push`, `git commit --amend`, `git rebase`, `git reset --hard`, `git stash`, or `git checkout` with paths.**
 - **Match `ai/AGENTS.md`:** direct, concise, outcome-first. Don't restate the request; don't narrate obvious steps.

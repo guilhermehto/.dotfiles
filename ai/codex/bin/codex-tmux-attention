@@ -27,5 +27,10 @@ if [ -n "${TMUX_PANE:-}" ] && command -v tmux >/dev/null 2>&1; then
   fi
 fi
 
+review_handler="$HOME/.config/work/plugins/prs-review.py"
+if { [ -n "${PRQ_REVIEW_DIR:-}" ] || [ -f .prq-review.json ]; } && [ -f "$review_handler" ]; then
+  python3 -B "$review_handler" hook || printf 'Could not update PR review status.\n' >&2
+fi
+
 # Stop hooks require JSON on stdout; an empty object is a successful no-op.
 printf '{}\n'
