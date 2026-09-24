@@ -1,0 +1,278 @@
+#!/usr/bin/env bash
+#
+# system_cleanup
+#
+# Frees disk space by clearing regenerable developer caches and stale git
+# worktrees for repositories under ~/src.
+#
+# Usage: system_cleanup [--dry-run]
+#
+# A worktree is stale when it has no modified or untracked files and its HEAD
+# is already on origin's default branch. Stale worktrees are listed and removed
+# only after confirmation; ignored files inside them (node_modules, .env) go
+# with them. Cogitator workspaces and prq review checkouts are skipped because
+# those tools own their lifecycle.
+#
+# Compatible with bash 3.2 (macOS system bash) and later.
+
+set -euo pipefail
+
+# ---------- Configuration ----------
+
+SRC_DIR="$HOME/src"
+
+TOOL_OWNED_DIRS=(
+  "$SRC_DIR/workspaces"
+  "$HOME/.local/state/prq"
+)
+
+# dotslash extracts read-only artifacts, so plain rm cannot delete them.
+DOTSLASH_CACHE="$HOME/Library/Caches/dotslash"
+
+CACHE_DIRS=(
+  "$HOME/.npm/_npx"
+  "$HOME/.yarn/berry/cache"
+  "$HOME/Library/Caches/pnpm"
+  "$HOME/.cache/nvim/jdtls"
+)
+
+dry_run=0
+failures=0
+stale_worktrees=()
+
+# ---------- Helpers ----------
+
+usage() {
+  printf 'Usage: system_cleanup [--dry-run]\n'
+}
+
+run() {
+  if [ "$dry_run" -eq 1 ]; then
+    printf '  would run: %s\n' "$*"
+    return 0
+  fi
+
+  if ! "$@"; then
+    printf '  failed: %s\n' "$*" >&2
+    failures=$((failures + 1))
+  fi
+}
+
+run_if_installed() {
+  if command -v "$1" >/dev/null 2>&1; then
+    run "$@"
+  fi
+}
+
+available_space() {
+  df -h "$HOME" | awk 'NR == 2 { print $4 }'
+}
+
+# ---------- Caches ----------
+
+clear_caches() {
+  printf '==> Caches\n'
+
+  if [ -e "$DOTSLASH_CACHE" ]; then
+    run sudo rm -rf "$DOTSLASH_CACHE"
+  fi
+
+  local dir
+  for dir in "${CACHE_DIRS[@]}"; do
+    if [ -e "$dir" ]; then
+      run rm -rf "$dir"
+    fi
+  done
+
+  if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+    run docker builder prune --all --force
+    run docker container prune --force
+  fi
+
+  run_if_installed npm cache clean --force
+  run_if_installed pnpm store prune
+  run_if_installed go clean -cache -modcache
+  run_if_installed uv cache prune
+  run_if_installed brew cleanup
+}
+
+# ---------- Git ----------
+
+list_repos() {
+  find "$SRC_DIR" -maxdepth 3 -name node_modules -prune -o -name .git -type d -print -prune |
+    sed 's#/\.git$##' |
+    sort
+}
+
+remove_interrupted_fetch_packs() {
+  local repo="$1" pack
+
+  # A running fetch writes tmp_pack_* too; only day-old ones are abandoned.
+  while IFS= read -r pack; do
+    run rm -f "$pack"
+  done < <(find "$repo/.git/objects/pack" -maxdepth 1 -name 'tmp_pack_*' -mtime +0)
+}
+
+linked_worktrees() {
+  local listing="$1" line path="" skip=0 record=0
+
+  # Porcelain lists the main worktree first and ends each record with a blank line.
+  while IFS= read -r line; do
+    case "$line" in
+      "worktree "*)
+        path="${line#worktree }"
+        skip=0
+        ;;
+      locked*|prunable*)
+        skip=1
+        ;;
+      "")
+        record=$((record + 1))
+        if [ "$record" -gt 1 ] && [ "$skip" -eq 0 ]; then
+          printf '%s\n' "$path"
+        fi
+        ;;
+    esac
+  done < <(printf '%s\n\n' "$listing")
+}
+
+is_tool_owned() {
+  local path="$1" dir
+
+  for dir in "${TOOL_OWNED_DIRS[@]}"; do
+    case "$path/" in
+      "$dir"/*)
+        return 0
+        ;;
+    esac
+  done
+
+  return 1
+}
+
+is_stale_worktree() {
+  local path="$1" default_branch="$2" changes
+
+  if is_tool_owned "$path"; then
+    return 1
+  fi
+
+  if ! changes="$(git -C "$path" status --porcelain --untracked-files=all 2>/dev/null)"; then
+    return 1
+  fi
+  if [ -n "$changes" ]; then
+    return 1
+  fi
+
+  git -C "$path" merge-base --is-ancestor HEAD "$default_branch" 2>/dev/null
+}
+
+collect_stale_worktrees() {
+  local repo="$1" listing default_branch path
+
+  listing="$(git -C "$repo" worktree list --porcelain)" || return 0
+  if grep -q '^prunable' <<<"$listing"; then
+    run git -C "$repo" worktree prune
+  fi
+
+  default_branch="$(git -C "$repo" symbolic-ref --quiet --short refs/remotes/origin/HEAD)" || return 0
+  while IFS= read -r path; do
+    if [ -n "$path" ] && is_stale_worktree "$path" "$default_branch"; then
+      stale_worktrees+=("$path")
+    fi
+  done < <(linked_worktrees "$listing")
+}
+
+confirm() {
+  local answer=""
+
+  printf '%s [y/N] ' "$1"
+  read -r answer || true
+  printf '\n'
+
+  case "$answer" in
+    y|Y|yes)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+remove_stale_worktrees() {
+  local count="${#stale_worktrees[@]}" path branch last_commit
+
+  if [ "$count" -eq 0 ]; then
+    printf '  no stale worktrees\n'
+    return 0
+  fi
+
+  printf '  stale worktrees:\n'
+  for path in "${stale_worktrees[@]}"; do
+    branch="$(git -C "$path" rev-parse --abbrev-ref HEAD)"
+    last_commit="$(git -C "$path" log -1 --format=%cs)"
+    printf '    %s  [%s, last commit %s]\n' "$path" "$branch" "$last_commit"
+  done
+
+  if [ "$dry_run" -eq 1 ]; then
+    return 0
+  fi
+  if ! confirm "  Remove $count worktree(s), including their ignored files?"; then
+    printf '  kept stale worktrees\n'
+    return 0
+  fi
+
+  for path in "${stale_worktrees[@]}"; do
+    run git -C "$path" worktree remove "$path"
+  done
+}
+
+clean_git() {
+  printf '==> Git\n'
+
+  if [ ! -d "$SRC_DIR" ]; then
+    return 0
+  fi
+
+  local repo
+  while IFS= read -r repo; do
+    remove_interrupted_fetch_packs "$repo"
+    collect_stale_worktrees "$repo"
+  done < <(list_repos)
+
+  remove_stale_worktrees
+}
+
+# ---------- Main ----------
+
+main() {
+  case "${1:-}" in
+    "")
+      ;;
+    --dry-run)
+      dry_run=1
+      ;;
+    -h|--help)
+      usage
+      return 0
+      ;;
+    *)
+      usage >&2
+      return 2
+      ;;
+  esac
+
+  local before
+  before="$(available_space)"
+
+  clear_caches
+  clean_git
+
+  printf '==> Available space: %s -> %s\n' "$before" "$(available_space)"
+
+  if [ "$failures" -gt 0 ]; then
+    printf '%d cleanup step(s) failed\n' "$failures" >&2
+    return 1
+  fi
+}
+
+main "$@"
