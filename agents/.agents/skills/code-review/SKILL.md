@@ -116,20 +116,13 @@ Run existing targeted validation only when it is available without installing de
 - Put unresolved assumptions under **Open questions**, not under a lower severity.
 - Omit style preferences and nits unless the user explicitly requests them. If an optional suggestion alleges a concrete risk, classify it as a finding and include confidence.
 
-### Sequence diagrams
-
-Use judgment to include an ASCII sequence diagram when event ordering or interactions are important to understanding a finding or the changed behavior: for example, concurrent requests, retries, asynchronous handoffs, or partial failures across components. Omit it when prose already makes the behavior clear; do not add one just to fill a section.
-
-- Use a fenced `text` block with ASCII participants, lifelines, and arrows. Time flows downward; label relevant calls, responses, and state changes. Do not use Mermaid or Unicode drawing characters.
-- Show only participants and steps needed to explain the behavior. Mark the point where actual behavior diverges from expected behavior, when applicable.
-- Ground the sequence in inspected code or contracts and label any assumptions. A diagram is an explanation, not additional evidence.
-- Place a finding-specific diagram next to its example. If several findings share a sequence, show it once and reference it. An important flow without a finding may appear under `## Notable sequence` before the assessment; explain why it matters without implying a defect.
-
 ### Output format
 
 Unless the user requests a different format, use this structure:
 
 ```markdown
+## Summary
+<A summary of what the PR is doing. Keep this succinct. To the point. Call out high risk/major changes IF necessary. Add an ASCII sequence diagram giving an overview of the changes>
 ## Findings
 
 ### Must fix
