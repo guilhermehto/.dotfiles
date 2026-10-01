@@ -6,21 +6,33 @@
 
 const docEl = document.getElementById('lh-doc');
 const fileEl = document.getElementById('lh-file');
+const dirEl = document.getElementById('lh-dir');
 const connectionEl = document.getElementById('lh-connection');
 const draftsEl = document.getElementById('lh-drafts');
 const draftsEmptyEl = document.getElementById('lh-drafts-empty');
+const draftCountEl = document.getElementById('lh-draft-count');
 const pendingEl = document.getElementById('lh-pending');
 const generalButton = document.getElementById('lh-general');
 const sendButton = document.getElementById('lh-send');
+const sendLabelEl = document.getElementById('lh-send-label');
 const statusEl = document.getElementById('lh-status');
+const activityEl = document.getElementById('lh-activity');
+const appliedEl = document.getElementById('lh-applied');
 const changesEl = document.getElementById('lh-changes');
 const changesTextEl = document.getElementById('lh-changes-text');
 const jumpButton = document.getElementById('lh-jump');
+const dismissButton = document.getElementById('lh-dismiss');
 const addButton = document.getElementById('lh-add');
 
 const MAX_SOURCE_CHARS = 2000;
 const MERMAID_URL = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
 const GENERAL_LABEL = 'General comment — whole document';
+const SEND_KEYS = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘⏎' : 'Ctrl+⏎';
+const CONNECTION = {
+  connecting: { label: 'Connecting…', title: '' },
+  live: { label: 'Live', title: 'The page updates as the file changes' },
+  reconnecting: { label: 'Reconnecting…', title: 'Server unreachable — it may have stopped' },
+};
 
 const state = {
   doc: null,
@@ -31,6 +43,7 @@ const state = {
   jumpIndex: 0,
   pendingBatches: [],
   selection: null,
+  hoveredKey: null,
   sending: false,
 };
 
@@ -40,6 +53,10 @@ let diagramCount = 0;
 // ---- startup and live updates ----
 
 async function start() {
+  for (const kbd of document.querySelectorAll('kbd.lh-mod')) {
+    kbd.textContent = SEND_KEYS;
+  }
+
   setDoc(await fetchJson('/doc'));
   state.drafts = loadDrafts();
   renderDoc();
@@ -60,7 +77,7 @@ function connectEvents() {
   events.addEventListener('doc', () => refreshDoc().catch(reportError));
   events.addEventListener('annotations', () => refreshAnnotations().catch(reportError));
   events.addEventListener('open', () => {
-    connectionEl.hidden = true;
+    setConnection('live');
 
     if (!connected) {
       connected = true;
@@ -70,8 +87,14 @@ function connectEvents() {
   });
   events.addEventListener('error', () => {
     connected = false;
-    connectionEl.hidden = false;
+    setConnection('reconnecting');
   });
+}
+
+function setConnection(name) {
+  connectionEl.dataset.state = name;
+  connectionEl.textContent = CONNECTION[name].label;
+  connectionEl.title = CONNECTION[name].title;
 }
 
 async function refreshDoc() {
@@ -99,7 +122,9 @@ async function refreshAnnotations() {
   renderPending(sent, applying);
 
   if (applied > 0) {
-    setStatus(`✓ Agent applied ${plural(applied, 'comment')}.`, 'ok');
+    appliedEl.textContent = `✓ Agent applied ${plural(applied, 'comment')}`;
+    appliedEl.hidden = false;
+    refreshActivity();
   }
 }
 
@@ -108,6 +133,10 @@ function setDoc(doc) {
   state.lines = doc.markdown.replace(/\r\n?/g, '\n').split('\n');
   fileEl.textContent = doc.name;
   fileEl.title = doc.path;
+  // LRM marks keep the slashes in place inside the right-to-left box that
+  // ellipsizes the start of the path.
+  dirEl.textContent = `\u200E${doc.path.slice(0, -doc.name.length - 1)}\u200E`;
+  dirEl.title = doc.path;
   document.title = `${doc.name} — live-html`;
 }
 
@@ -133,7 +162,7 @@ function renderDoc() {
     highlight(draft);
   }
 
-  renderDiagrams().catch(reportError);
+  renderDiagrams().catch((error) => setStatus(error.message, 'warn'));
   return changed;
 }
 
@@ -178,7 +207,7 @@ function markChangedBlocks() {
   const changed = blocks.filter((_, index) => !previous.has(sources[index]));
 
   for (const block of changed) {
-    block.classList.add('lh-changed');
+    block.classList.add('lh-changed', 'lh-flash');
   }
 
   return changed;
@@ -187,8 +216,17 @@ function markChangedBlocks() {
 function announceChanges(changed) {
   state.changedBlocks = changed;
   state.jumpIndex = 0;
-  changesEl.hidden = changed.length === 0;
-  changesTextEl.textContent = `Doc updated — ${plural(changed.length, 'block')} changed.`;
+  changesTextEl.textContent = changed.length ? `Doc updated · ${plural(changed.length, 'block')} changed` : 'Doc updated';
+  changesEl.hidden = false;
+  refreshJumpButton();
+  refreshActivity();
+}
+
+function refreshJumpButton() {
+  const count = state.changedBlocks.length;
+
+  jumpButton.hidden = count === 0;
+  jumpButton.textContent = count === 1 ? 'Show ↓' : `Next ↓ ${(state.jumpIndex % count) + 1}/${count}`;
 }
 
 function jumpToNextChange() {
@@ -198,8 +236,33 @@ function jumpToNextChange() {
     return;
   }
 
-  blocks[state.jumpIndex % blocks.length].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  const block = blocks[state.jumpIndex % blocks.length];
+  block.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  flash(block);
   state.jumpIndex += 1;
+  refreshJumpButton();
+}
+
+function flash(block) {
+  block.classList.remove('lh-flash');
+  // Forces a style flush so re-adding the class restarts the animation.
+  block.getBoundingClientRect();
+  block.classList.add('lh-flash');
+}
+
+function refreshActivity() {
+  activityEl.hidden = appliedEl.hidden && changesEl.hidden;
+}
+
+function dismissActivity() {
+  for (const block of docEl.querySelectorAll('.lh-changed')) {
+    block.classList.remove('lh-changed', 'lh-flash');
+  }
+
+  state.changedBlocks = [];
+  appliedEl.hidden = true;
+  changesEl.hidden = true;
+  refreshActivity();
 }
 
 function loadMermaid() {
@@ -418,16 +481,35 @@ function captureSelection() {
     return;
   }
 
-  const rect = range.getBoundingClientRect();
   state.selection = anchor;
-  addButton.style.left = `${window.scrollX + rect.left}px`;
-  addButton.style.top = `${window.scrollY + rect.bottom + 6}px`;
+  showAddButton(range);
+}
+
+// Sits under the end of the selection, where the pointer was released.
+function showAddButton(range) {
+  const lineRects = [...range.getClientRects()].filter((rect) => rect.width > 0);
+  const rect = lineRects.length ? lineRects[lineRects.length - 1] : range.getBoundingClientRect();
+
   addButton.hidden = false;
+
+  const width = addButton.offsetWidth;
+  const left = Math.max(8, Math.min(rect.right - width / 2, document.documentElement.clientWidth - width - 8));
+  addButton.style.left = `${window.scrollX + left}px`;
+  addButton.style.top = `${window.scrollY + rect.bottom + 8}px`;
 }
 
 function hideAddButton() {
   addButton.hidden = true;
   state.selection = null;
+}
+
+function commentOnSelection() {
+  if (state.selection) {
+    createDraft(state.selection);
+  }
+
+  window.getSelection().removeAllRanges();
+  hideAddButton();
 }
 
 function createDraft({ quote, offset }) {
@@ -465,27 +547,33 @@ function cardFor(key) {
   return draftsEl.querySelector(`.lh-card[data-key="${CSS.escape(key)}"]`);
 }
 
+function quoteElement(quote) {
+  const element = document.createElement('div');
+
+  element.className = quote ? 'lh-quote' : 'lh-quote general';
+  element.textContent = quote ? quote.replace(/\s+/g, ' ') : GENERAL_LABEL;
+  element.title = quote;
+  return element;
+}
+
 function addDraftCard(draft) {
   const card = document.createElement('div');
   card.className = 'lh-card';
   card.dataset.key = draft.key;
   card.innerHTML = `
-    <div class="lh-quote"></div>
-    <textarea rows="2" placeholder="What should change? ⏎ approve · ⇧⏎ newline · ⌘⏎ send"></textarea>
+    <div class="lh-lost" hidden>Quoted text is no longer in the doc. It will be sent without a location.</div>
+    <textarea rows="1" placeholder="What should change?" aria-label="Comment"></textarea>
     <div class="lh-row">
-      <label><input type="checkbox"> Approve</label>
+      <label class="lh-approve"><input type="checkbox"><span>Approve</span></label>
       <span class="lh-hint"></span>
-      <button class="lh-delete" type="button" title="Delete draft">×</button>
+      <button class="lh-icon lh-delete" type="button" title="Delete draft" aria-label="Delete draft">×</button>
     </div>`;
+  card.prepend(quoteElement(draft.quote));
 
-  const quoteEl = card.querySelector('.lh-quote');
   const textarea = card.querySelector('textarea');
   const checkbox = card.querySelector('input[type="checkbox"]');
 
-  quoteEl.textContent = draft.quote || GENERAL_LABEL;
-  quoteEl.classList.toggle('general', !draft.quote);
   textarea.value = draft.comment;
-
   textarea.addEventListener('input', () => {
     draft.comment = textarea.value;
 
@@ -493,29 +581,12 @@ function addDraftCard(draft) {
       draft.approved = false;
     }
 
+    fitTextarea(textarea);
     paintCard(card, draft);
     saveDrafts();
   });
-  textarea.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter' || event.shiftKey || event.isComposing) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (draft.comment.trim()) {
-      draft.approved = true;
-      paintCard(card, draft);
-      saveDrafts();
-    }
-
-    if (event.metaKey || event.ctrlKey) {
-      sendApproved();
-    } else {
-      textarea.blur();
-    }
-  });
+  textarea.addEventListener('keydown', (event) => handleDraftKey(event, card, draft));
+  textarea.addEventListener('focus', () => activateDraft(draft.key));
   checkbox.addEventListener('change', () => {
     draft.approved = checkbox.checked && Boolean(draft.comment.trim());
     paintCard(card, draft);
@@ -527,9 +598,51 @@ function addDraftCard(draft) {
       focusDraft(draft.key);
     }
   });
+  card.addEventListener('mouseenter', () => hoverDraft(draft.key));
+  card.addEventListener('mouseleave', () => hoverDraft(null));
 
   draftsEl.append(card);
+  fitTextarea(textarea);
   paintCard(card, draft);
+}
+
+function handleDraftKey(event, card, draft) {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    event.target.blur();
+
+    if (!draft.comment.trim()) {
+      deleteDraft(draft.key);
+    }
+
+    return;
+  }
+
+  if (event.key !== 'Enter' || event.shiftKey || event.isComposing) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (draft.comment.trim()) {
+    draft.approved = true;
+    paintCard(card, draft);
+    saveDrafts();
+  }
+
+  if (event.metaKey || event.ctrlKey) {
+    sendApproved();
+  } else {
+    event.target.blur();
+  }
+}
+
+function fitTextarea(textarea) {
+  const borders = textarea.offsetHeight - textarea.clientHeight;
+
+  textarea.style.height = 'auto';
+  textarea.style.height = `${textarea.scrollHeight + borders}px`;
 }
 
 function paintCard(card, draft) {
@@ -538,22 +651,26 @@ function paintCard(card, draft) {
 
   checkbox.checked = draft.approved;
   checkbox.disabled = !hasText;
+  card.querySelector('.lh-approve').title = hasText ? '' : 'Write a comment first';
+  card.querySelector('.lh-approve span').textContent = draft.approved ? 'Approved' : 'Approve';
+  card.querySelector('.lh-lost').hidden = !draft.lost;
+  card.querySelector('.lh-hint').textContent = hintFor(draft, hasText);
   card.classList.toggle('approved', draft.approved);
   card.classList.toggle('lost', draft.lost);
-  card.querySelector('.lh-hint').textContent = hintFor(draft, hasText);
+
+  for (const mark of marksFor(draft.key)) {
+    mark.classList.toggle('approved', draft.approved);
+  }
+
   refreshSendButton();
 }
 
 function hintFor(draft, hasText) {
-  if (draft.lost) {
-    return 'quoted text changed — highlight lost';
-  }
-
   if (draft.approved) {
-    return '✓ approved';
+    return `${SEND_KEYS} to send`;
   }
 
-  return hasText ? '⏎ to approve' : '';
+  return hasText ? '⏎ approve · ⇧⏎ new line' : 'Esc to discard';
 }
 
 function refreshDrafts() {
@@ -566,23 +683,34 @@ function refreshDrafts() {
   }
 
   draftsEmptyEl.hidden = state.drafts.length > 0;
+  draftCountEl.hidden = state.drafts.length === 0;
+  draftCountEl.textContent = String(state.drafts.length);
   refreshSendButton();
 }
 
-function focusDraft(key, { edit = false } = {}) {
+function activateDraft(key) {
   for (const element of document.querySelectorAll('.lh-card.active, mark.lh-mark.active')) {
     element.classList.remove('active');
   }
 
-  const marks = marksFor(key);
-  const card = cardFor(key);
-
-  for (const mark of marks) {
+  for (const mark of marksFor(key)) {
     mark.classList.add('active');
   }
 
+  const card = cardFor(key);
+
   if (card) {
     card.classList.add('active');
+  }
+}
+
+function focusDraft(key, { edit = false } = {}) {
+  activateDraft(key);
+
+  const marks = marksFor(key);
+  const card = cardFor(key);
+
+  if (card) {
     card.scrollIntoView({ block: 'nearest' });
   }
 
@@ -590,6 +718,33 @@ function focusDraft(key, { edit = false } = {}) {
     card.querySelector('textarea').focus();
   } else if (marks.length) {
     marks[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
+
+// Links a draft's highlight and its card while either is under the pointer.
+function hoverDraft(key) {
+  if (key === state.hoveredKey) {
+    return;
+  }
+
+  setHover(state.hoveredKey, false);
+  setHover(key, true);
+  state.hoveredKey = key;
+}
+
+function setHover(key, hovered) {
+  if (!key) {
+    return;
+  }
+
+  for (const mark of marksFor(key)) {
+    mark.classList.toggle('hover', hovered);
+  }
+
+  const card = cardFor(key);
+
+  if (card) {
+    card.classList.toggle('hover', hovered);
   }
 }
 
@@ -601,8 +756,18 @@ function approvedDrafts() {
 
 function refreshSendButton() {
   const count = approvedDrafts().length;
+
   sendButton.disabled = count === 0 || state.sending;
-  sendButton.textContent = count ? `Send ${count} approved ►` : 'Send ►';
+  sendButton.title = count ? '' : 'Approve a draft to send it';
+  sendLabelEl.textContent = sendLabel(count);
+}
+
+function sendLabel(count) {
+  if (state.sending) {
+    return 'Sending…';
+  }
+
+  return count ? `Send ${plural(count, 'comment')}` : 'Send';
 }
 
 async function sendApproved() {
@@ -627,7 +792,9 @@ async function sendApproved() {
       deleteDraft(draft.key);
     }
 
-    setStatus(`Sent ${plural(comments.length, 'comment')} — waiting for the agent.`, 'ok');
+    setStatus('');
+    appliedEl.hidden = true;
+    refreshActivity();
   } catch (error) {
     setStatus(`Send failed: ${error.message}`, 'error');
   } finally {
@@ -640,12 +807,12 @@ async function sendApproved() {
 
 function renderPending(sent, applying) {
   pendingEl.replaceChildren(
-    ...pendingGroup('Sent — waiting for the agent', sent),
-    ...pendingGroup('Agent is applying…', applying),
+    ...pendingGroup('Waiting for the agent', sent, ''),
+    ...pendingGroup('Agent is applying', applying, 'lh-busy'),
   );
 }
 
-function pendingGroup(title, batches) {
+function pendingGroup(title, batches, headingClass) {
   const comments = batches.flatMap((batch) => batch.comments);
 
   if (!comments.length) {
@@ -653,19 +820,21 @@ function pendingGroup(title, batches) {
   }
 
   const heading = document.createElement('h2');
-  heading.textContent = `${title} (${comments.length})`;
+  const count = document.createElement('span');
+
+  heading.className = headingClass;
+  count.className = 'lh-count';
+  count.textContent = String(comments.length);
+  heading.append(title, count);
 
   const cards = comments.map((comment) => {
     const card = document.createElement('div');
-    const quote = document.createElement('div');
     const body = document.createElement('div');
 
-    card.className = 'lh-card lh-pending';
-    quote.className = comment.quote ? 'lh-quote' : 'lh-quote general';
-    quote.textContent = comment.quote || GENERAL_LABEL;
+    card.className = 'lh-card';
     body.className = 'lh-comment';
     body.textContent = comment.comment;
-    card.append(quote, body);
+    card.append(quoteElement(comment.quote), body);
     return card;
   });
 
@@ -708,6 +877,10 @@ function plural(count, noun) {
 
 // ---- wiring ----
 
+function isTyping(target) {
+  return Boolean(target.closest && target.closest('textarea, input, select, [contenteditable]'));
+}
+
 docEl.addEventListener('mouseup', () => setTimeout(captureSelection));
 docEl.addEventListener('click', (event) => {
   const mark = event.target.closest('mark.lh-mark');
@@ -716,6 +889,11 @@ docEl.addEventListener('click', (event) => {
     focusDraft(mark.dataset.key);
   }
 });
+docEl.addEventListener('mouseover', (event) => {
+  const mark = event.target.closest('mark.lh-mark');
+  hoverDraft(mark ? mark.dataset.key : null);
+});
+docEl.addEventListener('mouseleave', () => hoverDraft(null));
 document.addEventListener('selectionchange', () => {
   if (window.getSelection().isCollapsed) {
     hideAddButton();
@@ -725,19 +903,26 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
     event.preventDefault();
     sendApproved();
+    return;
+  }
+
+  if (addButton.hidden || isTyping(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'c') {
+    event.preventDefault();
+    commentOnSelection();
+  } else if (event.key === 'Escape') {
+    window.getSelection().removeAllRanges();
+    hideAddButton();
   }
 });
 addButton.addEventListener('mousedown', (event) => event.preventDefault());
-addButton.addEventListener('click', () => {
-  if (state.selection) {
-    createDraft(state.selection);
-  }
-
-  window.getSelection().removeAllRanges();
-  hideAddButton();
-});
+addButton.addEventListener('click', commentOnSelection);
 generalButton.addEventListener('click', () => createDraft({ quote: '', offset: null }));
 sendButton.addEventListener('click', sendApproved);
 jumpButton.addEventListener('click', jumpToNextChange);
+dismissButton.addEventListener('click', dismissActivity);
 
 start().catch((error) => setStatus(`Failed to load: ${error.message}`, 'error'));

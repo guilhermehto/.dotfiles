@@ -20,10 +20,10 @@ Turn a markdown file into a browser page the user can highlight and comment on, 
 ## The loop
 
 1. **Serve** — start `server.js` and `watch.js` in the background; a tab opens.
-2. **Annotate** — the user selects text → **＋ Comment** (or **＋ General comment**), types the instruction, approves it (⏎ or the checkbox), then **Send** (⌘⏎). Unapproved drafts stay on the page and survive reloads and doc edits.
-3. **Wake** — `watch.js` claims the batch, prints it as JSON, and exits; the exit wakes you. The page shows "Agent is applying…".
+2. **Annotate** — the user selects text → **Comment** (or presses `C`; **＋ General comment** covers the whole doc), types the instruction, approves it (⏎ or **Approve**), then **Send** (⌘⏎). Unapproved drafts stay on the page and survive reloads and doc edits; Esc discards an empty one.
+3. **Wake** — `watch.js` claims the batch, prints it as JSON, and exits; the exit wakes you. The page shows "Agent is applying".
 4. **Act** — edit the markdown per comment.
-5. **Reflect** — re-arm `watch.js`. Starting it marks the batch applied ("✓ Agent applied N comments"). The page has already re-rendered in place, with changed blocks highlighted and a **Jump** link.
+5. **Reflect** — re-arm `watch.js`. Starting it marks the batch applied ("✓ Agent applied N comments"). The page has already re-rendered in place, with changed blocks marked in the gutter and a **Next ↓** link.
 
 ## Starting
 
