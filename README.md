@@ -114,7 +114,6 @@ into each tool from one place.
 ```
 ai/
 ├── AGENTS.md                  # engineering-standards prose — single source, cross-tool
-├── shared/bash-denylist.md    # canonical bash-denylist reference artifact
 ├── agents/                    # archmagos + 2 subagent definitions
 ├── commands/                  # 3 opencode slash-commands (catechism, commit, to-html)
 └── codex/
@@ -125,9 +124,8 @@ ai/
 ```
 
 `ai/AGENTS.md` is the single source for engineering-standards prose (code
-quality, tests, working style). `ai/shared/bash-denylist.md` is the canonical
-reference for the bash command denylist; opencode's per-agent frontmatter
-carries intentional enforcement copies kept in parity with it.
+quality, tests, working style). Each agent's bash denylist lives in its own
+opencode frontmatter (`permission.bash`).
 
 ### Shared skills (`agents/` package)
 
@@ -228,8 +226,7 @@ old planner-only invariant and its writer subagent are gone.
 opencode enforces the bash denylist via per-agent `permission.bash`
 frontmatter (hard deny). Codex has no equivalent per-agent permission
 frontmatter, so the git-write prohibitions are carried as instructional guards
-in each subagent TOML's `developer_instructions`. The canonical reference
-remains `ai/shared/bash-denylist.md`.
+in each subagent TOML's `developer_instructions`.
 
 **Codex `commit` skill**
 The main agent stages and commits the requested scope directly, reusing
