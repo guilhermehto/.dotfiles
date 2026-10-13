@@ -29,6 +29,7 @@ So `stow nvim` from inside this repo creates `~/.config/nvim` as a symlink.
 | ---------- | -------------------------- | ---------------------------------------- |
 | Neovim     | `nvim/`                    | Hand-rolled config                       |
 | tmux       | `tmux/`                    | `C-a` prefix, vim-aware pane nav, `sesh` popup |
+| zellij     | `zellij/`                  | Tokyo Night Storm, tmux-style `C-a` prefix, vim-aware pane nav, `C-a r` → `cogitator` session |
 | zsh        | `zsh/`                     | oh-my-zsh + agnoster + zoxide + fnm      |
 | Alacritty  | `alacritty/`               |                                          |
 | Kitty      | `kitty/`                   |                                          |
@@ -66,7 +67,7 @@ git clone git@github.com:<you>/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Pick the packages you want for the current machine, e.g. on macOS:
-stow nvim tmux tmuxinator zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders lazygit bat agents claude
+stow nvim tmux tmuxinator zellij zsh ghostty wezterm yabai skhd sketchybar aerospace janky-borders lazygit bat agents claude
 
 # On Linux:
 stow nvim tmux zsh alacritty hypr waybar rofi bat
@@ -83,6 +84,7 @@ Most of these are optional, but the configs assume they exist:
 - **tmux:** [sesh](https://github.com/joshmedeski/sesh),
   [gum](https://github.com/charmbracelet/gum),
   [tmuxinator](https://github.com/tmuxinator/tmuxinator) (required for `prefix+O` IDE popup)
+- **zellij:** [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator) (fetched by zellij on first `C-h/j/k/l`; grant its permission prompt once)
 - **Fonts:** [0xProto Nerd Font](https://www.nerdfonts.com/), AzeretMono Nerd Font
 - **macOS:** yabai, skhd, sketchybar, janky-borders, aerospace (all via Homebrew)
 - **Linux:** depends on distro / WM choice
@@ -91,7 +93,7 @@ Most of these are optional, but the configs assume they exist:
 
 - Themes lean on **Ayu** (terminals, sketchybar) and **Catppuccin** (ghostty, yabai borders).
 - Window gaps standardized at **12px** across yabai / aerospace.
-- Leader/prefix is **`C-a`** in tmux and **`alt`** for window management.
+- Leader/prefix is **`C-a`** in tmux and zellij, and **`alt`** for window management.
 
 ## AI assistant
 
