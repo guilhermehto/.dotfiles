@@ -30,9 +30,17 @@ shopt -s nullglob
 
 # ---------- Configuration ----------
 
-# Resolve the dotfiles root relative to this script's location.
+# Resolve the dotfiles root relative to this script's real location.
 # Script lives at ai/codex/bin/codex-sync-ai, so dotfiles root is three levels up.
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# install.sh links it from ~/.codex/bin, so follow symlinks first (no readlink -f
+# on bash 3.2-era macOS).
+SCRIPT_PATH="$0"
+while [[ -L "$SCRIPT_PATH" ]]; do
+  link_dir="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
+  SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+  [[ "$SCRIPT_PATH" == /* ]] || SCRIPT_PATH="$link_dir/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
 DOTFILES_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 AI_ROOT="$DOTFILES_ROOT/ai"
@@ -295,9 +303,8 @@ $MARKER_PERSONA_END
     else
       # It's a real file. Check if it's already our generated output.
       if grep -qF "$MARKER_STANDARDS_BEGIN" "$CODEX_AGENTS_MD" 2>/dev/null; then
-        # Already generated — check if content differs.
-        existing="$(cat "$CODEX_AGENTS_MD")"
-        if [[ "$existing" == "$composed" ]]; then
+        # Already generated — compare bytes ($(cat) would strip the trailing newline).
+        if printf '%s' "$composed" | cmp -s - "$CODEX_AGENTS_MD"; then
           agents_md_action="unchanged"
         else
           printf '%s' "$composed" > "$CODEX_AGENTS_MD"
