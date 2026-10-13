@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review code changes for concrete defects, regressions, security and data risks, contract or rollout failures, and behavior coverage. Use for local git diffs, staged or unstaged changes, commits, branch ranges, current-branch reviews, and PR links or PR numbers. Local change reviews must be delegated to a spawned subagent; PR link reviews run inline in the same thread using provider tooling.
+description: Review code changes for concrete defects, regressions, security and data risks, contract or rollout failures, behavior coverage, and change-owned code quality. Use for local git diffs, staged or unstaged changes, commits, branch ranges, current-branch reviews, and PR links or PR numbers. Local change reviews must be delegated to a spawned subagent; PR link reviews run inline in the same thread using provider tooling.
 ---
 
 # code-review
@@ -20,7 +20,7 @@ Classify the target before reviewing:
 | PR number (`123`, `PR #123`) | Review inline if provider/repo context is known; otherwise ask for the full PR URL. |
 | Staged, unstaged, all working-tree changes, current branch, local commits, branch ranges, local refs, or a specific commit | Spawn a subagent and ask it to run the review. |
 
-For local targets, the main agent identifies the target, spawns the subagent, waits for its review, and performs a lightweight quality gate before relaying it. Confirm that the response reviewed the intended target, covered the changed files, used valid line citations, and supported each finding with a concrete worked example, impact, and confidence. Ask the same subagent to correct material gaps; do not duplicate the full review in the main thread.
+For local targets, the main agent identifies the target, spawns the subagent, waits for its review, and performs a lightweight quality gate before relaying it. Confirm that the response reviewed the intended target, covered the changed files, used valid line citations, supported each Must fix and Should fix finding with a concrete worked example, impact, and confidence, and supported each Quality item with cost, simpler shape, and confidence. Ask the same subagent to correct material gaps; do not duplicate the full review in the main thread.
 
 For PR URLs, fetch PR metadata, description, base/head revisions, and diff directly with available provider tools. Do not resolve local PR refs, fetch branches, or compare against the local worktree. For Bitbucket/Atlassian PRs, prefer `twg bitbucket pull-requests get` and `twg bitbucket pull-requests diff`; check live `twg help` only when syntax or output is uncertain. For GitHub PRs, use `gh pr view` and `gh pr diff`, plus read-only provider content/search operations when surrounding code is needed. If provider tooling is unavailable, unauthenticated, or cannot provide enough context, state the limitation and ask for a PR diff/patch, an explicit git range, or a local ref.
 
@@ -70,11 +70,11 @@ If the request is ambiguous, state the interpretation in one sentence and procee
 3. For large diffs, inspect file-by-file so output truncation cannot silently omit files. State which generated, binary, vendored, lock, or otherwise unreadable files were not fully inspected.
 4. For local targets, use `git status` and `git log -n 10 --oneline` for context. For remote PRs, use PR metadata and exact base/head revisions; do not use unrelated local repository state.
 5. Read surrounding code for every non-trivial hunk. For removed code, inspect the base version. When remote tooling cannot provide enough surrounding context, lower confidence or ask for the missing material.
-6. Trace affected callers, consumers, schemas, persisted data, and tests. When the change introduces an abstraction, search for an existing equivalent only if duplication could create concrete divergence or ownership risk.
+6. Trace affected callers, consumers, schemas, persisted data, and tests. When the change introduces a helper or abstraction, search for an existing equivalent in the repository, standard library, or platform.
 
 ### Finding quality
 
-Report only risks introduced or materially worsened by the target change. Before presenting a concern as a finding, establish all four:
+Report only risks introduced or materially worsened by the target change. Before presenting a concern as a Must fix or Should fix finding, establish all four:
 
 - **Trigger:** a realistic input, state, timing, deployment, or failure condition.
 - **Impact:** observable incorrect behavior, security/privacy exposure, data loss or corruption, availability degradation, contract breakage, or concrete maintenance risk.
@@ -83,7 +83,7 @@ Report only risks introduced or materially worsened by the target change. Before
 
 If material evidence is missing, place the concern under `Open questions` or omit it. Do not turn a possibility into a defect merely because it matches a checklist item.
 
-Every finding must include a concrete worked example showing how the problem manifests in realistic use: starting state or sample input, action or event sequence, actual result, and expected result. Use specific illustrative values where helpful; do not merely restate the trigger or impact. Ground the path and results in inspected code or contracts, label assumptions, and distinguish an illustrative scenario from a reproduction actually run. An example does not replace evidence or justify inventing behavior. Keep simple examples to one or two sentences.
+Every Must fix and Should fix finding must include a concrete worked example showing how the problem manifests in realistic use: starting state or sample input, action or event sequence, actual result, and expected result. Use specific illustrative values where helpful; do not merely restate the trigger or impact. Ground the path and results in inspected code or contracts, label assumptions, and distinguish an illustrative scenario from a reproduction actually run. An example does not replace evidence or justify inventing behavior. Keep simple examples to one or two sentences.
 
 Every finding headline must end with a confidence temperature such as `(0.8 confidence)`. This measures confidence that the finding is valid and attributable to the change; it is not severity or the probability that the failure will occur. Use one decimal place:
 
@@ -93,6 +93,13 @@ Every finding headline must end with a confidence temperature such as `(0.8 conf
 - Below `0.7`: do not report as a finding; ask a question or omit it.
 
 Do not use a low confidence score to soften an unsupported claim. Severity and confidence are independent.
+
+Quality items concern readability and maintainability rather than failures, so they use a lighter bar. Each must be introduced by the change, cite a changed line, carry a confidence temperature that the alternative is simpler and preserves behavior, and state:
+
+- **Cost:** what the next reader or maintainer pays, such as decoding dense logic, tracking hidden state, or keeping duplicated logic in sync.
+- **Simpler shape:** the concrete alternative, such as the existing helper to reuse, a flatter control flow, or an intent-revealing name.
+
+Report at most five Quality items, choosing those with the highest cost. Skip anything the project's linter or formatter enforces and anything that is only personal preference. Never suggest a simplification that drops required validation, error handling, security, accessibility, or requested behavior.
 
 ### Review lenses
 
@@ -104,8 +111,15 @@ Start with changed behavior and invariants, then apply only the lenses relevant 
 - **Trust and data handling:** authentication and authorization, validation, injection, unsafe parsing or deserialization, path handling, secrets, privacy, and sensitive logging.
 - **Operations and performance:** timeouts, failure isolation, observability, pagination, N+1 work, unbounded growth, leaked resources, and hot-path complexity.
 - **Surface-specific behavior:** accessibility, localization, loading/error/empty states for UI; dependency, lockfile, build, and supply-chain effects when those surfaces change.
-- **Maintainability:** report duplication, placement, naming, comments, or complexity only when it violates an established boundary or creates a concrete correctness, divergence, or ownership risk. Describe the observable mismatch rather than labeling code an “anti-pattern.”
-- **Tests as evidence:** assess whether tests protect the changed behavior, boundaries, and failure modes. Mocking or snapshots are findings only when they prevent detection of a specific regression. Missing coverage is a finding only when consequential new behavior is left unprotected.
+- **Code quality:** check changed code for:
+  - Reimplementing an existing repository helper, standard-library function, or platform feature; speculative abstraction, configuration, or scaffolding without a current need.
+  - Control flow that is hard to follow: deep nesting, dense or nested expressions, functions doing several jobs, or cyclomatic complexity well above 10.
+  - State or mutation that is hidden, non-local, or implicitly ordered between steps.
+  - Helpers that only rename an expression; complex regex without a descriptive name.
+  - Names that describe mechanics rather than intent; comments that restate what code does instead of explaining a non-obvious why.
+
+  Report these as Quality items. Escalate to Should fix only when the issue violates an established boundary or creates a concrete correctness, divergence, or ownership risk. Describe the observable mismatch rather than labeling code an “anti-pattern.”
+- **Tests as evidence:** assess whether tests protect the changed behavior, boundaries, and failure modes through the public interface. Missing coverage is a Should fix finding when consequential new behavior is left unprotected or a bug fix lacks a regression test that would fail without the fix. Mocking or snapshots are a Should fix finding when they prevent detection of a specific regression. Report as Quality items tests that assert private state, helper calls, or call order outside the contract, mock the behavior under test, or are named after mechanics rather than behavior.
 
 Run existing targeted validation only when it is available without installing dependencies and can be run without modifying repository contents. Otherwise state what was not run.
 
@@ -113,8 +127,9 @@ Run existing targeted validation only when it is available without installing de
 
 - **Must fix:** concrete correctness, security/privacy, data integrity, availability, compatibility, migration, deployment, or rollback risk that should block the change.
 - **Should fix:** meaningful reliability, performance, maintainability, or test risk that is change-owned but does not clearly block release.
+- **Quality:** non-blocking, change-owned readability or maintainability cost that meets the Quality bar.
 - Put unresolved assumptions under **Open questions**, not under a lower severity.
-- Omit style preferences and nits unless the user explicitly requests them. If an optional suggestion alleges a concrete risk, classify it as a finding and include confidence.
+- Omit formatting, layout, style preferences, and nits unless the user explicitly requests them. If an optional suggestion alleges a concrete risk, classify it as a Must fix or Should fix finding and include confidence.
 
 ### Output format
 
@@ -138,6 +153,11 @@ Unless the user requests a different format, use this structure:
   - Impact: <observable consequence>
   - Example: <concrete setup and action -> actual result; expected result>
   - Fix direction: <required outcome without over-prescribing implementation>
+
+### Quality
+- `file:line` — <concise issue> (0.8 confidence)
+  - Cost: <what a reader or maintainer pays>
+  - Simpler shape: <concrete alternative>
 
 ## Open questions
 - <question whose answer could materially change the review>
