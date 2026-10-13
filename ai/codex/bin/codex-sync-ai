@@ -18,7 +18,7 @@
 #     ~/.codex/AGENTS.md.bak ONCE (does not clobber an existing .bak) and warns.
 #
 # Prune policy: only symlinks whose target resolves into a known dotfiles source path
-# are eligible for removal. Foreign entries (e.g. firecrawl skills) are never
+# are eligible for removal. Foreign entries (e.g. agent-browser) are never
 # touched. Real files are never touched.
 #
 # Re-running is a no-op when nothing has changed.

@@ -4,9 +4,9 @@
 # Do not paste the [agents] header if one already exists — merge the keys instead.
 #
 # max_depth >= 2 is required for the archmagos → subagent → sub-subagent spawn chain.
-# The default is 1 (allows one level of child agents). Setting 2 allows the
-# /execute-plan flow to dispatch enginseer from within a spawned subagent
-# context without hitting the depth limit.
+# The default is 1 (allows one level of child agents). Setting 2 leaves room for
+# a dispatched subagent (e.g. an execute-tasks worker) to spawn its own helper
+# without hitting the depth limit.
 #
 # max_threads caps concurrently open agent threads. 6 is the Codex default;
 # raise it if you run broad parallel sweeps (e.g. explore × N).
@@ -20,8 +20,12 @@ max_threads = 6
 # default sandbox is workspace-write. Without writable_roots, every re-sync
 # stalls on an escalation prompt rather than hard-failing — this entry removes
 # that friction so the skill runs unattended.
+# ~/.local/share/beads is the machine-wide beads store ($BEADS_DIR) and
+# ~/.beads holds bd's machine-level state; `bd` writes to both from any repo.
 [sandbox_workspace_write]
 writable_roots = [
   "~/.agents",
   "~/.codex",
+  "~/.local/share/beads",
+  "~/.beads",
 ]

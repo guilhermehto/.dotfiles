@@ -15,6 +15,7 @@ relative to `$HOME`:
 ├── nvim/.config/nvim/          → ~/.config/nvim/        (git submodule)
 ├── tmux/.tmux.conf             → ~/.tmux.conf
 ├── zsh/.zshrc                  → ~/.zshrc
+├── zsh/.zshenv                 → ~/.zshenv   (BEADS_DIR for every shell)
 ├── ghostty/.config/ghostty/    → ~/.config/ghostty/
 ├── ...
 ```
@@ -104,9 +105,9 @@ into each tool from one place.
 | Layer | Contents |
 |---|---|
 | Main agent | `archmagos` — handles read, explore, and in-chat build directly; delegates only for value |
-| Plan workflow | `/plan` (ground + align + write a phased plan) and `/execute-plan` (run it phase-by-phase, parallel phases concurrently) — opencode commands / Claude skills over the `plan-workflow` skill |
-| Workflow skills | `catechism`, `plan-workflow`, `to-html`, `personal-writing-style`, `code-review` — stowed to `~/.agents/skills` via the `agents/` package |
-| Subagents | `explore`, `enginseer`, `logis`, `servitor` |
+| Projects & tasks | One machine-wide [beads](https://github.com/gastownhall/beads) store (`$BEADS_DIR=~/.local/share/beads/.beads`, exported from `zsh/.zshenv`). Skills: `beads` (upstream), `project-tasks` (projects = epics with a PRD, tasks, claims, handoff comments), `execute-tasks` ("execute with subagents") |
+| Workflow skills | `catechism`, `to-html`, `personal-writing-style`, `code-review`, `commit`, `beads`, `project-tasks`, `execute-tasks` — stowed to `~/.agents/skills` via the `agents/` package |
+| Subagents | `explore`, `servitor` |
 
 ### `ai/` layout
 
@@ -114,10 +115,10 @@ into each tool from one place.
 ai/
 ├── AGENTS.md                  # engineering-standards prose — single source, cross-tool
 ├── shared/bash-denylist.md    # canonical bash-denylist reference artifact
-├── agents/                    # archmagos + 4 subagent definitions
-├── commands/                  # 6 opencode slash-commands (catechism, plan, execute-plan, plan-list, commit, to-html)
+├── agents/                    # archmagos + 2 subagent definitions
+├── commands/                  # 3 opencode slash-commands (catechism, commit, to-html)
 └── codex/
-    ├── agents/                # 4 subagent TOMLs for Codex
+    ├── agents/                # 2 subagent TOMLs for Codex
     ├── bin/codex-sync-ai      # idempotent reconciler
     ├── install.sh             # one-time bootstrap
     └── config.snippet.toml   # [agents] depth/threads + writable_roots
@@ -131,19 +132,21 @@ carries intentional enforcement copies kept in parity with it.
 ### Shared skills (`agents/` package)
 
 All dotfiles-managed skill sources live in the `agents/` stow package.
-Shared skills and Codex entry points use `.agents/skills/`; Claude-specific
-variants use `.agents/claude-skills/` to preserve their separate behavior:
+Shared skills and Codex entry points use `.agents/skills/`:
 
 ```
 agents/.agents/skills/<name>/SKILL.md   →   ~/.agents/skills/<name>/SKILL.md
-agents/.agents/claude-skills/<name>/SKILL.md   # Claude-specific variants
 ```
+
+`agents/.agents/skills/beads/SKILL.md` is a verbatim copy of beads'
+`internal/templates/skills/beads/SKILL.md` (v1.3.1); it defers details to
+`bd prime` and `bd <cmd> --help`, so it rarely needs refreshing.
 
 `stow agents` links them into `~/.agents/skills`, which both opencode (≥1.16,
 "global agent-compatible" discovery) and Codex (USER-scope skills) read
 natively — no sync script required. The package tree-folds into the existing
 real `~/.agents/skills` dir, so it coexists with hand-placed skills (e.g.
-firecrawl). `codex-sync-ai` reconciles the same centralized sources and
+agent-browser). `codex-sync-ai` reconciles the same centralized sources and
 preserves equivalent Stow links.
 
 Claude Code doesn't read `~/.agents` (and org managed settings block the
@@ -158,28 +161,16 @@ global Claude Code memory file.
 
 Subagents can't be symlinked from `ai/agents/` — those use opencode's
 frontmatter (`mode`, `temperature`, `permission` maps), which Claude Code
-doesn't understand. `claude/.claude/agents/` holds converted copies of the 4
-subagents (`explore`, `enginseer`, `logis`, `servitor`) with translated frontmatter (`name`,
+doesn't understand. `claude/.claude/agents/` holds converted copies of the 2
+subagents (`explore`, `servitor`) with translated frontmatter (`name`,
 `description`, `tools` allowlist, `model` alias); bodies are copied verbatim.
 `archmagos` is `mode: primary` and has no Claude Code equivalent (that role
 is the main thread + CLAUDE.md). When editing an agent in `ai/agents/`,
 mirror the body change in `claude/.claude/agents/`.
 
-The plan-workflow entry points reach Claude as skills, not commands: Claude
-Code merges `.claude/commands/` into the skills system, so a skill at
-`.claude/skills/<name>/SKILL.md` is invocable as `/<name>`.
-`claude/.claude/skills/{plan,execute-plan,plan-list}` symlink to
-`agents/.agents/claude-skills/<name>`. These Claude-specific variants mirror
-`ai/commands/<name>.md` (frontmatter gains `name`/`argument-hint`), and
-`stow claude` links them into `~/.claude/skills/`.
-They stay model-invocable so Claude can reach for them when the conversation
-calls for it. (`plan-list` uses `$ARGUMENTS` for its filter rather than the
-opencode `$1`, since Claude substitutes skill arguments 0-indexed, and
-`execute-plan` dispatches via Claude's `Agent` tool rather than opencode's
-`task`.) `catechism`
-and `to-html` already reach Claude as skills (above); `commit` stays
-opencode/Codex-only for now. When editing one of these entry points in
-`ai/commands/`, mirror the body into `agents/.agents/claude-skills/<name>/SKILL.md`.
+Skills reach Claude as skills: Claude Code merges `.claude/commands/` into
+the skills system, so a skill at `.claude/skills/<name>/SKILL.md` is
+invocable as `/<name>`. `commit` stays opencode/Codex-only for now.
 
 ### Per-tool wiring
 
@@ -204,7 +195,7 @@ to paste into `~/.codex/config.toml`.
 - Links skills from `agents/.agents/skills/` into `~/.agents/skills/<name>`,
   preserving equivalent Stow links and migrating links from the old
   `ai/skills/` and `ai/codex/skills/` locations.
-- Links the 4 subagent TOMLs into `~/.codex/agents/`.
+- Links the 2 subagent TOMLs into `~/.codex/agents/`.
 - Composes `~/.codex/AGENTS.md` = `ai/AGENTS.md` + `ai/agents/archmagos.md`
   (marker-delimited, regenerated idempotently). A single symlink cannot carry
   both files, and spawned-subagent inheritance of AGENTS.md is unverified, so
@@ -215,7 +206,8 @@ to paste into `~/.codex/config.toml`.
 
 The `writable_roots` entry in `config.snippet.toml` covers `~/.agents` and
 `~/.codex` so the `update-config` skill can run `codex-sync-ai` unattended
-without stalling on a sandbox escalation prompt.
+without stalling on a sandbox escalation prompt, plus `~/.local/share/beads`
+and `~/.beads` so `bd` can write the shared task store from any repo.
 
 To re-sync after changes: invoke the `update-config` skill inside Codex
 (natural-language trigger: "update config" / "sync codex" / "I added a
@@ -227,12 +219,10 @@ created/updated/pruned/skipped.
 Two invariants that were permission-enforced in the old multi-primary model
 are now instruction-enforced only:
 
-**Plan writes (both tools)**
-`archmagos` is write-capable and writes `.scriptorum/` directly via `/plan`
-and `/execute-plan` — there is no separate writer subagent. The old
-planner-only invariant (and the `magos-artisan` writer it relied on) is gone;
-the `plan-workflow` skill defines the direct-write operations and path-safety
-rules the main agent follows instead.
+**Plan writes (all tools)**
+`archmagos` is write-capable and persists plans only through beads, following
+the `project-tasks` skill (never `bd init`, never plan files in repos). The
+old planner-only invariant and its writer subagent are gone.
 
 **Git-write denylist (Codex)**
 opencode enforces the bash denylist via per-agent `permission.bash`
@@ -240,12 +230,6 @@ frontmatter (hard deny). Codex has no equivalent per-agent permission
 frontmatter, so the git-write prohibitions are carried as instructional guards
 in each subagent TOML's `developer_instructions`. The canonical reference
 remains `ai/shared/bash-denylist.md`.
-
-**Codex `plan` skill**
-Plan writes go directly to `.scriptorum/` on both tools now (the `magos-artisan`
-writer was retired). The Codex `plan` skill still predates the phased-plan
-redesign (parallel/sequential phases, rich-context steps, `/execute-plan`); it
-writes a valid plan in the older five-section shape until its mirror is updated.
 
 **Codex `commit` skill**
 The main agent stages and commits the requested scope directly, reusing
@@ -259,10 +243,12 @@ uses the same skill. Unrelated worktree and staged changes are preserved.
 - **`/work` command** — removed.
 - **Dropped primaries** — `explorator`, `fabricator`, and the old
   `magos-iterator` primary agent are gone; their capabilities are folded into
-  `archmagos` and the `/plan` + `/execute-plan` commands.
-- **`magos-artisan` subagent and `magos-iterator` skill** — retired. The
-  persisted-plan workflow is now the `/plan` and `/execute-plan` commands;
-  `archmagos` writes `.scriptorum/` directly per the `plan-workflow` skill.
+  `archmagos`.
+- **`magos-artisan` subagent and `magos-iterator` skill** — retired.
+- **Scriptorum plan workflow** — `/plan`, `/execute-plan`, `/plan-list`, the
+  `plan-workflow` skill, and the `logis` and `enginseer` subagents were
+  replaced by the beads store and the `project-tasks` / `execute-tasks`
+  skills. Existing `.scriptorum/` directories are left on disk untouched.
 - **Review subagent** — moved to the shared `code-review` skill. Local change
   reviews spawn a review subagent; PR link reviews stay in the current thread
   so provider-tool context is preserved.
@@ -275,8 +261,8 @@ described above). Concept mapping:
 | Claude Code concept | This model |
 |---|---|
 | `CLAUDE.md` (memory) | `claude/.claude/CLAUDE.md → ai/AGENTS.md`; the `archmagos` persona has no Claude equivalent — that role is the main thread |
-| Subagents (`~/.claude/agents/`) | `claude/.claude/agents/` — converted copies of `ai/agents/` (4 subagents) |
-| Skills (`~/.claude/skills/`) | `claude/.claude/skills/` — cross-platform skills symlinked from `agents/.agents/skills/`, plus `plan`/`execute-plan`/`plan-list` variants symlinked from `agents/.agents/claude-skills/` (each invocable as `/name`) |
+| Subagents (`~/.claude/agents/`) | `claude/.claude/agents/` — converted copies of `ai/agents/` (2 subagents) |
+| Skills (`~/.claude/skills/`) | `claude/.claude/skills/` — cross-platform skills symlinked from `agents/.agents/skills/` (each invocable as `/name`) |
 
 ## TODO
 

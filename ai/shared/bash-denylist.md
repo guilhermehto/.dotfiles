@@ -82,7 +82,7 @@ Prevents pushing, history rewriting, and irreversible worktree mutations.
 
 ---
 
-## Read-only contract (agents: archmagos, explore, logis)
+## Read-only contract (agents: archmagos, explore)
 
 These agents carry an additional block that prevents any worktree or commit mutations:
 
@@ -104,7 +104,7 @@ Read-only agents must not touch the index or commit history at all.
 
 ---
 
-## Write-agent commit contract (agents: enginseer, servitor)
+## Write-agent commit contract (agents: servitor)
 
 These agents commit their own work but must not amend or stash:
 
@@ -113,4 +113,4 @@ These agents commit their own work but must not amend or stash:
 "git commit -a*": deny
 "git stash*": deny
 ```
-Enginseer and servitor stage and commit explicitly scoped changes per-step; amending or bulk-staging would break the per-step commit invariant.
+Servitor stages and commits explicitly scoped changes; amending or bulk-staging would break that scoping.

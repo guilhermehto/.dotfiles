@@ -23,4 +23,4 @@ Rules:
 
 - If the user says "just go", "stop asking", or equivalent at any point, halt the interview immediately and act on what you have, surfacing remaining open assumptions in the recap.
 - Do not write any files (KB or otherwise) as part of this command. The output is in-conversation only.
-- If alignment is reached but the next action would be a `/plan` or similar, suggest it explicitly in the recap's `Next step` line; do not invoke it automatically.
+- If alignment is reached but the next action would be planning a project into the task store (`project-tasks` skill) or similar, suggest it explicitly in the recap's `Next step` line; do not invoke it automatically.
