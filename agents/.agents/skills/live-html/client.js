@@ -503,13 +503,18 @@ function hideAddButton() {
   state.selection = null;
 }
 
+// Clears the doc selection before the draft takes focus: browsers that share
+// one selection between the page and a focused textarea would otherwise lose
+// the textarea's caret.
 function commentOnSelection() {
-  if (state.selection) {
-    createDraft(state.selection);
-  }
+  const anchor = state.selection;
 
   window.getSelection().removeAllRanges();
   hideAddButton();
+
+  if (anchor) {
+    createDraft(anchor);
+  }
 }
 
 function createDraft({ quote, offset }) {

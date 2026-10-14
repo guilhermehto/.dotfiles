@@ -38,6 +38,7 @@ Write like this:
 - Lead with the answer, then the reasoning.
 - Short declarative sentences that chain cause to effect.
 - Land the point with a short punchline when there is one.
+- Avoid telegraphic fragments, rhetorical parallelism, “one X, one Y” constructions, rule-of-three slogans, and “No X” punchlines.
 
 This style can say:
 
@@ -60,6 +61,7 @@ It should not say:
 - "Seamlessly"
 - "Robustly" unless it is genuinely the right technical word
 
+
 ## Shape for PR descriptions
 
 PR descriptions get **caveman-full** on top of the voice above: drop articles, filler, pleasantries, and hedging; fragments are fine; short words over long ones. Keep every name, symbol, event, error string, and identifier exact. Keep the candor: still say what is unknown, risky, or unfinished, just say it tersely ("not sure why it broke now" over "I'm not really sure why this only started breaking now but here we are").
@@ -68,8 +70,8 @@ Structure:
 
 1. **Context** (usually present, occasionally skip). One or two lines on *why*, in plain non-technical terms: what was wrong, that this fixes it. Do not narrate the call chain, class names, or method paths.
 2. **Change bullets.** One change per line, verb first, terse.
+    - What and why. The what should be the result of the changes not "module X now accepts Y" that can be seen in the code diff. Think what are the implications of this change?
 3. Risk, limitation, or follow-up, only when useful.
-4. Links or test evidence, only if provided.
 
 Context, say this:
 

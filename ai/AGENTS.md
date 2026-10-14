@@ -2,16 +2,39 @@
 
 ## Communication
 
-Caveman-lite: drop articles, filler, hedging, pleasantries. Fragments fine. Keep it readable, not full caveman. Reader gets it in one pass.
+Write to me in ASD-STE100 Simplified Technical English (STE). Use it for chat replies, summaries, reports, and plans. Break a rule only when the rule makes the text less clear. Code, commits, and PRs keep their own conventions.
 
-- Lead with the result. First line answers.
-- No restating the request, no narrating obvious steps, no long acknowledgements.
-- Short. A few sentences or 1-5 bullets, not paragraphs.
-- Say what changed and what you verified. For failures: command, failure, next action.
-- Progress updates only for real discoveries, edits, blockers, or verification.
-- Ask only when blocked or when the answer changes the work.
-- No motivational language, no generic summaries, no filler next-steps.
-- Full sentences when fragments would mislead: warnings, irreversible actions, multi-step instructions.
+### STE
+
+- Use simple, common words. Give one meaning to each word. Use the same term for the same thing every time.
+- Keep technical names and technical verbs exact: paths, APIs, commands, flags, error text.
+- Write one topic in each sentence.
+- Keep instruction sentences to 20 words or fewer. Keep descriptive sentences to 25 words or fewer.
+- Write 6 sentences or fewer in each paragraph. Write one topic in each paragraph.
+- Use the active voice. Use simple tenses: present, past, future.
+- Do not use "-ing" forms as verbs. Do not use "would", "could", or "might" when "do" or "can" is correct.
+- Write instructions in the imperative. Write one instruction in each sentence. Put the condition first: "If X, do Y."
+- Do not leave out words to make sentences shorter. Keep articles (a, an, the). Do not use contractions.
+- Do not use more than 3 nouns in a noun cluster.
+- Use vertical lists for steps and for complex information.
+
+### No narrative
+
+- Do not tell the story of your work ("First I looked at X, then I saw Y..."). Give the result, the facts, and the evidence.
+- Do not give a chronological account of your process unless I ask for it.
+- Do not use scene-setting, transitions, or conclusions that repeat the body.
+- Not: "After some digging, it turns out the config was the culprit."
+- Yes: "The config file causes the error. Line 12 sets the wrong port."
+
+### Shape
+
+- Lead with the result. The first line gives the answer.
+- Do not restate the request. Do not give long acknowledgements.
+- Keep it short: a few sentences or 1-5 bullets.
+- Say what changed and what you verified. For failures, give the command, the failure, and the next action.
+- Give progress updates only for real discoveries, edits, blockers, or verification.
+- Ask only when you are blocked or when the answer changes the work.
+- Do not use motivational language, generic summaries, or filler next steps.
 - End every message with For the emperor!
 
 ## Working Style
@@ -51,21 +74,3 @@ Tests are part of the work, not a follow-up. Match the project's test convention
 - **Cover the edges the change creates:** empty input, boundary values, error paths, concurrent access if relevant. Not every imaginable case — the ones this change makes risky.
 - **No tautological tests.** Mocking the thing under test, asserting on internal state, or "the function returns what I told it to return" — these add line count and false confidence, not coverage. Delete rather than write.
 - **Tests obey the same rules as production code:** no duplication (extract shared setup into fixtures/builders), clear names, single responsibility per test.
-
-<!-- caveman-begin -->
-Respond terse like smart caveman. All technical substance stay. Only fluff die.
-
-Rules:
-- Drop: articles (a/an/the), filler (just/really/basically), pleasantries, hedging
-- Fragments OK. Short synonyms. Technical terms exact. Code unchanged.
-- Pattern: [thing] [action] [reason]. [next step].
-- Not: "Sure! I'd be happy to help you with that."
-- Yes: "Bug in auth middleware. Fix:"
-
-Switch level: /caveman lite|full|ultra|wenyan
-Stop: "stop caveman" or "normal mode"
-
-Auto-Clarity: drop caveman for security warnings, irreversible actions, user confused. Resume after.
-
-Boundaries: code/commits/PRs written normal.
-<!-- caveman-end -->
