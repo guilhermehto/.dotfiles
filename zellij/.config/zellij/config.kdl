@@ -206,25 +206,25 @@ keybinds clear-defaults=true {
     }
     shared_among "normal" "locked" {
         bind "Ctrl h" {
-            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm" {
+            MessagePlugin "file:~/.config/zellij/plugins/vim-zellij-navigator.wasm" {
                 name "move_focus";
                 payload "left";
             };
         }
         bind "Ctrl j" {
-            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm" {
+            MessagePlugin "file:~/.config/zellij/plugins/vim-zellij-navigator.wasm" {
                 name "move_focus";
                 payload "down";
             };
         }
         bind "Ctrl k" {
-            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm" {
+            MessagePlugin "file:~/.config/zellij/plugins/vim-zellij-navigator.wasm" {
                 name "move_focus";
                 payload "up";
             };
         }
         bind "Ctrl l" {
-            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.3.0/vim-zellij-navigator.wasm" {
+            MessagePlugin "file:~/.config/zellij/plugins/vim-zellij-navigator.wasm" {
                 name "move_focus";
                 payload "right";
             };

@@ -84,7 +84,9 @@ Most of these are optional, but the configs assume they exist:
 - **tmux:** [sesh](https://github.com/joshmedeski/sesh),
   [gum](https://github.com/charmbracelet/gum),
   [tmuxinator](https://github.com/tmuxinator/tmuxinator) (required for `prefix+O` IDE popup)
-- **zellij:** [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator) (fetched by zellij on first `C-h/j/k/l`; grant its permission prompt once)
+- **zellij:** [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator) 0.3.0, built from source and vendored at
+  `zellij/.config/zellij/plugins/vim-zellij-navigator.wasm` (grant its permission prompt once). Rebuild:
+  `git clone --branch 0.3.0 https://github.com/hiasr/vim-zellij-navigator && cd vim-zellij-navigator && docker run --rm -v "$PWD":/src -w /src rust:1 sh -c 'rustup target add wasm32-wasip1 && cargo build --locked --release --target wasm32-wasip1'`
 - **Fonts:** [0xProto Nerd Font](https://www.nerdfonts.com/), AzeretMono Nerd Font
 - **macOS:** yabai, skhd, sketchybar, janky-borders, aerospace (all via Homebrew)
 - **Linux:** depends on distro / WM choice
