@@ -1,4 +1,11 @@
 keybinds clear-defaults=true {
+    // BEGIN cogitator (managed by cogitator — regenerate with `cogitator zellij install`)
+    shared_among "normal" {
+        bind "Space" { Run "/Users/guilhermeoliveira/.local/bin/cogitator-zellij" "next" { floating true; close_on_exit true; }; SwitchToMode "locked"; }
+        bind "a" { Run "/Users/guilhermeoliveira/.local/bin/cogitator-zellij" "pick" { floating true; close_on_exit true; width "70%"; height "60%"; x "15%"; y "20%"; }; SwitchToMode "locked"; }
+        bind "g" { MessagePlugin "file:/Users/guilhermeoliveira/.local/share/cogitator/worktrees/cogitator-feat/zellij/zellij-plugin/target/wasm32-wasip1/release/cogitator-zellij.wasm" { name "cogitator_focus"; floating true; cogitator "/Users/guilhermeoliveira/.local/bin/cogitator-zellij"; }; SwitchToMode "locked"; }
+    }
+    // END cogitator
     locked {
         bind "Ctrl a" { SwitchToMode "normal"; }
     }
@@ -707,3 +714,6 @@ default_mode "locked"
 //   - "off" (do not forward notifications to the host terminal)
 //
 // host_notification_protocol "auto"
+// BEGIN cogitator (managed by cogitator — regenerate with `cogitator zellij install`)
+default_layout "/Users/guilhermeoliveira/.config/zellij/layouts/cogitator.kdl"
+// END cogitator
