@@ -5,7 +5,7 @@
 keybinds clear-defaults=true {
     normal {
         bind "space" {
-            Run "/Users/guilhermeoliveira/.local/bin/cogitator-zellij" "next" {
+            Run "/Users/goliveira/go/bin/cogitator" "next" {
                 floating true
                 hold_on_close false
             }
@@ -14,6 +14,15 @@ keybinds clear-defaults=true {
         bind "&" { CloseTab; SwitchToMode "locked"; }
         bind "," { SwitchToMode "renametab"; TabNameInput 0; }
         bind "/" { SwitchToMode "scroll"; }
+        bind "F" {
+            Run "bash" "-c" "exec \"$HOME/.config/work/zellij/run\" flags" {
+                floating true
+                hold_on_close false
+                width "92"
+                height "18"
+            }
+            SwitchToMode "locked"
+        }
         bind "H" { Resize "Increase left"; SwitchToMode "resize"; }
         bind "J" { Resize "Increase down"; SwitchToMode "resize"; }
         bind "K" { Resize "Increase up"; SwitchToMode "resize"; }
@@ -22,7 +31,7 @@ keybinds clear-defaults=true {
         bind "Q" { Quit; }
         bind "[" { SwitchToMode "scroll"; }
         bind "a" {
-            Run "/Users/guilhermeoliveira/.local/bin/cogitator-zellij" "pick" {
+            Run "/Users/goliveira/go/bin/cogitator" "pick" {
                 floating true
                 hold_on_close false
                 x "15%"
@@ -34,10 +43,10 @@ keybinds clear-defaults=true {
         }
         bind "c" { NewTab; SwitchToMode "locked"; }
         bind "g" {
-            MessagePlugin "file:/Users/guilhermeoliveira/.local/share/cogitator/cogitator-zellij.wasm" {
+            MessagePlugin "file:/Users/goliveira/.local/share/cogitator/cogitator-zellij-db7a1432406b.wasm" {
                 name "cogitator_focus"
                 floating true
-                cogitator "/Users/guilhermeoliveira/.local/bin/cogitator-zellij"
+                cogitator "/Users/goliveira/go/bin/cogitator"
             }
             SwitchToMode "locked"
         }
@@ -415,7 +424,7 @@ default_mode "locked"
 // The name of the default layout to load on startup
 // Default: "default"
 // 
-default_layout "/Users/guilhermeoliveira/.config/zellij/layouts/cogitator.kdl"
+default_layout "/Users/goliveira/.config/zellij/layouts/cogitator.kdl"
  
 // The folder in which Zellij will look for layouts
 // (Requires restart)
