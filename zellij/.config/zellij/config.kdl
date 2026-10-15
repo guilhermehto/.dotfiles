@@ -27,7 +27,18 @@ keybinds clear-defaults=true {
         bind "J" { Resize "Increase down"; SwitchToMode "resize"; }
         bind "K" { Resize "Increase up"; SwitchToMode "resize"; }
         bind "L" { Resize "Increase right"; SwitchToMode "resize"; }
-        bind "P" { SwitchToMode "pane"; }
+        bind "P" {
+            Run "bash" "-c" "exec \"$HOME/.config/work/zellij/run\" prs" {
+                floating true
+                hold_on_close false
+                x "5%"
+                y "10%"
+                width "90%"
+                height "80%"
+            }
+            SwitchToMode "locked"
+        }
+        bind "Ctrl p" { SwitchToMode "pane"; }
         bind "Q" { Quit; }
         bind "[" { SwitchToMode "scroll"; }
         bind "a" {
