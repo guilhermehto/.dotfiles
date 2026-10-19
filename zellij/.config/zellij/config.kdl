@@ -378,6 +378,10 @@ plugins {
 // eg. "https://example.com/my-plugin.wasm"
 load_plugins {
     zellij:link
+    "file:~/.config/zellij/plugins/dim-unfocused.wasm" {
+        fg "#b8c0e0"
+        bg "#1e2030"
+    }
 }
 web_client {
     font "monospace"

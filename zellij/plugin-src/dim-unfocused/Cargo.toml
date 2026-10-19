@@ -1,0 +1,15 @@
+[package]
+name = "dim-unfocused"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "dim-unfocused"
+path = "src/main.rs"
+
+[dependencies]
+zellij-tile = "=0.45.1"
+
+[profile.release]
+opt-level = "s"
+lto = true
