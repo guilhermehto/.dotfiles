@@ -194,7 +194,7 @@ sketchybar --add item ram right                        \
 
 sketchybar 	--add item cpu.percent right 					        \
  						--set cpu.percent script="$PLUGIN_DIR/cpu.sh" \
-                  update_freq=1
+                  update_freq=10
 
 ### CPU
 #
