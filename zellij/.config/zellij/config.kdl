@@ -400,7 +400,7 @@ web_client {
 // Choose the theme that is specified in the themes section.
 // Default: default
 // 
-theme "tokyo-night-storm"
+theme "tokyo-night-storm-focus"
  
 // Theme to use when the host terminal reports a dark color palette.
 // Requires `theme_light` to also be set; otherwise `theme` is used.
@@ -468,7 +468,7 @@ default_layout "/Users/goliveira/.config/zellij/layouts/cogitator.kdl"
 //   - full
 //   - titles (default)
 // 
-// pane_frame_style "titles"
+pane_frame_style "full"
  
 // When attaching to an existing session with other users,
 // should the session be mirrored (true)
