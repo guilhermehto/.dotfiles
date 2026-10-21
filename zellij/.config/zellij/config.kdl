@@ -685,7 +685,7 @@ show_startup_tips false
  
 // Whether to enable mouse hover visual effects (frame highlight and help text)
 // default is true
-// mouse_hover_effects false
+mouse_hover_effects false
  
 // Whether to show mouse hover help-text tips (resize help and group shortcuts)
 // default is true
