@@ -40,6 +40,15 @@ keybinds clear-defaults=true {
         }
         bind "Ctrl p" { SwitchToMode "pane"; }
         bind "Q" { Quit; }
+        bind "T" {
+            Run "bash" "-c" "exec \"$HOME/.config/work/zellij/run\" jira" {
+                floating true
+                close_on_exit true
+                width "128"
+                height "18"
+            }
+            SwitchToMode "locked"
+        }
         bind "[" { SwitchToMode "scroll"; }
         bind "a" {
             Run "/Users/goliveira/go/bin/cogitator" "pick" {
