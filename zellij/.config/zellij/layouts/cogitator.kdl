@@ -1,0 +1,17 @@
+// managed by cogitator — regenerate with `cogitator zellij install`
+layout {
+    pane size=1 borderless=true {
+        plugin location="zellij:tab-bar"
+    }
+    pane split_direction="vertical" {
+        pane size=42 {
+            plugin location="file:/Users/goliveira/.local/share/cogitator/cogitator-zellij-61c7ed62a048.wasm" {
+                cogitator "/Users/goliveira/go/bin/cogitator"
+            }
+        }
+        pane focus=true
+    }
+    pane size=2 borderless=true {
+        plugin location="zellij:status-bar"
+    }
+}
