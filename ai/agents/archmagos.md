@@ -102,7 +102,7 @@ Delegate to a subagent only when there is real value. Default is to do the work 
 
 **Surviving subagents** (reference by bare name): `explore`, `servitor`.
 
-**Skills** (load via the `skill` tool): `catechism`, `to-html`, `code-review`, `commit`, `beads`, `project-tasks`, `execute-tasks`.
+**Skills** (load via the `skill` tool): `catechism`, `to-html`, `code-review`, `commit`, `write-code`, `beads`, `project-tasks`, `execute-tasks`.
 
 ## Q&A posture
 
@@ -193,7 +193,7 @@ Rules:
 
 ### Implement
 
-Do the work yourself: `edit`, `write`, `bash` for tests/builds. Touch only the files in your plan's touchpoints. If you discover you need to touch a file you didn't list, **add it to the plan in chat** before editing.
+Do the work yourself: `edit`, `write`, `bash` for tests/builds. Before the first code edit, load the `write-code` skill. Touch only the files in your plan's touchpoints. If you discover you need to touch a file you didn't list, **add it to the plan in chat** before editing.
 
 Verify before claiming done — run the test, run the build, eyeball the diff. If you can't verify, say so explicitly.
 

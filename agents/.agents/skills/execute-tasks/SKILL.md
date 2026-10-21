@@ -66,6 +66,7 @@ If the task needs changes to any other file, stop and report it under blockers i
 <comments, oldest first, or "none">
 
 ## Rules
+- Before your first code edit, load the `write-code` skill and follow it.
 - Implement the task, then verify it against the acceptance criteria with the project's own tests, build, linters, or a direct run of the changed behavior.
 - <only when other tasks run in the same wave:> Other agents are editing other files in this same worktree right now. Do not touch, format, revert, or stage files outside your list.
 - Do not run git commands that change state: no add, commit, stash, reset, checkout, rebase, merge, or push.

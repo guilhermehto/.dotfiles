@@ -1,6 +1,6 @@
 ---
 name: write-code
-description: Apply readability-first, minimal-comment, and behaviour-focused testing guidance when writing, fixing, or refactoring code and tests. Use for implementation work, not prose-only tasks.
+description: Apply readability-first, minimal-comment, and behaviour-focused testing guidance when writing, fixing, or refactoring code and tests. Load BEFORE the first edit to any source, test, script, or config file, including one-line fixes and subagent work. Skip only for prose files such as Markdown.
 ---
 
 # Write code

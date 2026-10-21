@@ -42,6 +42,7 @@ Write to me in ASD-STE100 Simplified Technical English (STE). Use it for chat re
 - Make the smallest correct change.
 - Preserve existing patterns before introducing new ones.
 - Read relevant files before editing.
+- Before you write, fix, or refactor code, load the `write-code` skill. Subagents load it themselves; a parent's load does not carry over.
 - Treat the worktree as shared.
 - Never revert unrelated changes.
 - Do not commit, amend, or push unless explicitly asked.
