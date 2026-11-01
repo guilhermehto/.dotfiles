@@ -1,0 +1,5 @@
+{
+  "name": "fork-split",
+  "version": "0.1.0",
+  "description": "Fork the conversation into a new zellij pane on the right"
+}
