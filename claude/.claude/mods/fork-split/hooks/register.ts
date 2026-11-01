@@ -1,7 +1,9 @@
 import type { Register } from 'claude-code'
 
+const PARENT_SESSION_VARIABLE = 'CLAUDE_FORK_PARENT_SESSION'
+
 function forkPaneArgv(sessionId: string, prompt: string): string[] {
-  const claude = ['claude', '--resume', sessionId, '--fork-session']
+  const claude = ['env', `${PARENT_SESSION_VARIABLE}=${sessionId}`, 'claude', '--resume', sessionId, '--fork-session']
 
   if (prompt !== '') {
     claude.push(prompt)

@@ -38,7 +38,10 @@ test('opens a forked claude in a pane on the right', async ($, on) => {
 
   expect(text).toBe('Forked this conversation into a pane on the right.')
   expect(runs).toEqual([
-    ['zellij', 'run', '--direction', 'right', '--close-on-exit', '--name', 'fork', '--', 'claude', '--resume', SESSION_ID, '--fork-session'],
+    [
+      'zellij', 'run', '--direction', 'right', '--close-on-exit', '--name', 'fork', '--',
+      'env', `CLAUDE_FORK_PARENT_SESSION=${SESSION_ID}`, 'claude', '--resume', SESSION_ID, '--fork-session',
+    ],
   ])
 })
 
