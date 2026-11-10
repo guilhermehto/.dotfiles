@@ -20,7 +20,7 @@ Classify the target before reviewing:
 | PR number (`123`, `PR #123`) | Review inline if provider/repo context is known; otherwise ask for the full PR URL. |
 | Staged, unstaged, all working-tree changes, current branch, local commits, branch ranges, local refs, or a specific commit | Spawn a subagent and ask it to run the review. |
 
-For local targets, the main agent identifies the target, spawns the subagent, waits for its review, and performs a lightweight quality gate before relaying it. Confirm that the response reviewed the intended target, covered the changed files, used valid line citations, supported each Must fix and Should fix finding with a concrete worked example, impact, and confidence, and supported each Quality item with cost, simpler shape, and confidence. Ask the same subagent to correct material gaps; do not duplicate the full review in the main thread.
+For local targets, the main agent identifies the target, spawns the subagent, waits for its review, and performs a lightweight quality gate before relaying it. Confirm that the response reviewed the intended target, covered the changed files, used valid line citations, gave every item its section ID, supported each Must fix and Should fix finding with a concrete worked example, impact, and confidence, and supported each Quality item with cost, simpler shape, and confidence. Ask the same subagent to correct material gaps; do not duplicate the full review in the main thread.
 
 For PR URLs, fetch PR metadata, description, base/head revisions, and diff directly with available provider tools. Do not resolve local PR refs, fetch branches, or compare against the local worktree. For Bitbucket/Atlassian PRs, prefer `twg bitbucket pull-requests get` and `twg bitbucket pull-requests diff`; check live `twg help` only when syntax or output is uncertain. For GitHub PRs, use `gh pr view` and `gh pr diff`, plus read-only provider content/search operations when surrounding code is needed. If provider tooling is unavailable, unauthenticated, or cannot provide enough context, state the limitation and ask for a PR diff/patch, an explicit git range, or a local ref.
 
@@ -141,32 +141,34 @@ Unless the user requests a different format, use this structure:
 ## Findings
 
 ### Must fix
-- `file:line` — <concise problem> (0.9 confidence)
+- **M1** `file:line` — <concise problem> (0.9 confidence)
   - Trigger: <specific scenario>
   - Impact: <observable consequence>
   - Example: <concrete setup and action -> actual result; expected result>
   - Fix direction: <required outcome without over-prescribing implementation>
 
 ### Should fix
-- `file:line` — <concise problem> (0.8 confidence)
+- **S1** `file:line` — <concise problem> (0.8 confidence)
   - Trigger: <specific scenario>
   - Impact: <observable consequence>
   - Example: <concrete setup and action -> actual result; expected result>
   - Fix direction: <required outcome without over-prescribing implementation>
 
 ### Quality
-- `file:line` — <concise issue> (0.8 confidence)
+- **Q1** `file:line` — <concise issue> (0.8 confidence)
   - Cost: <what a reader or maintainer pays>
   - Simpler shape: <concrete alternative>
 
 ## Open questions
-- <question whose answer could materially change the review>
+- **O1** <question whose answer could materially change the review>
 
 ## Assessment
 <No blocking findings | Blocking findings present | Insufficient evidence>. <Brief rationale.>
 - Scope: <target and coverage, including anything not fully inspected>
 - Validation: <checks run, failures, or not run>
 ```
+
+Start every item with an ID so the user can refer to it: `M` for Must fix, `S` for Should fix, `Q` for Quality, `O` for Open questions. Number each section from 1 in the order listed (`M1`, `M2`, `Q1`). When revising a review in the same thread, keep existing IDs and append new ones rather than renumbering.
 
 If a findings subsection or `Open questions` has nothing, write `_(none)_`. Keep the review proportional; do not add optional sections merely to fill space.
 
